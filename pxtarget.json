@@ -1,7 +1,7 @@
 {
-    "id": "sample",
-    "name": "Sample PXT",
-    "title": "Sample PXT Target",
+    "id": "arduino",
+    "name": "code Arduino with PXT",
+    "title": "code Arduino with PXT",
     "corepkg": "sample",
     "cloud": {
         "workspace": false,
