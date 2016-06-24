@@ -5,6 +5,7 @@ Arduino target for
 
 ## ToDo
 
-[] Update logo
-[] Add compiler services
-[] Rename core package
+- [ ] Fix sample program 
+- [ ] Add microbit simulator & core package
+- [ ] Update logo
+- [ ] Add compiler services
