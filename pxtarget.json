@@ -2,20 +2,20 @@
     "id": "arduino",
     "name": "code Arduino with PXT",
     "title": "code Arduino with PXT",
-    "corepkg": "sample",
+    "corepkg": "arduino",
     "cloud": {
         "workspace": false,
         "packages": true
     },
     "bundleddirs": [
-        "libs/sample"
+        "libs/arduino"
     ],
     "blocksprj": {
         "id": "blocksprj",
         "config": {
             "name": "{0} block",
             "dependencies": {
-                "sample": "*"
+                "arduino": "*"
             },
             "description": "",
             "files": [
@@ -33,7 +33,7 @@
         "config": {
             "name": "{0} js",
             "dependencies": {
-                "sample": "*"
+                "arduino": "*"
             },
             "description": "",
             "files": [

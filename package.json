@@ -1,19 +1,20 @@
 {
-  "name": "pxt-sample",
+  "name": "pxt-arduino",
   "version": "0.0.23",
-  "description": "sample target for PXT",
+  "description": "Arduino target for PXT",
   "keywords": [
+    "Arduino",
     "JavaScript",
     "education",
     "PXT"
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Microsoft/pxt-sample.git"
+    "url": "git+https://github.com/Microsoft/pxt-arduino.git"
   },
   "author": "",
   "license": "MIT",
-  "homepage": "https://github.com/Microsoft/pxt-sample#readme",
+  "homepage": "https://github.com/Microsoft/pxt-arduino#readme",
   "files": [
     "README.md",
     "pxtarget.json",

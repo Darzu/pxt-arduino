@@ -1,4 +1,4 @@
-/// <reference path="../libs/sample/enums.d.ts"/>
+/// <reference path="../libs/arduino/enums.d.ts"/>
 
 namespace pxsim.basic {
     /**

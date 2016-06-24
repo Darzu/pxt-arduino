@@ -1,6 +1,6 @@
 {
-    "name": "sample",
-    "description": "A target sample for PXT",
+    "name": "arduion",
+    "description": "An Arduino target for PXT",
     "files": [
         "README.md",
         "pxt-core.d.ts",
