@@ -1,5 +1,5 @@
 {
-    "name": "arduion",
+    "name": "arduino",
     "description": "An Arduino target for PXT",
     "files": [
         "README.md",
