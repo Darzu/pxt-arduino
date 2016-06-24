@@ -45,23 +45,30 @@
         }
     },
     "runtime": {
-      "mathBlocks": true,
-      "loopsBlocks": true,
-      "logicBlocks": true,
-      "variablesBlocks": true,
-      "textBlocks": true,
-      "listsBlocks": true 
+        "mathBlocks": true,
+        "loopsBlocks": true,
+        "logicBlocks": true,
+        "variablesBlocks": true
     },
     "simulator": {
-        "autoRun": true
+        "autoRun": true,
+        "aspectRatio": 1.22
+    },
+    "serial": {
+        "manufacturerFilter": "^mbed$",
+        "nameFilter": "^mbed Serial Port",
+        "log": true
     },
     "appTheme": {
+        "accentColor": "#00979C",
         "logoUrl": "https://sample.pxt.io/",
         "homeUrl": "https://sample.pxt.io/",
         "embedUrl": "https://sample.pxt.io/",
         "privacyUrl": "https://go.microsoft.com/fwlink/?LinkId=521839",
         "termsOfUseUrl": "https://go.microsoft.com/fwlink/?LinkID=206977",
-        "visualStudioCode": false,
+        "privacyUrl": "https://go.microsoft.com/fwlink/?LinkId=521839",
+        "termsOfUseUrl": "https://go.microsoft.com/fwlink/?LinkID=206977",
+        "boardName": "Arduino Zero",
         "docMenu": [
             {
                 "name": "About",
@@ -69,8 +76,9 @@
             },
             {
                 "name": "Docs",
-                "path": "/docs"
+                "path": "/doc"
             }
-        ]
+        ],
+        "sideDoc": "docs"
     }
 }
