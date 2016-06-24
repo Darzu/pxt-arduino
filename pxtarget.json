@@ -41,7 +41,7 @@
             ]
         },
         "files": {
-            "main.ts": "\n"
+            "main.ts": "basic.forever(() => {\n  basic.forward(5);\n  basic.turn(Direction.Left, 90);\n  });\n"
         }
     },
     "runtime": {
