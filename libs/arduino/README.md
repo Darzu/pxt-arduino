@@ -1,4 +1,3 @@
-# core
+# basic
 
-The core library.
-
+Add your docs here...
