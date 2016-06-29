@@ -7,11 +7,16 @@
         "pxt-helpers.ts",
         "enums.d.ts",
         "sims.d.ts",
-        "basic.ts"
+        "basic.ts",
+        "input.cpp",
+        "shims.d.ts",
+        "dal.d.ts",
+        "core.cpp",
+        "ksbit.h"
     ],
     "testFiles": [
         "test.ts"
     ],
     "public": true,
-    "dependencies": {}
+    "dependencies": { }
 }

@@ -1,4 +1,8 @@
+/// <reference path="../node_modules/pxt-core/typings/bluebird/bluebird.d.ts"/>
+/// <reference path="../node_modules/pxt-core/built/pxtsim.d.ts"/>
+/// <reference path="../libs/arduino/dal.d.ts"/>
 /// <reference path="../libs/arduino/enums.d.ts"/>
+//TODO: trim references
 
 namespace pxsim.basic {
     /**
@@ -12,18 +16,28 @@ namespace pxsim.basic {
     }
 
     /**
-     * Moves the sprite forward
-     * @param angle degrees to turn, eg:90
+     * Turns the sprite left
      */
     //% weight=85
-    //% blockId=sampleTurn block="turn %direction|by %angle degrees"
-    export function turnAsync(direction: Direction, angle: number) {
+    //% blockId=sampleTurnLeft block="turn left by %angle degrees"
+    export function turnLeftAsync(angle: number) {
         let b = board();
 
-        if (direction == Direction.Left)
-            b.sprite.angle -= angle;
-        else
-            b.sprite.angle += angle;
+        b.sprite.angle -= angle;
+
+        return Promise.delay(400)
+    }
+
+    /**
+     * Turns the sprite right
+     */
+    //% weight=85
+    //% blockId=sampleTurnRight block="turn right by %angle degrees"
+    export function turnRightAsync(angle: number) {
+        let b = board();
+
+        b.sprite.angle += angle;
+
         return Promise.delay(400)
     }
 

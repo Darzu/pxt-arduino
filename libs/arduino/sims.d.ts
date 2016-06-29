@@ -10,13 +10,20 @@ declare namespace basic {
     function forward(steps: number): void;
 
     /**
-     * Moves the sprite forward
-     * @param angle degrees to turn, eg:90
+     * Turns the sprite left
      */
     //% weight=85
-    //% blockId=sampleTurn block="turn %direction|by %angle degrees"
-    //% shim=basic::turnAsync promise
-    function turn(direction: Direction, angle: number): void;
+    //% blockId=sampleTurnLeft block="turn left by %angle degrees"
+    //% shim=basic::turnLeftAsync promise
+    function turnLeft(angle: number): void;
+
+    /**
+     * Turns the sprite right
+     */
+    //% weight=85
+    //% blockId=sampleTurnRight block="turn right by %angle degrees"
+    //% shim=basic::turnRightAsync promise
+    function turnRight(angle: number): void;
 
     /**
      * Repeats the code forever in the background. On each iteration, allows other code to run.
