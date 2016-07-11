@@ -3,36 +3,21 @@
 
 <head>
     <meta charset="utf-8">
-    <title>sample simulator</title>
-    <link rel="stylesheet" type="text/css" href="/sim/sim.css">
+    <title>BBC micro:bit simulator</title>
     <style>
-        body {
-            background: transparent;
-            overflow: hidden;
-        }
-        svg.sim {
-            margin-bottom:1em;
-        }
-        svg.sim.grayscale {    
-            -moz-filter: grayscale(1);
-            -webkit-filter: grayscale(1);
-            filter: grayscale(1);
-        }
-        .sim-button {
-            pointer-events: none;    
-        }
+html {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
 
-        .sim-button-outer:hover {
-            stroke:grey;
-            stroke-width: 3px;
-        }
-        .sim-button-nut {
-            fill:#704A4A;
-            pointer-events:none;
-        }
-        .sim-button-nut:hover {
-            stroke:1px solid #704A4A; 
-        }
+body {
+  height: 100%;
+  width:100%;
+  padding: 0;
+  overflow: hidden;
+  margin: 0;
+}
     </style>
     <script src="/cdn/bluebird.min.js"></script>
     <script src="/cdn/pxtsim.js"></script>
@@ -40,7 +25,4 @@
 </head>
 
 <body>
-    <svg id='svgcanvas' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 280">
-        <circle id='svgsprite' cx="100" cy="100" r="50" class="sprite" />
-    </svg>
 </body>

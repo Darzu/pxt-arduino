@@ -1,14 +1,22 @@
 {
-    "name": "Przykład PXT",
-    "title": "Przykładowe Doświadczenie PXT",
+    "name": "koduj z micro:bit",
+    "title": "koduj z micro:bit",
     "docMenu": [
         {
             "name": "O nas",
             "path": "/about"
         },
         {
-            "name": "Dokumentacja",
-            "path": "/docs"
+            "name": "Lekcje",
+            "path": "/lessons"
+        },
+        {
+            "name": "Instrukcja obsługi",
+            "path": "/reference"
+        },
+        {
+            "name": "Urządzenie",
+            "path": "/device"
         }
     ]
 }

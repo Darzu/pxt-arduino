@@ -1,21 +1,26 @@
 {
-    "id": "arduino",
-    "name": "code Arduino with PXT",
-    "title": "code Arduino with PXT",
-    "corepkg": "arduino",
+    "id": "microbit",
+    "name": "code the micro:bit",
+    "title": "code the micro:bit",
+    "corepkg": "microbit",
+    "bundleddirs": [
+        "libs/microbit",
+        "libs/microbit-radio",
+        "libs/microbit-devices",
+        "libs/microbit-bluetooth",
+        "libs/neopixel"
+    ],
     "cloud": {
         "workspace": false,
         "packages": true
     },
-    "bundleddirs": [
-        "libs/arduino"
-    ],
     "blocksprj": {
         "id": "blocksprj",
         "config": {
             "name": "{0} block",
             "dependencies": {
-                "arduino": "*"
+                "microbit": "*",
+                "microbit-radio": "*"
             },
             "description": "",
             "files": [
@@ -33,7 +38,8 @@
         "config": {
             "name": "{0} bit",
             "dependencies": {
-                "arduino": "*"
+                "microbit": "*",
+                "microbit-radio": "*"
             },
             "description": "",
             "files": [
@@ -44,6 +50,13 @@
             "main.ts": "basic.showLeds(`\r\n    . . . . .\r\n    . # . # .\r\n    . . . . .\r\n    # . . . #\r\n    . # # # .\r\n    `);"
         }
     },
+    "compile": {
+        "isNative": false,
+        "hasHex": true,
+        "deployDrives": "^MICROBIT",
+        "driveName": "MICROBIT",
+        "hexMimeType": "application/x-microbit-hex"
+    },
     "runtime": {
         "mathBlocks": true,
         "loopsBlocks": true,
@@ -52,7 +65,7 @@
     },
     "simulator": {
         "autoRun": true,
-        "aspectRatio": 1.22
+        "aspectRatio": 0.61
     },
     "compileService": {
         "yottaTarget": "bbc-microbit-classic-gcc",
@@ -67,25 +80,46 @@
         "log": true
     },
     "appTheme": {
-        "accentColor": "#00979C",
-        "logoUrl": "https://sample.pxt.io/",
-        "homeUrl": "https://sample.pxt.io/",
-        "embedUrl": "https://sample.pxt.io/",
+        "accentColor": "#5C005C",
+        "logoUrl": "https://codethemicrobit.com/about",
+        "logo": "./static/microbit.simplified.svg",
+        "docsLogo": "./static/microbit.simplified.svg",
+        "portraitLogo": "./static/microbit.simplified.svg",
+        "footerLogo": "./static/microbit.simplified.svg",
+        "cardLogo": "https://az851932.vo.msecnd.net/pub/drbwxcth",
+        "appLogo": "https://az851932.vo.msecnd.net/pub/tbhemtig",
+        "organizationLogo": "./static/Microsoft-logo_rgb_c-gray.png",
+        "homeUrl": "https://codethemicrobit.com/",
+        "embedUrl": "https://codethemicrobit.com/",
         "privacyUrl": "https://go.microsoft.com/fwlink/?LinkId=521839",
         "termsOfUseUrl": "https://go.microsoft.com/fwlink/?LinkID=206977",
-        "privacyUrl": "https://go.microsoft.com/fwlink/?LinkId=521839",
-        "termsOfUseUrl": "https://go.microsoft.com/fwlink/?LinkID=206977",
-        "boardName": "Arduino Zero",
+        "boardName": "BBC micro:bit",
         "docMenu": [
             {
-                "name": "About",
-                "path": "/about"
+                "name": "Getting Started",
+                "path": "/getting-started"
             },
             {
-                "name": "Docs",
-                "path": "/doc"
+                "name": "Projects",
+                "path": "/projects"
+            },
+            {
+                "name": "Reference",
+                "path": "/reference"
+            },
+            {
+                "name": "Blocks",
+                "path": "/blocks"
+            },
+            {
+                "name": "JavaScript",
+                "path": "/javascript"
+            },
+            {
+                "name": "Streaming Data",
+                "path": "/streaming"
             }
         ],
-        "sideDoc": "docs"
+        "sideDoc": "getting-started"
     }
 }

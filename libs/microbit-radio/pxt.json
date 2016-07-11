@@ -1,0 +1,25 @@
+{
+    "name": "microbit-radio",
+    "description": "The radio services",
+    "files": [
+        "README.md",
+        "shims.d.ts",
+        "enums.d.ts",
+        "radio.cpp",
+        "radio.ts"
+    ],
+    "public": true,
+    "dependencies": {
+        "microbit": "file:../microbit"
+    },
+    "yotta": {
+        "config": {
+            "microbit-dal": {
+                "bluetooth": {
+                    "enabled": 0
+                }
+            }
+        }
+    },
+    "installedVersion": "rlfgis"
+}
