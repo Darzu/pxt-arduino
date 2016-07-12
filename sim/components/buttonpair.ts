@@ -95,7 +95,7 @@ namespace pxsim.boardsvg {
         public buildDom(g: SVGElement) {
             this.buttonsOuter = []; this.buttons = [];
 
-            const outerBtn = (left: number, top: number) => {
+            const mkBtn = (left: number, top: number) => {
                 const btnr = 4;
                 const btnw = 56.2;
                 const btnn = 6;
@@ -107,14 +107,14 @@ namespace pxsim.boardsvg {
                 svg.child(btng, "circle", { class: "sim-button-nut", cx: left + btnnm, cy: top + btnw - btnnm, r: btnn });
                 svg.child(btng, "circle", { class: "sim-button-nut", cx: left + btnw - btnnm, cy: top + btnw - btnnm, r: btnn });
                 svg.child(btng, "circle", { class: "sim-button-nut", cx: left + btnw - btnnm, cy: top + btnnm, r: btnn });
+
+                let innerBtn = svg.child(g, "circle", { class: "sim-button", cx: left + 29, cy: top + 28, r: 16.5 });
+                this.buttons.push(innerBtn);
             }
 
-            outerBtn(25.9, 176.4);
-            this.buttons.push(svg.path(g, "sim-button", "M69.7,203.5c0,8.7-7,15.7-15.7,15.7s-15.7-7-15.7-15.7c0-8.7,7-15.7,15.7-15.7S69.7,194.9,69.7,203.5"));
-            outerBtn(418.1, 176.4);
-            this.buttons.push(svg.path(g, "sim-button", "M461.9,203.5c0,8.7-7,15.7-15.7,15.7c-8.7,0-15.7-7-15.7-15.7c0-8.7,7-15.7,15.7-15.7C454.9,187.8,461.9,194.9,461.9,203.5"));
-            outerBtn(417, 250);
-            this.buttons.push(svg.child(g, "circle", { class: "sim-button", cx: 446, cy: 278, r: 16.5 }));
+            mkBtn(25.9, 176.4);
+            mkBtn(418.1, 176.4);
+            mkBtn(417, 250);
             (<any>this.buttonsOuter[2]).style.visibility = "hidden";
             (<any>this.buttons[2]).style.visibility = "hidden";
 
