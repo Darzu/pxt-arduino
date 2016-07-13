@@ -134,21 +134,21 @@ namespace input {
     //     registerWithDal(MICROBIT_ID_GESTURE, (int)gesture, body);
     // }
 
-    /**
-     * Do something when a pin(``P0``, ``P1`` or both ``P2``) is pressed.
-     * @param name TODO
-     * @param body TODO
-     */
-    //% help=input/on-pin-pressed weight=83
-    //% blockId=device_pin_event block="on pin|%NAME|pressed" icon="\uf094"
-    void onPinPressed(TouchPin name, Action body) {
-        auto pin = getPin((int)name);
-        if (!pin) return;
+    // /**
+    //  * Do something when a pin(``P0``, ``P1`` or both ``P2``) is pressed.
+    //  * @param name TODO
+    //  * @param body TODO
+    //  */
+    // //% help=input/on-pin-pressed weight=83
+    // //% blockId=device_pin_event block="on pin|%NAME|pressed" icon="\uf094"
+    // void onPinPressed(TouchPin name, Action body) {
+    //     auto pin = getPin((int)name);
+    //     if (!pin) return;
 
-        // Forces the PIN to switch to makey-makey style detection.
-        pin->isTouched();
-        registerWithDal((int)name, MICROBIT_BUTTON_EVT_CLICK, body);
-    }
+    //     // Forces the PIN to switch to makey-makey style detection.
+    //     pin->isTouched();
+    //     registerWithDal((int)name, MICROBIT_BUTTON_EVT_CLICK, body);
+    // }
 
     /**
      * Get the button state (pressed or not) for ``A`` and ``B``.
@@ -270,15 +270,15 @@ namespace input {
     //% help=input/calibrate weight=0
     void calibrate() { }
 
-    /**
-     * Get the pin state (pressed or not). Requires to hold the ground to close the circuit.
-     * @param name pin used to detect the touch
-     */
-    //% help=input/pin-is-pressed weight=58 block="pin|%NAME|is pressed" icon="\uf094"
-    bool pinIsPressed(TouchPin name) {
-        auto pin = getPin((int)name);
-        return pin && pin->isTouched();
-    }
+    // /**
+    //  * Get the pin state (pressed or not). Requires to hold the ground to close the circuit.
+    //  * @param name pin used to detect the touch
+    //  */
+    // //% help=input/pin-is-pressed weight=58 block="pin|%NAME|is pressed" icon="\uf094"
+    // bool pinIsPressed(TouchPin name) {
+    //     auto pin = getPin((int)name);
+    //     return pin && pin->isTouched();
+    // }
 
     // /**
     //  * Sets the accelerometer sample range in gravities.
