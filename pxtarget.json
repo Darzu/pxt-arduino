@@ -71,7 +71,7 @@
         "yottaTarget": "nrf51dk-classic-gcc",
         "yottaCorePackage": "pxt-arduino-core",
         "githubCorePackage": "microsoft/pxt-arduino-core",
-        "gittag": "v0.0.3",
+        "gittag": "v0.0.4",
         "serviceId": "nrf51dk"
     },
     "serial": {
