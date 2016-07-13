@@ -252,7 +252,7 @@ pointer-events: none;
 
             // display 
             this.displaySvg.buildDom(this.g);
-            this.displaySvg.updateLocation(0, 380)
+            this.displaySvg.updateLocation(0, 370)
 
             // compass
             this.compassSvg.buildDom(this.g);
@@ -264,9 +264,9 @@ pointer-events: none;
 
             // buttons
             this.buttonPairSvg.buildDom(this.g);
-            this.buttonPairSvg.updateLocation(0, 0, 380);
-            this.buttonPairSvg.updateLocation(1, 0, 380);
-            this.buttonPairSvg.updateLocation(2, 0, 380);
+            this.buttonPairSvg.updateLocation(0, 0, 370);
+            this.buttonPairSvg.updateLocation(1, 0, 370);
+            this.buttonPairSvg.updateLocation(2, 0, 370);
         }
 
         private attachEvents() {
