@@ -85,6 +85,12 @@ namespace pxsim.boardsvg {
         private bb: SVGGElement;
         private background: SVGElement;
 
+        public style = `
+/* bread board */
+.sim-bb-pin {
+    fill:#333;
+}`
+
         public updateLocation(x: number, y: number) {
             //TODO(DZ): come up with a better abstraction/interface for customizing placement
             let els = [this.bb, this.background];
@@ -92,32 +98,67 @@ namespace pxsim.boardsvg {
         }
         
         public buildDom(g: SVGElement, width: number, height: number) {
+            const midRatio = 0.66666666;
+            const midH = height*midRatio;
+            const barRatio = 0.16666666;
+            const barH = height*barRatio;
+
+            const midCols = 30;
+            const midGridW = (midCols-1) * PIN_DIST;
+            const midRows = 12;
+            const midGridH = (midRows-1) * PIN_DIST;
+            const midGridX = (width - midGridW)/2;
+            const midGridY = barH + (midH - midGridH)/2;
+
+            const barRows = 2;
+            const barGridH = (barRows-1) * PIN_DIST;
+            const barCols = 5*5+4
+            const barGridW = (barCols-1) * PIN_DIST;
+            const topBarGridX = (width - barGridW)/2;
+            const topBarGridY = (barH - barGridH)/2;
+            const botBarGridX = topBarGridX;
+            const botBarGridY = topBarGridY + barH + midH;
+
+            // const i1_x = PIN_DIST * 1.839344262295082;
+            // const i1_y = PIN_DIST * 5.019672131147541;
+            // const e1_x = i1_x;
+            // const e1_y = i1_y + 5*PIN_DIST + PIN_DIST*2;
+            // const top_x = 34.15;
+            // const top_y = PIN_DIST * 1.1;
+
             //TODO compute width and height from pinDist
             this.background = svg.child(g, "image", 
                 { class: "sim-board", x: 0, y: 0, width: width, height: height, 
                     "href": "/images/breadboard-photo-sml.png"});
 
-            let mkGrid = (l: number, r: number, rs: number, cs: number): SVGGElement => {
+            let mkGrid = (l: number, t: number, rs: number, cs: number): SVGGElement => {
                 const size = PIN_DIST/2.5;
                 const rounding = size/3;
+                const x = l - size/2;
+                const y = t - size/2;
 
                 let grid = <SVGGElement>svg.elt("g");
                 for (let i = 0; i < rs; i++) {
                     for (let j = 0; j < cs; j++) {
                         let pin = svg.elt("rect")
-                        let props = { class: "sim-bb-pin", x: l+j*PIN_DIST, y: r+i*PIN_DIST, rx: rounding, ry: rounding, width: size, height: size };
+                        let props = { class: "sim-bb-pin", x: x+j*PIN_DIST, y: y+i*PIN_DIST, rx: rounding, ry: rounding, width: size, height: size };
                         svg.hydrate(pin, props)
                         grid.appendChild(pin);
                     }
                 }
                 return grid;
             }
-            const a30_x = 25;
-            const a30_y = 73.5;
 
             this.bb = <SVGGElement>svg.child(g, "g")
-            let bb1 = mkGrid(a30_x,a30_y,5,30);
-            this.bb.appendChild(bb1);
+
+            let midGrid = mkGrid(midGridX,midGridY,12,30);
+            this.bb.appendChild(midGrid);
+
+            let topGrid = mkGrid(topBarGridX, topBarGridY, 2, 29);
+            this.bb.appendChild(topGrid);
+
+            let botGrid = mkGrid(botBarGridX, botBarGridY, 2, 29);
+            this.bb.appendChild(botGrid);
         }
     }
 
@@ -250,11 +291,6 @@ pointer-events: none;
     from { stroke: yellow; }
     to   { stroke: default; }
 }
-
-/* bread board */
-.sim-bb-pin {
-    fill:#888;
-}
             `;
             this.style.textContent += this.buttonPairSvg.style;
             this.style.textContent += this.edgeConnectorSvg.style;
@@ -263,6 +299,7 @@ pointer-events: none;
             this.style.textContent += this.serialSvg.style;
             this.style.textContent += this.thermometerSvg.style;
             this.style.textContent += this.lightSensorSvg.style;
+            this.style.textContent += this.breadboard.style;
 
             this.defs = <SVGDefsElement>svg.child(this.element, "defs", {});
             this.g = svg.elt("g");
