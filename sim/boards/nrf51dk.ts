@@ -253,8 +253,8 @@ pointer-events: none;
             // this.g.appendChild(bb);
 
             // display 
-            this.displaySvg.buildDom(this.g);
-            this.displaySvg.updateLocation(0, 370)
+            this.displaySvg.buildDom(this.g, PIN_DIST);
+            this.displaySvg.updateLocation(PIN_DIST*8.3, 482+PIN_DIST*2)
 
             // compass
             this.compassSvg.buildDom(this.g);

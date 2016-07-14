@@ -13,7 +13,8 @@ namespace pxsim {
     pxsim.initCurrentRuntime = () => {
         U.assert(!runtime.board);
         if (boardType == BoardTypes.microbit) {
-            runtime.board = new MicrobitBoard();
+            //runtime.board = new MicrobitBoard();
+            console.error("Microbit board not yet supported")
         } else if (boardType == BoardTypes.nrf51dk) {
             runtime.board = new Nrf51dkBoard();
         }

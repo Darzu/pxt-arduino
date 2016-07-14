@@ -180,20 +180,23 @@ namespace pxsim {
 
 namespace pxsim.boardsvg {
     export interface ILedMatrixTheme {
-        display?: string;
+        background?: string;
         ledOn?: string;
         ledOff?: string;
     }
-    export var defaultLedMatrixTheme = {
-        display: "#000",
+    export var defaultLedMatrixTheme : ILedMatrixTheme = {
+        background: "#000",
         ledOn: "#ff7f7f",
-        ledOff: "#202020",
+        ledOff: "#DDD",
     };
 
     export class LedMatrixSvg {
-        private display: SVGElement;
+        private background: SVGElement;
         private ledsOuter: SVGElement[];
         private leds: SVGElement[];
+
+        private DRAW_SIZE = 8;
+        private ACTIVE_SIZE = 5; 
 
         public style = `
 .sim-led-back:hover {
@@ -208,12 +211,12 @@ namespace pxsim.boardsvg {
 
         public updateLocation(x: number, y: number) {
             //TODO(DZ): come up with a better abstraction/interface for customizing placement
-            let els = [this.display].concat(this.leds).concat(this.ledsOuter)
+            let els = [this.background].concat(this.leds).concat(this.ledsOuter)
             els.forEach(e => svg.hydrate(e, {transform: `translate(${x} ${y})`})) 
         }
 
         public updateTheme(theme: ILedMatrixTheme) {
-            svg.fill(this.display, theme.display);
+            svg.fill(this.background, theme.background);
             svg.fills(this.leds, theme.ledOn);
             svg.fills(this.ledsOuter, theme.ledOff);
         }
@@ -223,24 +226,41 @@ namespace pxsim.boardsvg {
             let img = state.image;
             this.leds.forEach((led, i) => {
                 let sel = (<SVGStylable><any>led)
-                sel.style.opacity = ((bw ? img.data[i] > 0 ? 255 : 0 : img.data[i]) / 255.0) + "";
+                let dx = i % this.DRAW_SIZE;
+                let dy = (i - dx) / this.DRAW_SIZE;
+                if (dx < this.ACTIVE_SIZE && dy < this.ACTIVE_SIZE) {
+                    let j = dx + dy * this.ACTIVE_SIZE;
+                    sel.style.opacity = ((bw ? img.data[j] > 0 ? 255 : 0 : img.data[j]) / 255.0) + "";
+                } else {
+                    sel.style.opacity = 0 + "";
+                }
             })
         }
 
-        public buildDom(g: SVGElement) {
-            this.display = svg.path(g, "sim-display", "M333.8,310.3H165.9c-8.3,0-15-6.7-15-15V127.5c0-8.3,6.7-15,15-15h167.8c8.3,0,15,6.7,15,15v167.8C348.8,303.6,342.1,310.3,333.8,310.3z");
+        public buildDom(g: SVGElement, pinDist: number) {
+            const ROWS = this.DRAW_SIZE;
+            const COLS = this.DRAW_SIZE;
+            let width = COLS*pinDist;
+            let height = ROWS*pinDist;
+            let left = 0;
+            let top = 0;
+            const R = 1;
+            this.background = svg.child(g, "rect", {class: "sim-display", x:left, y:top, rx:R, ry:R, width: width, height: height})
 
-            // leds
+            // ledsOuter
             this.leds = [];
             this.ledsOuter = [];
-            let left = 154, top = 113, ledoffw = 46, ledoffh = 44;
-            for (let i = 0; i < 5; ++i) {
-                let ledtop = i * ledoffh + top;
-                for (let j = 0; j < 5; ++j) {
-                    let ledleft = j * ledoffw + left;
-                    let k = i * 5 + j;
-                    this.ledsOuter.push(svg.child(g, "rect", { class: "sim-led-back", x: ledleft, y: ledtop, width: 10, height: 20, rx: 2, ry: 2 }));
-                    this.leds.push(svg.child(g, "rect", { class: "sim-led", x: ledleft - 2, y: ledtop - 2, width: 14, height: 24, rx: 3, ry: 3, title: `(${j},${i})` }));
+            let ledRad = Math.round(pinDist * .35);
+            let spacing = pinDist;
+            let padding = (spacing - 2*ledRad) / 2.0;
+            let hoverRad = ledRad * 1.2;
+            let hoverOffset = hoverRad - ledRad;
+            for (let i = 0; i < ROWS; ++i) {
+                let y = ledRad + i*spacing + padding;
+                for (let j = 0; j < COLS; ++j) {
+                    let x = ledRad + j*spacing + padding;
+                    this.ledsOuter.push(svg.child(g, "circle", { class: "sim-led-back", cx: x, cy: y, r: ledRad }));
+                    this.leds.push(svg.child(g, "circle", { class: "sim-led", cx: x - hoverOffset, cy: y - hoverOffset, r: hoverRad, title: `(${j},${i})` }));
                 }
             }
         }
