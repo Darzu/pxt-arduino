@@ -56,7 +56,7 @@ namespace pxsim.boardsvg {
     stroke-width: 3px;
 }
 .sim-button-nut {
-    fill:#704A4A;
+    fill:#000;
     pointer-events:none;
 }
 .sim-button-nut:hover {
