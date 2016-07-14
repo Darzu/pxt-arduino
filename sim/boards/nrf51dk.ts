@@ -249,8 +249,8 @@ pointer-events: none;
                 }
                 return grid;
             }
-            let bb = mkGrid(25, 482, 5, 30);
-            this.g.appendChild(bb);
+            // let bb = mkGrid(25, 482, 5, 30);
+            // this.g.appendChild(bb);
 
             // display 
             this.displaySvg.buildDom(this.g);
