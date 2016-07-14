@@ -244,8 +244,7 @@ namespace pxsim.boardsvg {
             let height = ROWS*pinDist;
             let left = 0;
             let top = 0;
-            const R = 1;
-            this.background = svg.child(g, "rect", {class: "sim-display", x:left, y:top, rx:R, ry:R, width: width, height: height})
+            this.background = svg.child(g, "rect", {class: "sim-display", x:left, y:top, width: width, height: height})
 
             // ledsOuter
             this.leds = [];
