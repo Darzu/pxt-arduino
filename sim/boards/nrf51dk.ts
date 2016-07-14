@@ -79,6 +79,48 @@ namespace pxsim.boardsvg {
         disableTilt?: boolean;
     }
 
+    const PIN_DIST = 15.25;
+
+    export class Breadboard {
+        private bb: SVGGElement;
+        private background: SVGElement;
+
+        public updateLocation(x: number, y: number) {
+            //TODO(DZ): come up with a better abstraction/interface for customizing placement
+            let els = [this.bb, this.background];
+            translateEls(els, x, y);
+        }
+        
+        public buildDom(g: SVGElement, width: number, height: number) {
+            //TODO compute width and height from pinDist
+            this.background = svg.child(g, "image", 
+                { class: "sim-board", x: 0, y: 0, width: width, height: height, 
+                    "href": "/images/breadboard-photo-sml.png"});
+
+            let mkGrid = (l: number, r: number, rs: number, cs: number): SVGGElement => {
+                const size = PIN_DIST/2.5;
+                const rounding = size/3;
+
+                let grid = <SVGGElement>svg.elt("g");
+                for (let i = 0; i < rs; i++) {
+                    for (let j = 0; j < cs; j++) {
+                        let pin = svg.elt("rect")
+                        let props = { class: "sim-bb-pin", x: l+j*PIN_DIST, y: r+i*PIN_DIST, rx: rounding, ry: rounding, width: size, height: size };
+                        svg.hydrate(pin, props)
+                        grid.appendChild(pin);
+                    }
+                }
+                return grid;
+            }
+            const a30_x = 25;
+            const a30_y = 73.5;
+
+            this.bb = <SVGGElement>svg.child(g, "g")
+            let bb1 = mkGrid(a30_x,a30_y,5,30);
+            this.bb.appendChild(bb1);
+        }
+    }
+
     export class Nrf51dkSvg {
         public element: SVGSVGElement;
         private style: SVGStyleElement;
@@ -96,6 +138,7 @@ namespace pxsim.boardsvg {
         private thermometerSvg = new ThermometerSvg();
         private accelerometerSvg = new AccelerometerSvg();
         private lightSensorSvg = new LightSensorSvg();
+        private breadboard = new Breadboard();
 
         constructor(public props: INrf51dkProps) {
             this.board = this.props.runtime.board as pxsim.Nrf51dkBoard;
@@ -137,11 +180,20 @@ namespace pxsim.boardsvg {
         }
 
         private buildDom() {
+            const WIDTH = 498;
+            const HEIGHT = 812;
+            const BOARD_HEIGHT = 380;
+            const BREADBOARD_HEIGHT = 323; //TODO: relate to PIN_DIST
+            const TOP_MARGIN = 20;
+            const MID_MARGIN = 40;
+            const BB_X = 0;
+            const BB_Y = TOP_MARGIN + BOARD_HEIGHT + MID_MARGIN;
+
             this.element = <SVGSVGElement>svg.elt("svg")
             svg.hydrate(this.element, {
                 "version": "1.0",
-                "viewBox": "0 0 498 812",
-                "enable-background": "new 0 0 498 812",
+                "viewBox": `0 0 ${WIDTH} ${HEIGHT}`,
+                "enable-background": `new 0 0 ${WIDTH} ${HEIGHT}`,
                 "class": "sim",
                 "x": "0px",
                 "y": "0px"
@@ -216,8 +268,6 @@ pointer-events: none;
             this.g = svg.elt("g");
             this.element.appendChild(this.g);
 
-            const PIN_DIST = 15.25;
-
             // filters
             let glow = svg.child(this.defs, "filter", { id: "filterglow", x: "-5%", y: "-5%", width: "120%", height: "120%" });
             svg.child(glow, "feGaussianBlur", { stdDeviation: "5", result: "glow" });
@@ -225,32 +275,13 @@ pointer-events: none;
             for (let i = 0; i < 3; ++i) svg.child(merge, "feMergeNode", { in: "glow" })
 
             // backgrounds
-            let board = svg.child(this.g, "image", 
-                { class: "sim-board", x: 0, y: 0, width: 498, height: 380, 
+            svg.child(this.g, "image", 
+                { class: "sim-board", x: 0, y: TOP_MARGIN, width: WIDTH, height: BOARD_HEIGHT, 
                     "href": "/images/arduino-zero-photo-sml.png"});
-            let breadBoard = svg.child(this.g, "image", 
-                { class: "sim-board", x: 0, y: 380, width: 498, height: 380, 
-                    "href": "/images/breadboard-photo-sml.png"});
 
             // hand-drawn breadboard
-            let mkGrid = (l: number, r: number, rs: number, cs: number): SVGGElement => {
-                const spacing = PIN_DIST;
-                const size = spacing/2.5;
-                const rounding = 2;
-
-                let grid = <SVGGElement>svg.elt("g");
-                for (let i = 0; i < rs; i++) {
-                    for (let j = 0; j < cs; j++) {
-                        let pin = svg.elt("rect")
-                        let props = { class: "sim-bb-pin", x: l+j*spacing, y: r+i*spacing, rx: rounding, ry: rounding, width: size, height: size };
-                        svg.hydrate(pin, props)
-                        grid.appendChild(pin);
-                    }
-                }
-                return grid;
-            }
-            // let bb = mkGrid(25, 482, 5, 30);
-            // this.g.appendChild(bb);
+            this.breadboard.buildDom(this.g, WIDTH, BREADBOARD_HEIGHT);
+            this.breadboard.updateLocation(BB_X, BB_Y);
 
             // display 
             this.displaySvg.buildDom(this.g, PIN_DIST);

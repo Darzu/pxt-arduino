@@ -212,7 +212,7 @@ namespace pxsim.boardsvg {
         public updateLocation(x: number, y: number) {
             //TODO(DZ): come up with a better abstraction/interface for customizing placement
             let els = [this.background].concat(this.leds).concat(this.ledsOuter)
-            els.forEach(e => svg.hydrate(e, {transform: `translate(${x} ${y})`})) 
+            translateEls(els, x, y);
         }
 
         public updateTheme(theme: ILedMatrixTheme) {

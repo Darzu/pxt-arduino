@@ -62,6 +62,10 @@ namespace pxsim.boardsvg {
 .sim-button-nut:hover {
     stroke:1px solid #704A4A; 
 }
+.sim-button-tab {
+    fill:#c0c0c0;
+    pointer-events:none;
+}
             `;
 
         public updateLocation(idx: number, x: number, y: number) {
@@ -69,7 +73,7 @@ namespace pxsim.boardsvg {
             if (idx < 0 || 2 < idx)
                 return; //TODO(DZ): throw error
             let els = [this.buttons[idx], this.buttonsOuter[idx], this.buttonABText]
-            els.forEach(e => svg.hydrate(e, {transform: `translate(${x} ${y})`})) 
+            translateEls(els, x, y);
         }
 
         public updateTheme(buttonPairTheme: IButtonPairTheme) {
@@ -95,27 +99,53 @@ namespace pxsim.boardsvg {
         public buildDom(g: SVGElement, pinDist: number) {
             this.buttonsOuter = []; this.buttons = [];
 
-            const mkBtn = (left: number, top: number) => {
-                const cornerr = 4;
-                const pegr = 3.5;
-                const pegoffset = 6;
-                const pegdist = pinDist*2.0;
-                const width = pegdist + 2*pegoffset;
-                const btnr = 12;
+            const tabSize = pinDist/2.5;
+            const pegR = pinDist/5;
+            const btnR = pinDist*.8;
+            const pegMargin = pinDist/8;
+            const plateR = pinDist/12;
+
+            const pegOffset = pegMargin + pegR;
+            const left = 0 - tabSize/2;
+            const top = 0 - tabSize/2; 
+            const plateH = 3*pinDist-tabSize;
+            const plateW = 2*pinDist+tabSize;
+
+            const mkBtn = () => {
                 let btng = svg.child(g, "g");
                 this.buttonsOuter.push(btng);
-                svg.child(btng, "rect", { class: "sim-button-outer", x: left, y: top, rx: cornerr, ry: cornerr, width: width, height: width });
-                svg.child(btng, "circle", { class: "sim-button-nut", cx: left + pegoffset, cy: top + pegoffset, r: pegr });
-                svg.child(btng, "circle", { class: "sim-button-nut", cx: left + pegoffset, cy: top + width - pegoffset, r: pegr });
-                svg.child(btng, "circle", { class: "sim-button-nut", cx: left + width - pegoffset, cy: top + width - pegoffset, r: pegr });
-                svg.child(btng, "circle", { class: "sim-button-nut", cx: left + width - pegoffset, cy: top + pegoffset, r: pegr });
-                let innerBtn = svg.child(g, "circle", { class: "sim-button", cx: left + width/2, cy: top + width/2, r: btnr });
+
+                //tabs
+                const mkTab = (x: number, y: number) => {
+                    svg.child(btng, "rect", { class: "sim-button-tab", x: x, y: y, width: tabSize, height: tabSize})
+                }
+                mkTab(left, top);
+                mkTab(left + 2*pinDist, top);
+                mkTab(left, top + 3*pinDist);
+                mkTab(left + 2*pinDist, top + 3*pinDist);
+
+                //plate
+                const plateL = left;
+                const plateT = top + tabSize;
+                svg.child(btng, "rect", { class: "sim-button-outer", x: plateL, y: plateT, rx: plateR, ry: plateR, width: plateW, height: plateH });
+
+                //pegs
+                const mkPeg = (x: number, y: number) => {
+                    svg.child(btng, "circle", { class: "sim-button-nut", cx: x, cy: y, r: pegR });
+                }
+                mkPeg(plateL + pegOffset, plateT + pegOffset)
+                mkPeg(plateL + plateW - pegOffset, plateT + pegOffset)
+                mkPeg(plateL + pegOffset, plateT + plateH - pegOffset)
+                mkPeg(plateL + plateW - pegOffset, plateT + plateH - pegOffset)
+
+                //inner btn
+                let innerBtn = svg.child(g, "circle", { class: "sim-button", cx: plateL + plateW/2, cy: plateT + plateH/2, r: btnR });
                 this.buttons.push(innerBtn);
             }
 
-            mkBtn(0,0);
-            mkBtn(0,0);
-            mkBtn(0,0);
+            mkBtn();
+            mkBtn();
+            mkBtn();
             (<any>this.buttonsOuter[2]).style.visibility = "hidden";
             (<any>this.buttons[2]).style.visibility = "hidden";
 

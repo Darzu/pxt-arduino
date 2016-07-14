@@ -231,6 +231,10 @@ namespace pxsim.boardsvg {
         move: "mousemove",
         leave: "mouseleave"
     };
+
+    export function translateEls(els: SVGElement[], x: number, y: number) {
+        els.forEach(e => svg.hydrate(e, {transform: `translate(${x} ${y})`})) 
+    }
 }
 
 namespace pxsim {
