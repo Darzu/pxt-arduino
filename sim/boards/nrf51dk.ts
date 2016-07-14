@@ -216,6 +216,8 @@ pointer-events: none;
             this.g = svg.elt("g");
             this.element.appendChild(this.g);
 
+            const PIN_DIST = 15.25;
+
             // filters
             let glow = svg.child(this.defs, "filter", { id: "filterglow", x: "-5%", y: "-5%", width: "120%", height: "120%" });
             svg.child(glow, "feGaussianBlur", { stdDeviation: "5", result: "glow" });
@@ -232,8 +234,8 @@ pointer-events: none;
 
             // hand-drawn breadboard
             let mkGrid = (l: number, r: number, rs: number, cs: number): SVGGElement => {
-                const size = 6;
-                const spacing = size*2.5;
+                const spacing = PIN_DIST;
+                const size = spacing/2.5;
                 const rounding = 2;
 
                 let grid = <SVGGElement>svg.elt("g");
@@ -247,7 +249,7 @@ pointer-events: none;
                 }
                 return grid;
             }
-            let bb = mkGrid(10, 420, 5, 30);
+            let bb = mkGrid(25, 482, 5, 30);
             this.g.appendChild(bb);
 
             // display 
