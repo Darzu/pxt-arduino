@@ -5,10 +5,7 @@
     "corepkg": "microbit",
     "bundleddirs": [
         "libs/microbit",
-        "libs/microbit-radio",
-        "libs/microbit-devices",
-        "libs/microbit-bluetooth",
-        "libs/neopixel"
+        "libs/microbit-radio"
     ],
     "cloud": {
         "workspace": false,

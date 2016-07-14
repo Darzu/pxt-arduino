@@ -1,1 +1,0 @@
-run ``pxt testdir ../../buit/docs/blocks`` from this folder
