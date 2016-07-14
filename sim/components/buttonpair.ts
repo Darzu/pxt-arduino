@@ -92,32 +92,34 @@ namespace pxsim.boardsvg {
             }
         }
 
-        public buildDom(g: SVGElement) {
+        public buildDom(g: SVGElement, pinDist: number) {
             this.buttonsOuter = []; this.buttons = [];
 
             const mkBtn = (left: number, top: number) => {
-                const btnr = 4;
-                const btnw = 56.2;
-                const btnn = 6;
-                const btnnm = 10
+                const cornerr = 4;
+                const pegr = 3.5;
+                const pegoffset = 6;
+                const pegdist = pinDist*2.0;
+                const width = pegdist + 2*pegoffset;
+                const btnr = 12;
                 let btng = svg.child(g, "g");
                 this.buttonsOuter.push(btng);
-                svg.child(btng, "rect", { class: "sim-button-outer", x: left, y: top, rx: btnr, ry: btnr, width: btnw, height: btnw });
-                svg.child(btng, "circle", { class: "sim-button-nut", cx: left + btnnm, cy: top + btnnm, r: btnn });
-                svg.child(btng, "circle", { class: "sim-button-nut", cx: left + btnnm, cy: top + btnw - btnnm, r: btnn });
-                svg.child(btng, "circle", { class: "sim-button-nut", cx: left + btnw - btnnm, cy: top + btnw - btnnm, r: btnn });
-                svg.child(btng, "circle", { class: "sim-button-nut", cx: left + btnw - btnnm, cy: top + btnnm, r: btnn });
-
-                let innerBtn = svg.child(g, "circle", { class: "sim-button", cx: left + 29, cy: top + 28, r: 16.5 });
+                svg.child(btng, "rect", { class: "sim-button-outer", x: left, y: top, rx: cornerr, ry: cornerr, width: width, height: width });
+                svg.child(btng, "circle", { class: "sim-button-nut", cx: left + pegoffset, cy: top + pegoffset, r: pegr });
+                svg.child(btng, "circle", { class: "sim-button-nut", cx: left + pegoffset, cy: top + width - pegoffset, r: pegr });
+                svg.child(btng, "circle", { class: "sim-button-nut", cx: left + width - pegoffset, cy: top + width - pegoffset, r: pegr });
+                svg.child(btng, "circle", { class: "sim-button-nut", cx: left + width - pegoffset, cy: top + pegoffset, r: pegr });
+                let innerBtn = svg.child(g, "circle", { class: "sim-button", cx: left + width/2, cy: top + width/2, r: btnr });
                 this.buttons.push(innerBtn);
             }
 
-            mkBtn(25.9, 176.4);
-            mkBtn(418.1, 176.4);
-            mkBtn(417, 250);
+            mkBtn(0,0);
+            mkBtn(0,0);
+            mkBtn(0,0);
             (<any>this.buttonsOuter[2]).style.visibility = "hidden";
             (<any>this.buttons[2]).style.visibility = "hidden";
 
+            //TODO parameterize text location
             this.buttonABText = svg.child(g, "text", { class: "sim-text", x: 370, y: 272 }) as SVGTextElement;
             this.buttonABText.textContent = "A+B";
             this.buttonABText.style.visibility = "hidden";

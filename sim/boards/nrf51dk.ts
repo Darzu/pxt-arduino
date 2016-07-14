@@ -265,10 +265,10 @@ pointer-events: none;
             this.edgeConnectorSvg.hide();
 
             // buttons
-            this.buttonPairSvg.buildDom(this.g);
-            this.buttonPairSvg.updateLocation(0, 0, 370);
-            this.buttonPairSvg.updateLocation(1, 0, 370);
-            this.buttonPairSvg.updateLocation(2, 0, 370);
+            this.buttonPairSvg.buildDom(this.g, PIN_DIST);
+            this.buttonPairSvg.updateLocation(0, 25.9, 176.4+370);
+            this.buttonPairSvg.updateLocation(1, 418.1, 176.4+370);
+            this.buttonPairSvg.updateLocation(2, 417, 250+370);
         }
 
         private attachEvents() {
