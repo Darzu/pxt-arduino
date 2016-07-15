@@ -97,6 +97,12 @@ namespace pxsim.boardsvg {
     font-family:"Lucida Console", Monaco, monospace;
     fill:#555;
     pointer-events: none;
+}
+.sim-bb-blue {
+    fill:#1AA5D7;
+}
+.sim-bb-red {
+    fill:#DD4BA0;
 }`
 
         public updateLocation(x: number, y: number) {
@@ -195,29 +201,58 @@ namespace pxsim.boardsvg {
             botGrid.forEach(e => this.bb.appendChild(e));
 
             //labels
-            const mkTxt = (l: number, t: number, size: number, r: number, txt: string) => {
+            const mkTxt = (l: number, t: number, size: number, r: number, txt: string, classStr: string) => {
                 const txtXOffFactor = -0.33333;//Found by trial and error
-                const txtYOffFactor = 0.4;
+                const txtYOffFactor = 0.3;
                 const xOff = txtXOffFactor*size*txt.length;
                 const yOff = txtYOffFactor*size;
                 let g = svg.child(this.bb, "g", {transform: `translate(${l} ${t})`})
-                let el = svg.child(g, "text", { class: "sim-bb-label", x: xOff, y: yOff, style: `font-size:${size}px;`,
+                let el = svg.child(g, "text", { class: classStr, x: xOff, y: yOff, style: `font-size:${size}px;`,
                     transform: `translate(${0} ${0}) rotate(${r})` }) as SVGTextElement;
                 el.textContent = txt;
                 return el
             }
             const mkLabel = (pinName: string, label: string, xOff: number, yOff: number, r: number, s: number) => {
                 let loc = nameToLoc[pinName];
-                return mkTxt(loc[0] + xOff, loc[1] + yOff, s, r, label);
+                return mkTxt(loc[0] + xOff, loc[1] + yOff, s, r, label, "sim-bb-label");
             }
 
-            let size = PIN_DIST * 0.7;
-            nums.forEach(n => mkLabel("j"+n, ""+n, 0, -PIN_DIST, -90, size));
-            nums.forEach(n => mkLabel("a"+n, ""+n, 0, PIN_DIST, -90, size));
-            ae.forEach(a => mkLabel(a+"1", a, -PIN_DIST, 0, -90, size))
-            fj.forEach(a => mkLabel(a+"1", a, -PIN_DIST, 0, -90, size))
-            ae.forEach(a => mkLabel(a+"30", a, PIN_DIST, 0, -90, size))
-            fj.forEach(a => mkLabel(a+"30", a, PIN_DIST, 0, -90, size))
+            const lblSize = PIN_DIST * 0.7;
+            nums.forEach(n => mkLabel("j"+n, ""+n, 0, -PIN_DIST, -90, lblSize));
+            nums.forEach(n => mkLabel("a"+n, ""+n, 0, PIN_DIST, -90, lblSize));
+            ae.forEach(a => mkLabel(a+"1", a, -PIN_DIST, 0, -90, lblSize))
+            fj.forEach(a => mkLabel(a+"1", a, -PIN_DIST, 0, -90, lblSize))
+            ae.forEach(a => mkLabel(a+"30", a, PIN_DIST, 0, -90, lblSize))
+            fj.forEach(a => mkLabel(a+"30", a, PIN_DIST, 0, -90, lblSize))
+
+            //+- labels
+            const mpLblSize = PIN_DIST * 1.7;
+            const mpLblOff = PIN_DIST * 0.8;
+            //TL
+            mkTxt(0 + mpLblOff, 0 + mpLblOff, mpLblSize, -90, "-", "sim-bb-label sim-bb-blue");
+            mkTxt(0 + mpLblOff, barH - mpLblOff, mpLblSize, -90, "+", "sim-bb-label sim-bb-red");
+            //TR
+            mkTxt(width - mpLblOff, 0 + mpLblOff, mpLblSize, -90, "-", "sim-bb-label sim-bb-blue");
+            mkTxt(width - mpLblOff, barH - mpLblOff, mpLblSize, -90, "+", "sim-bb-label sim-bb-red");
+            //BL
+            mkTxt(0 + mpLblOff, barH + midH + mpLblOff, mpLblSize, -90, "-", "sim-bb-label sim-bb-blue");
+            mkTxt(0 + mpLblOff, barH + midH + barH - mpLblOff, mpLblSize, -90, "+", "sim-bb-label sim-bb-red");
+            //BR
+            mkTxt(width - mpLblOff, barH + midH + mpLblOff, mpLblSize, -90, "-", "sim-bb-label sim-bb-blue");
+            mkTxt(width - mpLblOff, barH + midH + barH - mpLblOff, mpLblSize, -90, "+", "sim-bb-label sim-bb-red");
+        
+            //blue & red lines
+            const lnLen = barGridW + PIN_DIST*1.5;
+            const lnThickness = PIN_DIST/5.0;
+            const lnYOff = PIN_DIST*.6;
+            const lnXOff = (lnLen - barGridW)/2;
+            const mkLn = (x: number, y: number, classStr: string) => {
+                return svg.child(this.bb, "rect", { class: classStr, x: x, y: y - lnThickness/2, width: lnLen, height: lnThickness});
+            }
+            mkLn(topBarGridX - lnXOff, topBarGridY - lnYOff, "sim-bb-blue");
+            mkLn(topBarGridX - lnXOff, topBarGridY + PIN_DIST + lnYOff, "sim-bb-red");
+            mkLn(botBarGridX - lnXOff, botBarGridY - lnYOff, "sim-bb-blue");
+            mkLn(botBarGridX - lnXOff, botBarGridY + PIN_DIST + lnYOff, "sim-bb-red");
         }
     }
 
