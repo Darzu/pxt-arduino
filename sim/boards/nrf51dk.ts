@@ -95,7 +95,7 @@ namespace pxsim.boardsvg {
 .sim-bb-channel {
 }
 .sim-bb-pin {
-    fill:#555;
+    fill:url(#gradient-pin);
 }
 .sim-bb-label {
     font-family:"Lucida Console", Monaco, monospace;
@@ -192,17 +192,18 @@ namespace pxsim.boardsvg {
             const bckRnd = PIN_DIST*0.3;
             svg.child(this.bb, "rect", { class: "sim-bb-background", width: width, height: height, rx: bckRnd, ry: bckRnd});
 
-            //mid channel
+            //channel grad
             let channelGid = "gradient-channel";
             let channelGrad = <SVGLinearGradientElement>svg.child(defs, "linearGradient", 
                 { id: channelGid, x1: "0%", y1: "0%", x2: "0%", y2: "100%" });
             let channelDark = "#AAA";
             let channelLight = "#CCC";
-            let stop1 = svg.child(channelGrad, "stop", { offset: "0%", style: `stop-color: ${channelDark};` })
-            let stop2 = svg.child(channelGrad, "stop", { offset: "20%", style: `stop-color: ${channelLight};` })
-            let stop3 = svg.child(channelGrad, "stop", { offset: "80%", style: `stop-color: ${channelLight};` })
-            let stop4 = svg.child(channelGrad, "stop", { offset: "100%", style: `stop-color: ${channelDark};` })
+            svg.child(channelGrad, "stop", { offset: "0%", style: `stop-color: ${channelDark};` })
+            svg.child(channelGrad, "stop", { offset: "20%", style: `stop-color: ${channelLight};` })
+            svg.child(channelGrad, "stop", { offset: "80%", style: `stop-color: ${channelLight};` })
+            svg.child(channelGrad, "stop", { offset: "100%", style: `stop-color: ${channelDark};` })
 
+            //channel
             const mkChannel = (cy: number, h: number) => {
                 let channel = svg.child(this.bb, "rect", { class: "sim-bb-channel", y: cy - h/2, width: width, height: h});
                 channel.setAttribute("fill", `url(#${channelGid})`);
@@ -214,6 +215,16 @@ namespace pxsim.boardsvg {
             mkChannel(barH + midH/2, midChannelH);
             mkChannel(barH, smlChannelH);
             mkChannel(barH+midH, smlChannelH);
+
+            //pin grad
+            const pinGid = "gradient-pin";
+            let pinGrad = <SVGRadialGradientElement>svg.child(defs, "radialGradient", 
+                { id: pinGid, cx: "50%", cy: "50%", r: "50%", fx: "50%", fy: "50%" });
+            const pinInner = "#666";
+            const pinOuter = "#DDD";
+            svg.child(pinGrad, "stop", { offset: "0%", style: `stop-color: ${pinInner};` })
+            svg.child(pinGrad, "stop", { offset: "50%", style: `stop-color: ${pinInner};` })
+            svg.child(pinGrad, "stop", { offset: "100%", style: `stop-color: ${pinOuter};` })
 
             //grids
             let ae = ["e", "d", "c", "b", "a", ];
