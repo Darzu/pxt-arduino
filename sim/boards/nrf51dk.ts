@@ -79,6 +79,15 @@ namespace pxsim.boardsvg {
         disableTilt?: boolean;
     }
 
+    const WIDTH = 498;
+    const HEIGHT = 812;
+    const BOARD_HEIGHT = 380;
+    const BREADBOARD_HEIGHT = 323; //TODO: relate to PIN_DIST
+    const TOP_MARGIN = 20;
+    const MID_MARGIN = 40;
+    const BB_X = 0;
+    const BB_Y = TOP_MARGIN + BOARD_HEIGHT + MID_MARGIN;
+
     export class Nrf51dkSvg {
         public element: SVGSVGElement;
         private style: SVGStyleElement;
@@ -137,15 +146,12 @@ namespace pxsim.boardsvg {
             else svg.removeClass(this.element, "grayscale");
         }
 
+        private bbLoc(pinName: string): [number, number] {
+            let bbLoc = this.breadboard.getPinLoc(pinName);
+            return [bbLoc[0] + BB_X, bbLoc[1] + BB_Y];
+        }
+
         private buildDom() {
-            const WIDTH = 498;
-            const HEIGHT = 812;
-            const BOARD_HEIGHT = 380;
-            const BREADBOARD_HEIGHT = 323; //TODO: relate to PIN_DIST
-            const TOP_MARGIN = 20;
-            const MID_MARGIN = 40;
-            const BB_X = 0;
-            const BB_Y = TOP_MARGIN + BOARD_HEIGHT + MID_MARGIN;
 
             this.element = <SVGSVGElement>svg.elt("svg")
             svg.hydrate(this.element, {
@@ -251,9 +257,12 @@ pointer-events: none;
 
             // buttons
             this.buttonPairSvg.buildDom(this.g, PIN_DIST);
-            this.buttonPairSvg.updateLocation(0, 25.9, 176.4+370);
-            this.buttonPairSvg.updateLocation(1, 418.1, 176.4+370);
-            this.buttonPairSvg.updateLocation(2, 417, 250+370);
+            console.log(`f1: ${this.bbLoc("f1")}`)
+            console.log(`f28: ${this.bbLoc("f28")}`)
+            console.log(`d28: ${this.bbLoc("d28")}`)
+            this.buttonPairSvg.updateLocation(0, this.bbLoc("f1"));
+            this.buttonPairSvg.updateLocation(1, this.bbLoc("f28"));
+            this.buttonPairSvg.updateLocation(2, this.bbLoc("d28"));//TODO move to virtual space
         }
 
         private attachEvents() {

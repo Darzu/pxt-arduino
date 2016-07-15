@@ -63,17 +63,17 @@ namespace pxsim.boardsvg {
     stroke:1px solid #704A4A; 
 }
 .sim-button-tab {
-    fill:#c0c0c0;
+    fill:#FFF;
     pointer-events:none;
 }
             `;
 
-        public updateLocation(idx: number, x: number, y: number) {
+        public updateLocation(idx: number, xy: [number, number]) {
             //TODO(DZ): come up with a better abstraction/interface for customizing placement
             if (idx < 0 || 2 < idx)
                 return; //TODO(DZ): throw error
             let els = [this.buttons[idx], this.buttonsOuter[idx], this.buttonABText]
-            translateEls(els, x, y);
+            translateEls(els, xy[0], xy[1]);
         }
 
         public updateTheme(buttonPairTheme: IButtonPairTheme) {
