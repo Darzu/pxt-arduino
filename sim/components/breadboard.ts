@@ -5,6 +5,8 @@ namespace pxsim.boardsvg {
 
     export class Breadboard {
         private bb: SVGGElement;
+        private nameToPin: Map<SVGElement> = {};
+        private nameToLoc: Map<[number, number]> = {};
 
         //TODO relate font size to PIN_DIST 
         public style = `
@@ -33,6 +35,14 @@ namespace pxsim.boardsvg {
             //TODO(DZ): come up with a better abstraction/interface for customizing placement
             let els = [this.bb];
             translateEls(els, x, y);
+        }
+
+        public getPinLoc(pinName: string): [number, number] {
+            if (!(pinName in this.nameToLoc)) {
+                console.error("Unknown pin: " + pinName)
+                return [0,0];
+            }
+            return this.nameToLoc[pinName];
         }
         
         public buildDom(g: SVGElement, defs: SVGDefsElement, width: number, height: number) {
@@ -93,13 +103,11 @@ namespace pxsim.boardsvg {
                 ]
             }
 
-            let nameToPin: Map<SVGElement> = {};
-            let nameToLoc: Map<[number, number]> = {};
             const notePin = (getNm: (i: number, j: number) => string): PinFn => {
                 return (p, i, j, x, y) => {
                     let name = getNm(i, j);
-                    nameToPin[name] = p;
-                    nameToLoc[name] = [x, y];
+                    this.nameToPin[name] = p;
+                    this.nameToLoc[name] = [x, y];
                     return name;
                 }
             }
@@ -164,7 +172,7 @@ namespace pxsim.boardsvg {
                 return el
             }
             const mkLabel = (pinName: string, label: string, xOff: number, yOff: number, r: number, s: number) => {
-                let loc = nameToLoc[pinName];
+                let loc = this.getPinLoc(pinName);
                 return mkTxt(loc[0] + xOff, loc[1] + yOff, s, r, label, "sim-bb-label");
             }
 
