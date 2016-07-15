@@ -84,7 +84,8 @@ namespace pxsim.boardsvg {
                         let pinX = x+j*PIN_DIST;
                         let pinY = y+i*PIN_DIST;
                         let name = pinFn(pin, i, j, pinX+size/2, pinY+size/2);
-                        let props = { class: "sim-bb-pin", x: pinX, y: pinY, rx: rounding, ry: rounding, width: size, height: size, title: name };
+                        let title = `${name[0]}, ${name[1] + (name[2] || "") + (name[3] || "")}`
+                        let props = { class: "sim-bb-pin", x: pinX, y: pinY, rx: rounding, ry: rounding, width: size, height: size, title: title };
                         svg.hydrate(pin, props)
                         grid.appendChild(pin);
 
