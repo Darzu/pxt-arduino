@@ -194,28 +194,30 @@ namespace pxsim.boardsvg {
             let botGrid = mkBar(botBarGridX, botBarGridY, notePin((i, j) => mp[i]+nums[j]));
             botGrid.forEach(e => this.bb.appendChild(e));
 
-            //labels
-            const txtSize = 15.0;
-            const txtWRatio = 6.27/15;
-            const txtHRatio = 13.0/15;
-            const txtW = txtWRatio*txtSize;
-            const txtH = txtHRatio*txtSize;
-
-            const mkTxt = (l: number, t: number, txt: string) => {
-                const x = t - txtW / 2.0;
-                const y = l - txtH / 2.0;
-                svg.child(this.bb, "circle", {cx: l, cy: t, r: txtW/2, style: `fill:green;`})
-                let el = svg.child(this.bb, "text", { class: "sim-bb-az", x: x, y: y, style: `font-size:${txtSize}px;` }) as SVGTextElement;
+            //label
+            const mkTxt = (l: number, t: number, size: number, r: number, txt: string) => {
+                const txtXOffFactor = -0.33333;//Found by trial and error
+                const txtYOffFactor = 0.33333;
+                const xOff = txtXOffFactor*size;
+                const yOff = txtYOffFactor*size;
+                let g = svg.child(this.bb, "g", {transform: `translate(${l} ${t})`})
+                let el = svg.child(g, "text", { class: "sim-bb-az", x: xOff, y: yOff, style: `font-size:${size}px;`,
+                    transform: `translate(${0} ${0}) rotate(${r})` }) as SVGTextElement;
                 el.textContent = txt;
             }
-            let loc = nameToLoc["h5"];
-            console.log(`h5: (${loc[0]}, ${loc[1]})`);
-            mkTxt(loc[0], loc[1], "a")
-            mkTxt(topBarGridX + txtSize, topBarGridY, "b")
-            mkTxt(topBarGridX, topBarGridY + txtSize, "1")
-            mkTxt(topBarGridX, topBarGridY + txtSize*2, "2")
-            mkTxt(topBarGridX + txtSize, topBarGridY + txtSize, "-")
-            mkTxt(topBarGridX + txtSize*2, topBarGridY + txtSize*2, "+")
+
+            let loc = nameToLoc["-31"];
+            let size = PIN_DIST;
+            mkTxt(loc[0], loc[1], size, 0, "X");
+            mkTxt(loc[0], loc[1], size, 90, "X");
+            mkTxt(loc[0], loc[1], size, 180, "X");
+            mkTxt(loc[0], loc[1], size, 270, "X");
+
+            loc = nameToLoc["a30"];
+            mkTxt(loc[0], loc[1], size, 0, "a");
+            mkTxt(loc[0], loc[1], size, 90, "a");
+            mkTxt(loc[0], loc[1], size, 180, "a");
+            mkTxt(loc[0], loc[1], size, 270, "a");
         }
     }
 
