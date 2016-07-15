@@ -91,11 +91,11 @@ namespace pxsim.boardsvg {
         public style = `
 /* bread board */
 .sim-bb-pin {
-    fill:#333;
+    fill:#555;
 }
-.sim-bb-az {
+.sim-bb-label {
     font-family:"Lucida Console", Monaco, monospace;
-    fill:red;
+    fill:#555;
     pointer-events: none;
 }`
 
@@ -174,50 +174,50 @@ namespace pxsim.boardsvg {
                 }
             }
 
+            //wrapper
             this.bb = <SVGGElement>svg.child(g, "g")
+            svg.hydrate(this.bb, {class: "sim-bb"});
 
+            //grids
             let ae = ["e", "d", "c", "b", "a", ];
             let fj = ["j", "i", "h", "g", "f", ];
-            let nums = ["1","2","3","4","5","6","7","8","9","10",
-                "11","12","13","14","15","16","17","18","19","20",
-                "21","22","23","24","25","26","27","28","29","30",
-                "31","32","33","34","35","36","37","38","39","40",
-                "41","42","43","44","45","46","47","48","49","50"];
+            let nums =[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,]
+            let numsAlph = nums.map(n => ""+n)
             let mp = ["-", "+"];
 
-            let midGrid1 = mkGrid(midGridX,midGridY,5,30, notePin((i, j) => fj[i]+nums[j]));
+            let midGrid1 = mkGrid(midGridX,midGridY,5,30, notePin((i, j) => fj[i]+numsAlph[j]));
             this.bb.appendChild(midGrid1);
-            let midGrid2 = mkGrid(midGridX,midGridY+7*PIN_DIST,5,30, notePin((i, j) => ae[i]+nums[j]));
+            let midGrid2 = mkGrid(midGridX,midGridY+7*PIN_DIST,5,30, notePin((i, j) => ae[i]+numsAlph[j]));
             this.bb.appendChild(midGrid2);
-            let topGrid = mkBar(topBarGridX, topBarGridY, notePin((i, j) => mp[i]+nums[j+25]));
+            let topGrid = mkBar(topBarGridX, topBarGridY, notePin((i, j) => mp[i]+numsAlph[j+25]));
             topGrid.forEach(e => this.bb.appendChild(e));
-            let botGrid = mkBar(botBarGridX, botBarGridY, notePin((i, j) => mp[i]+nums[j]));
+            let botGrid = mkBar(botBarGridX, botBarGridY, notePin((i, j) => mp[i]+numsAlph[j]));
             botGrid.forEach(e => this.bb.appendChild(e));
 
-            //label
+            //labels
             const mkTxt = (l: number, t: number, size: number, r: number, txt: string) => {
                 const txtXOffFactor = -0.33333;//Found by trial and error
-                const txtYOffFactor = 0.33333;
-                const xOff = txtXOffFactor*size;
+                const txtYOffFactor = 0.4;
+                const xOff = txtXOffFactor*size*txt.length;
                 const yOff = txtYOffFactor*size;
                 let g = svg.child(this.bb, "g", {transform: `translate(${l} ${t})`})
-                let el = svg.child(g, "text", { class: "sim-bb-az", x: xOff, y: yOff, style: `font-size:${size}px;`,
+                let el = svg.child(g, "text", { class: "sim-bb-label", x: xOff, y: yOff, style: `font-size:${size}px;`,
                     transform: `translate(${0} ${0}) rotate(${r})` }) as SVGTextElement;
                 el.textContent = txt;
+                return el
+            }
+            const mkLabel = (pinName: string, label: string, xOff: number, yOff: number, r: number, s: number) => {
+                let loc = nameToLoc[pinName];
+                return mkTxt(loc[0] + xOff, loc[1] + yOff, s, r, label);
             }
 
-            let loc = nameToLoc["-31"];
-            let size = PIN_DIST;
-            mkTxt(loc[0], loc[1], size, 0, "X");
-            mkTxt(loc[0], loc[1], size, 90, "X");
-            mkTxt(loc[0], loc[1], size, 180, "X");
-            mkTxt(loc[0], loc[1], size, 270, "X");
-
-            loc = nameToLoc["a30"];
-            mkTxt(loc[0], loc[1], size, 0, "a");
-            mkTxt(loc[0], loc[1], size, 90, "a");
-            mkTxt(loc[0], loc[1], size, 180, "a");
-            mkTxt(loc[0], loc[1], size, 270, "a");
+            let size = PIN_DIST * 0.7;
+            nums.forEach(n => mkLabel("j"+n, ""+n, 0, -PIN_DIST, -90, size));
+            nums.forEach(n => mkLabel("a"+n, ""+n, 0, PIN_DIST, -90, size));
+            ae.forEach(a => mkLabel(a+"1", a, -PIN_DIST, 0, -90, size))
+            fj.forEach(a => mkLabel(a+"1", a, -PIN_DIST, 0, -90, size))
+            ae.forEach(a => mkLabel(a+"30", a, PIN_DIST, 0, -90, size))
+            fj.forEach(a => mkLabel(a+"30", a, PIN_DIST, 0, -90, size))
         }
     }
 
