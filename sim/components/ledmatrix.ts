@@ -253,13 +253,12 @@ namespace pxsim.boardsvg {
             this.leds = [];
             this.ledsOuter = [];
             let hoverRad = ledRad * 1.2;
-            let hoverOffset = hoverRad - ledRad;
             for (let i = 0; i < ROWS; ++i) {
                 let y = top + ledRad + i*spacing + padding;
                 for (let j = 0; j < COLS; ++j) {
                     let x = left + ledRad + j*spacing + padding;
                     this.ledsOuter.push(svg.child(g, "circle", { class: "sim-led-back", cx: x, cy: y, r: ledRad }));
-                    this.leds.push(svg.child(g, "circle", { class: "sim-led", cx: x - hoverOffset, cy: y - hoverOffset, r: hoverRad, title: `(${j},${i})` }));
+                    this.leds.push(svg.child(g, "circle", { class: "sim-led", cx: x, cy: y, r: hoverRad, title: `(${j},${i})` }));
                 }
             }
         }
