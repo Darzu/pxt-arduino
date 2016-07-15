@@ -95,7 +95,7 @@ namespace pxsim.boardsvg {
 .sim-bb-channel {
 }
 .sim-bb-pin {
-    fill:#555;
+    fill:#999;
 }
 .sim-bb-label {
     font-family:"Lucida Console", Monaco, monospace;
