@@ -85,11 +85,15 @@ namespace pxsim.boardsvg {
 
     export class Breadboard {
         private bb: SVGGElement;
-        private background: SVGElement;
 
         //TODO relate font size to PIN_DIST 
         public style = `
 /* bread board */
+.sim-bb-background {
+    fill:#E0E0E0;
+}
+.sim-bb-channel {
+}
 .sim-bb-pin {
     fill:#555;
 }
@@ -107,11 +111,11 @@ namespace pxsim.boardsvg {
 
         public updateLocation(x: number, y: number) {
             //TODO(DZ): come up with a better abstraction/interface for customizing placement
-            let els = [this.bb, this.background];
+            let els = [this.bb];
             translateEls(els, x, y);
         }
         
-        public buildDom(g: SVGElement, width: number, height: number) {
+        public buildDom(g: SVGElement, defs: SVGDefsElement, width: number, height: number) {
             const midRatio = 0.66666666;
             const midH = height*midRatio;
             const barRatio = 0.16666666;
@@ -133,9 +137,9 @@ namespace pxsim.boardsvg {
             const botBarGridX = topBarGridX;
             const botBarGridY = topBarGridY + barH + midH;
 
-            this.background = svg.child(g, "image", 
-                { class: "sim-board", x: 0, y: 0, width: width, height: height, 
-                    "href": "/images/breadboard-photo-sml.png"});
+            // this.background = svg.child(g, "image", 
+            //     { class: "sim-board", x: 0, y: 0, width: width, height: height, 
+            //         "href": "/images/breadboard-photo-sml.png"});
 
             const mkGrid = (l: number, t: number, rs: number, cs: number,  pinFn: PinFn): SVGGElement => {
                 const size = PIN_DIST/2.5;
@@ -184,6 +188,33 @@ namespace pxsim.boardsvg {
             this.bb = <SVGGElement>svg.child(g, "g")
             svg.hydrate(this.bb, {class: "sim-bb"});
 
+            //background
+            const bckRnd = PIN_DIST*0.3;
+            svg.child(this.bb, "rect", { class: "sim-bb-background", width: width, height: height, rx: bckRnd, ry: bckRnd});
+
+            //mid channel
+            let channelGid = "gradient-channel";
+            let channelGrad = <SVGLinearGradientElement>svg.child(defs, "linearGradient", 
+                { id: channelGid, x1: "0%", y1: "0%", x2: "0%", y2: "100%" });
+            let channelDark = "#AAA";
+            let channelLight = "#CCC";
+            let stop1 = svg.child(channelGrad, "stop", { offset: "0%", style: `stop-color: ${channelDark};` })
+            let stop2 = svg.child(channelGrad, "stop", { offset: "20%", style: `stop-color: ${channelLight};` })
+            let stop3 = svg.child(channelGrad, "stop", { offset: "80%", style: `stop-color: ${channelLight};` })
+            let stop4 = svg.child(channelGrad, "stop", { offset: "100%", style: `stop-color: ${channelDark};` })
+
+            const mkChannel = (cy: number, h: number) => {
+                let channel = svg.child(this.bb, "rect", { class: "sim-bb-channel", y: cy - h/2, width: width, height: h});
+                channel.setAttribute("fill", `url(#${channelGid})`);
+                return channel;
+            }
+
+            const midChannelH = PIN_DIST;
+            const smlChannelH = PIN_DIST*0.05;
+            mkChannel(barH + midH/2, midChannelH);
+            mkChannel(barH, smlChannelH);
+            mkChannel(barH+midH, smlChannelH);
+
             //grids
             let ae = ["e", "d", "c", "b", "a", ];
             let fj = ["j", "i", "h", "g", "f", ];
@@ -226,20 +257,22 @@ namespace pxsim.boardsvg {
             fj.forEach(a => mkLabel(a+"30", a, PIN_DIST, 0, -90, lblSize))
 
             //+- labels
-            const mpLblSize = PIN_DIST * 1.7;
+            const pLblSize = PIN_DIST * 1.7;
+            const mLblSize = PIN_DIST * 2;
             const mpLblOff = PIN_DIST * 0.8;
+            const mXOff = PIN_DIST*0.07;
             //TL
-            mkTxt(0 + mpLblOff, 0 + mpLblOff, mpLblSize, -90, "-", "sim-bb-label sim-bb-blue");
-            mkTxt(0 + mpLblOff, barH - mpLblOff, mpLblSize, -90, "+", "sim-bb-label sim-bb-red");
+            mkTxt(0 + mpLblOff + mXOff, 0 + mpLblOff, mLblSize, -90, "-", "sim-bb-label sim-bb-blue");
+            mkTxt(0 + mpLblOff, barH - mpLblOff, pLblSize, -90, "+", "sim-bb-label sim-bb-red");
             //TR
-            mkTxt(width - mpLblOff, 0 + mpLblOff, mpLblSize, -90, "-", "sim-bb-label sim-bb-blue");
-            mkTxt(width - mpLblOff, barH - mpLblOff, mpLblSize, -90, "+", "sim-bb-label sim-bb-red");
+            mkTxt(width - mpLblOff + mXOff, 0 + mpLblOff, mLblSize, -90, "-", "sim-bb-label sim-bb-blue");
+            mkTxt(width - mpLblOff, barH - mpLblOff, pLblSize, -90, "+", "sim-bb-label sim-bb-red");
             //BL
-            mkTxt(0 + mpLblOff, barH + midH + mpLblOff, mpLblSize, -90, "-", "sim-bb-label sim-bb-blue");
-            mkTxt(0 + mpLblOff, barH + midH + barH - mpLblOff, mpLblSize, -90, "+", "sim-bb-label sim-bb-red");
+            mkTxt(0 + mpLblOff + mXOff, barH + midH + mpLblOff, mLblSize, -90, "-", "sim-bb-label sim-bb-blue");
+            mkTxt(0 + mpLblOff, barH + midH + barH - mpLblOff, pLblSize, -90, "+", "sim-bb-label sim-bb-red");
             //BR
-            mkTxt(width - mpLblOff, barH + midH + mpLblOff, mpLblSize, -90, "-", "sim-bb-label sim-bb-blue");
-            mkTxt(width - mpLblOff, barH + midH + barH - mpLblOff, mpLblSize, -90, "+", "sim-bb-label sim-bb-red");
+            mkTxt(width - mpLblOff + mXOff, barH + midH + mpLblOff, mLblSize, -90, "-", "sim-bb-label sim-bb-blue");
+            mkTxt(width - mpLblOff, barH + midH + barH - mpLblOff, pLblSize, -90, "+", "sim-bb-label sim-bb-red");
         
             //blue & red lines
             const lnLen = barGridW + PIN_DIST*1.5;
@@ -411,7 +444,7 @@ pointer-events: none;
                     "href": "/images/arduino-zero-photo-sml.png"});
 
             // hand-drawn breadboard
-            this.breadboard.buildDom(this.g, WIDTH, BREADBOARD_HEIGHT);
+            this.breadboard.buildDom(this.g, this.defs, WIDTH, BREADBOARD_HEIGHT);
             this.breadboard.updateLocation(BB_X, BB_Y);
 
             // display 
