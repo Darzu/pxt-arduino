@@ -214,6 +214,13 @@ pointer-events: none;
     from { stroke: yellow; }
     to   { stroke: default; }
 }
+
+.sim-bb-wire {
+    stroke:rgb(240,80,80);
+    stroke-width:6px;
+    fill:none;
+    stroke-linecap: round;
+}
             `;
             this.style.textContent += this.buttonPairSvg.style;
             this.style.textContent += this.edgeConnectorSvg.style;
@@ -260,6 +267,14 @@ pointer-events: none;
             this.buttonPairSvg.updateLocation(0, this.bbLoc("f1"));
             this.buttonPairSvg.updateLocation(1, this.bbLoc("f28"));
             this.buttonPairSvg.updateLocation(2, this.bbLoc("d28"));//TODO move to virtual space
+
+            // wires
+            let p1 = this.bbLoc("a1");
+            let c1 = this.bbLoc("j1");
+            let c2 = this.bbLoc("a6");
+            let p2 = this.bbLoc("j6");
+            const coordStr = (xy: [number, number]):string => {return `${xy[0]}, ${xy[1]}`};
+            svg.path(this.g, "sim-bb-wire", `M${coordStr(p1)} C${coordStr(c1)} ${coordStr(c2)} ${coordStr(p2)}`);
         }
 
         private attachEvents() {
