@@ -209,10 +209,10 @@ namespace pxsim.boardsvg {
 }
 `;
 
-        public updateLocation(x: number, y: number) {
+        public updateLocation(xy: [number, number]) {
             //TODO(DZ): come up with a better abstraction/interface for customizing placement
             let els = [this.background].concat(this.leds).concat(this.ledsOuter)
-            translateEls(els, x, y);
+            translateEls(els, xy[0], xy[1]);
         }
 
         public updateTheme(theme: ILedMatrixTheme) {
@@ -242,22 +242,22 @@ namespace pxsim.boardsvg {
             const COLS = this.DRAW_SIZE;
             let width = COLS*pinDist;
             let height = ROWS*pinDist;
-            let left = 0;
-            let top = 0;
+            let ledRad = Math.round(pinDist * .35);
+            let spacing = pinDist;
+            let padding = (spacing - 2*ledRad) / 2.0;
+            let left = -(ledRad + padding);
+            let top = -(ledRad + padding);
             this.background = svg.child(g, "rect", {class: "sim-display", x:left, y:top, width: width, height: height})
 
             // ledsOuter
             this.leds = [];
             this.ledsOuter = [];
-            let ledRad = Math.round(pinDist * .35);
-            let spacing = pinDist;
-            let padding = (spacing - 2*ledRad) / 2.0;
             let hoverRad = ledRad * 1.2;
             let hoverOffset = hoverRad - ledRad;
             for (let i = 0; i < ROWS; ++i) {
-                let y = ledRad + i*spacing + padding;
+                let y = top + ledRad + i*spacing + padding;
                 for (let j = 0; j < COLS; ++j) {
-                    let x = ledRad + j*spacing + padding;
+                    let x = left + ledRad + j*spacing + padding;
                     this.ledsOuter.push(svg.child(g, "circle", { class: "sim-led-back", cx: x, cy: y, r: ledRad }));
                     this.leds.push(svg.child(g, "circle", { class: "sim-led", cx: x - hoverOffset, cy: y - hoverOffset, r: hoverRad, title: `(${j},${i})` }));
                 }

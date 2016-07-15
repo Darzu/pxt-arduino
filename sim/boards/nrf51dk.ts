@@ -245,7 +245,7 @@ pointer-events: none;
 
             // display 
             this.displaySvg.buildDom(this.g, PIN_DIST);
-            this.displaySvg.updateLocation(PIN_DIST*8.3, 482+PIN_DIST*2)
+            this.displaySvg.updateLocation(this.bbLoc("h12"))
 
             // compass
             this.compassSvg.buildDom(this.g);
@@ -257,9 +257,6 @@ pointer-events: none;
 
             // buttons
             this.buttonPairSvg.buildDom(this.g, PIN_DIST);
-            console.log(`f1: ${this.bbLoc("f1")}`)
-            console.log(`f28: ${this.bbLoc("f28")}`)
-            console.log(`d28: ${this.bbLoc("d28")}`)
             this.buttonPairSvg.updateLocation(0, this.bbLoc("f1"));
             this.buttonPairSvg.updateLocation(1, this.bbLoc("f28"));
             this.buttonPairSvg.updateLocation(2, this.bbLoc("d28"));//TODO move to virtual space
