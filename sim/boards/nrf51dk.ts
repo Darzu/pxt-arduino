@@ -81,14 +81,22 @@ namespace pxsim.boardsvg {
 
     const PIN_DIST = 15.25;
 
+    declare type PinFn = (p: SVGElement, i: number, j: number, x: number, y: number)=>string;
+
     export class Breadboard {
         private bb: SVGGElement;
         private background: SVGElement;
 
+        //TODO relate font size to PIN_DIST 
         public style = `
 /* bread board */
 .sim-bb-pin {
     fill:#333;
+}
+.sim-bb-az {
+    font-family:"Lucida Console", Monaco, monospace;
+    fill:red;
+    pointer-events: none;
 }`
 
         public updateLocation(x: number, y: number) {
@@ -119,19 +127,11 @@ namespace pxsim.boardsvg {
             const botBarGridX = topBarGridX;
             const botBarGridY = topBarGridY + barH + midH;
 
-            // const i1_x = PIN_DIST * 1.839344262295082;
-            // const i1_y = PIN_DIST * 5.019672131147541;
-            // const e1_x = i1_x;
-            // const e1_y = i1_y + 5*PIN_DIST + PIN_DIST*2;
-            // const top_x = 34.15;
-            // const top_y = PIN_DIST * 1.1;
-
-            //TODO compute width and height from pinDist
             this.background = svg.child(g, "image", 
                 { class: "sim-board", x: 0, y: 0, width: width, height: height, 
                     "href": "/images/breadboard-photo-sml.png"});
 
-            let mkGrid = (l: number, t: number, rs: number, cs: number): SVGGElement => {
+            const mkGrid = (l: number, t: number, rs: number, cs: number,  pinFn: PinFn): SVGGElement => {
                 const size = PIN_DIST/2.5;
                 const rounding = size/3;
                 const x = l - size/2;
@@ -141,24 +141,81 @@ namespace pxsim.boardsvg {
                 for (let i = 0; i < rs; i++) {
                     for (let j = 0; j < cs; j++) {
                         let pin = svg.elt("rect")
-                        let props = { class: "sim-bb-pin", x: x+j*PIN_DIST, y: y+i*PIN_DIST, rx: rounding, ry: rounding, width: size, height: size };
+                        let pinX = x+j*PIN_DIST;
+                        let pinY = y+i*PIN_DIST;
+                        let name = pinFn(pin, i, j, pinX+size/2, pinY+size/2);
+                        let props = { class: "sim-bb-pin", x: pinX, y: pinY, rx: rounding, ry: rounding, width: size, height: size, title: name };
                         svg.hydrate(pin, props)
                         grid.appendChild(pin);
+
                     }
                 }
                 return grid;
             }
 
+            const mkBar = (x: number, y: number, pinFn: PinFn) => {
+                return [
+                     mkGrid(x + 0*PIN_DIST, y, 2, 5, (p, i, j, x, y) => pinFn(p, i, j+0, x, y)),
+                     mkGrid(x + 6*PIN_DIST, y, 2, 5, (p, i, j, x, y) => pinFn(p, i, j+5, x, y)),
+                     mkGrid(x + 12*PIN_DIST, y, 2, 5, (p, i, j, x, y) => pinFn(p, i, j+10, x, y)),
+                     mkGrid(x + 18*PIN_DIST, y, 2, 5, (p, i, j, x, y) => pinFn(p, i, j+15, x, y)),
+                     mkGrid(x + 24*PIN_DIST, y, 2, 5, (p, i, j, x, y) => pinFn(p, i, j+20, x, y)),
+                ]
+            }
+
+            let nameToPin: Map<SVGElement> = {};
+            let nameToLoc: Map<[number, number]> = {};
+            const notePin = (getNm: (i: number, j: number) => string): PinFn => {
+                return (p, i, j, x, y) => {
+                    let name = getNm(i, j);
+                    nameToPin[name] = p;
+                    nameToLoc[name] = [x, y];
+                    return name;
+                }
+            }
+
             this.bb = <SVGGElement>svg.child(g, "g")
 
-            let midGrid = mkGrid(midGridX,midGridY,12,30);
-            this.bb.appendChild(midGrid);
+            let ae = ["e", "d", "c", "b", "a", ];
+            let fj = ["j", "i", "h", "g", "f", ];
+            let nums = ["1","2","3","4","5","6","7","8","9","10",
+                "11","12","13","14","15","16","17","18","19","20",
+                "21","22","23","24","25","26","27","28","29","30",
+                "31","32","33","34","35","36","37","38","39","40",
+                "41","42","43","44","45","46","47","48","49","50"];
+            let mp = ["-", "+"];
 
-            let topGrid = mkGrid(topBarGridX, topBarGridY, 2, 29);
-            this.bb.appendChild(topGrid);
+            let midGrid1 = mkGrid(midGridX,midGridY,5,30, notePin((i, j) => fj[i]+nums[j]));
+            this.bb.appendChild(midGrid1);
+            let midGrid2 = mkGrid(midGridX,midGridY+7*PIN_DIST,5,30, notePin((i, j) => ae[i]+nums[j]));
+            this.bb.appendChild(midGrid2);
+            let topGrid = mkBar(topBarGridX, topBarGridY, notePin((i, j) => mp[i]+nums[j+25]));
+            topGrid.forEach(e => this.bb.appendChild(e));
+            let botGrid = mkBar(botBarGridX, botBarGridY, notePin((i, j) => mp[i]+nums[j]));
+            botGrid.forEach(e => this.bb.appendChild(e));
 
-            let botGrid = mkGrid(botBarGridX, botBarGridY, 2, 29);
-            this.bb.appendChild(botGrid);
+            //labels
+            const txtSize = 15.0;
+            const txtWRatio = 6.27/15;
+            const txtHRatio = 13.0/15;
+            const txtW = txtWRatio*txtSize;
+            const txtH = txtHRatio*txtSize;
+
+            const mkTxt = (l: number, t: number, txt: string) => {
+                const x = t - txtW / 2.0;
+                const y = l - txtH / 2.0;
+                svg.child(this.bb, "circle", {cx: l, cy: t, r: txtW/2, style: `fill:green;`})
+                let el = svg.child(this.bb, "text", { class: "sim-bb-az", x: x, y: y, style: `font-size:${txtSize}px;` }) as SVGTextElement;
+                el.textContent = txt;
+            }
+            let loc = nameToLoc["h5"];
+            console.log(`h5: (${loc[0]}, ${loc[1]})`);
+            mkTxt(loc[0], loc[1], "a")
+            mkTxt(topBarGridX + txtSize, topBarGridY, "b")
+            mkTxt(topBarGridX, topBarGridY + txtSize, "1")
+            mkTxt(topBarGridX, topBarGridY + txtSize*2, "2")
+            mkTxt(topBarGridX + txtSize, topBarGridY + txtSize, "-")
+            mkTxt(topBarGridX + txtSize*2, topBarGridY + txtSize*2, "+")
         }
     }
 
