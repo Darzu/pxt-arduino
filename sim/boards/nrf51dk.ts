@@ -269,12 +269,14 @@ pointer-events: none;
             this.buttonPairSvg.updateLocation(2, this.bbLoc("d28"));//TODO move to virtual space
 
             // wires
-            let p1 = this.bbLoc("a1");
-            let c1 = this.bbLoc("j1");
-            let c2 = this.bbLoc("a6");
-            let p2 = this.bbLoc("j6");
-            const coordStr = (xy: [number, number]):string => {return `${xy[0]}, ${xy[1]}`};
-            svg.path(this.g, "sim-bb-wire", `M${coordStr(p1)} C${coordStr(c1)} ${coordStr(c2)} ${coordStr(p2)}`);
+            const connectWire = (p1: [number, number], p2: [number, number]): SVGPathElement => {
+                const coordStr = (xy: [number, number]):string => {return `${xy[0]}, ${xy[1]}`};
+                let c1: [number, number] = [p1[0], p2[1]];
+                let c2: [number, number] = [p2[0], p1[1]];
+                return <SVGPathElement>svg.path(this.g, "sim-bb-wire", `M${coordStr(p1)} C${coordStr(c1)} ${coordStr(c2)} ${coordStr(p2)}`);
+            }
+            connectWire(this.bbLoc("a1"), this.bbLoc("j6"))
+            connectWire(this.bbLoc("a26"), this.bbLoc("-36"))
         }
 
         private attachEvents() {
