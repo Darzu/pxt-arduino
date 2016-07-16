@@ -1,5 +1,5 @@
 namespace pxsim.boardsvg {
-    export const PIN_DIST = 15.25;
+    export const PIN_DIST = 15; //original dist: 15.25
 
     declare type PinFn = (p: SVGElement, i: number, j: number, x: number, y: number)=>string;
 
