@@ -216,10 +216,11 @@ pointer-events: none;
 }
 
 .sim-bb-wire {
-    stroke:rgb(240,80,80);
-    stroke-width:6px;
     fill:none;
     stroke-linecap: round;
+}
+.sim-bb-wire-end {
+    stroke:#333;
 }
             `;
             this.style.textContent += this.buttonPairSvg.style;
@@ -269,14 +270,31 @@ pointer-events: none;
             this.buttonPairSvg.updateLocation(2, this.bbLoc("d28"));//TODO move to virtual space
 
             // wires
-            const connectWire = (p1: [number, number], p2: [number, number]): SVGPathElement => {
+            const wireWidth = PIN_DIST/2.5;
+            const red = "rgb(240,80,80)";
+            const mkWire = (p1: [number, number], p2: [number, number], clr: string): SVGPathElement => {
                 const coordStr = (xy: [number, number]):string => {return `${xy[0]}, ${xy[1]}`};
                 let c1: [number, number] = [p1[0], p2[1]];
                 let c2: [number, number] = [p2[0], p1[1]];
-                return <SVGPathElement>svg.path(this.g, "sim-bb-wire", `M${coordStr(p1)} C${coordStr(c1)} ${coordStr(c2)} ${coordStr(p2)}`);
+                let w = <SVGPathElement>svg.path(this.g, "sim-bb-wire", `M${coordStr(p1)} C${coordStr(c1)} ${coordStr(c2)} ${coordStr(p2)}`);
+                (<any>w).style["stroke"] = clr;
+                (<any>w).style["stroke-width"] = `${wireWidth}px`;
+                return w;
             }
-            connectWire(this.bbLoc("a1"), this.bbLoc("j6"))
-            connectWire(this.bbLoc("a26"), this.bbLoc("-36"))
+            const mkWireEnd = (p: [number, number], clr: string): SVGElement => {
+                const endW = PIN_DIST/5;
+                let wg = svg.child(this.g, "g");
+                let x = p[0];
+                let y = p[1];
+                let r = wireWidth/2 + endW/2;
+                let w = svg.child(wg, "circle", {cx: x, cy: y, r: r, class: "sim-bb-wire-end"});
+                (<any>w).style["fill"] = clr;
+                (<any>w).style["stroke-width"] = `${endW}px`;
+                return wg;
+            }
+            mkWire(this.bbLoc("a1"), this.bbLoc("j6"), red)
+            mkWire(this.bbLoc("a26"), this.bbLoc("-36"), red)
+            mkWireEnd(this.bbLoc("j21"), red);
         }
 
         private attachEvents() {
