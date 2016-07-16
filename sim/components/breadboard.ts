@@ -147,17 +147,16 @@ namespace pxsim.boardsvg {
             //grids
             let ae = ["e", "d", "c", "b", "a", ];
             let fj = ["j", "i", "h", "g", "f", ];
-            let nums =[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,]
-            let numsAlph = nums.map(n => ""+n)
             let mp = ["-", "+"];
+            const jStr = (j: number):string => {return (j+1)+""};
 
-            let midGrid1 = mkGrid(midGridX,midGridY,5,30, notePin((i, j) => fj[i]+numsAlph[j]));
+            let midGrid1 = mkGrid(midGridX,midGridY,5,30, notePin((i, j) => fj[i]+jStr(j)));
             this.bb.appendChild(midGrid1);
-            let midGrid2 = mkGrid(midGridX,midGridY+7*PIN_DIST,5,30, notePin((i, j) => ae[i]+numsAlph[j]));
+            let midGrid2 = mkGrid(midGridX,midGridY+7*PIN_DIST,5,30, notePin((i, j) => ae[i]+jStr(j)));
             this.bb.appendChild(midGrid2);
-            let topGrid = mkBar(topBarGridX, topBarGridY, notePin((i, j) => mp[i]+numsAlph[j+25]));
+            let topGrid = mkBar(topBarGridX, topBarGridY, notePin((i, j) => mp[i]+jStr(j+25)));
             topGrid.forEach(e => this.bb.appendChild(e));
-            let botGrid = mkBar(botBarGridX, botBarGridY, notePin((i, j) => mp[i]+numsAlph[j]));
+            let botGrid = mkBar(botBarGridX, botBarGridY, notePin((i, j) => mp[i]+jStr(j)));
             botGrid.forEach(e => this.bb.appendChild(e));
 
             //labels
@@ -178,8 +177,10 @@ namespace pxsim.boardsvg {
             }
 
             const lblSize = PIN_DIST * 0.7;
-            nums.forEach(n => mkLabel("j"+n, ""+n, 0, -PIN_DIST, -90, lblSize));
-            nums.forEach(n => mkLabel("a"+n, ""+n, 0, PIN_DIST, -90, lblSize));
+            for (let n = 1; n <= 30; n++)
+            	mkLabel("j"+n, ""+n, 0, -PIN_DIST, -90, lblSize);
+            for (let n = 1; n <= 30; n++)
+                mkLabel("a"+n, ""+n, 0, PIN_DIST, -90, lblSize);
             ae.forEach(a => mkLabel(a+"1", a, -PIN_DIST, 0, -90, lblSize))
             fj.forEach(a => mkLabel(a+"1", a, -PIN_DIST, 0, -90, lblSize))
             ae.forEach(a => mkLabel(a+"30", a, PIN_DIST, 0, -90, lblSize))
