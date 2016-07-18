@@ -272,18 +272,18 @@ pointer-events: none;
             // wires
             const wireWidth = PIN_DIST/2.5;
             const red = "rgb(240,80,80)";
-            const mkWire = (p1: [number, number], p2: [number, number], clr: string): SVGPathElement => {
+            const mkWireSeg = (p1: [number, number], p2: [number, number], clr: string): SVGPathElement => {
                 const coordStr = (xy: [number, number]):string => {return `${xy[0]}, ${xy[1]}`};
                 let c1: [number, number] = [p1[0], p2[1]];
                 let c2: [number, number] = [p2[0], p1[1]];
-                let w = <SVGPathElement>svg.path(this.g, "sim-bb-wire", `M${coordStr(p1)} C${coordStr(c1)} ${coordStr(c2)} ${coordStr(p2)}`);
+                let w = <SVGPathElement>svg.mkPath("sim-bb-wire", `M${coordStr(p1)} C${coordStr(c1)} ${coordStr(c2)} ${coordStr(p2)}`);
                 (<any>w).style["stroke"] = clr;
                 (<any>w).style["stroke-width"] = `${wireWidth}px`;
                 return w;
             }
             const mkWireEnd = (p: [number, number], clr: string): SVGElement => {
                 const endW = PIN_DIST/5;
-                let wg = svg.child(this.g, "g");
+                let wg = svg.elt("g");
                 let x = p[0];
                 let y = p[1];
                 let r = wireWidth/2 + endW/2;
@@ -292,9 +292,56 @@ pointer-events: none;
                 (<any>w).style["stroke-width"] = `${endW}px`;
                 return wg;
             }
-            mkWire(this.bbLoc("a1"), this.bbLoc("j6"), red)
-            mkWire(this.bbLoc("a26"), this.bbLoc("-36"), red)
-            mkWireEnd(this.bbLoc("j21"), red);
+            const boardEdges = [TOP_MARGIN, TOP_MARGIN+BOARD_HEIGHT, TOP_MARGIN+BOARD_HEIGHT+MID_MARGIN, 
+                TOP_MARGIN+BOARD_HEIGHT+MID_MARGIN+BREADBOARD_HEIGHT];
+            const mkWire = (p1: [number, number], p2: [number, number], clr: string): SVGElement => {
+                let g = svg.elt("g");
+                const indexOfMin = (vs: number[]): number => {
+                    let minIdx = 0;
+                    let min = vs[0];
+                    for (let i = 1; i < vs.length; i++) {
+                        if (vs[i] < min) {
+                            min = vs[i];
+                            minIdx = i;
+                        }   
+                    }
+                    return minIdx;
+                }
+                const closestEdge = (p: [number, number]): number => {
+                    let dists = boardEdges.map(e => Math.abs(p[1] - e));
+                    let edgeIdx =  indexOfMin(dists);
+                    return boardEdges[edgeIdx];
+                }
+                const closestPointOffBoard = (p: [number, number]): [number, number] => {
+                    const offset = PIN_DIST/2;
+                    let e = closestEdge(p);
+                    let y: number;
+                    if (e - p[1] < 0)
+                        y = e - offset;
+                    else
+                        y = e + offset;
+                    return [p[0], y];
+                }
+                let end1 = mkWireEnd(p1, clr);
+                g.appendChild(end1);
+                let offP1 = closestPointOffBoard(p1);
+                let offSeg1 = mkWireSeg(p1, offP1, clr);
+                g.appendChild(offSeg1);
+                let end2 = mkWireEnd(p2, clr);
+                g.appendChild(end2);
+                let offP2 = closestPointOffBoard(p2);
+                let offSeg2 = mkWireSeg(p2, offP2, clr);
+                g.appendChild(offSeg2);
+                let midSeg = mkWireSeg(offP1, offP2, clr);
+                g.appendChild(midSeg);
+                return g;
+            }
+            const drawWire = (p1: [number, number], p2: [number, number], clr: string): SVGElement => {
+                let w = mkWire(p1, p2, clr);
+                this.g.appendChild(w);
+                return w;
+            }
+            drawWire(this.bbLoc("a1"), this.bbLoc("j6"), red);
         }
 
         private attachEvents() {
