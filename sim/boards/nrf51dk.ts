@@ -219,7 +219,7 @@ pointer-events: none;
 .sim-board-pin {
     fill:#999;
     stroke:#000;
-    stroke-width:${0.1}px;
+    stroke-width:${PIN_DIST/3.0}px;
 }
             `;
             this.style.textContent += this.buttonPairSvg.style;
@@ -267,7 +267,7 @@ pointer-events: none;
                 { class: "sim-board", x: 0, y: TOP_MARGIN, width: WIDTH, height: boardHeight, 
                     "href": `/images/${arduinoZero.photo}`});
             const mkPinGrid = (l: number, t: number, rs: number, cs: number, getNm: (i: number, j: number) => string) => {
-                const size = PIN_DIST/1.0;
+                const size = PIN_DIST*0.66666;
                 let props = { class: "sim-board-pin" }
                 let pinFn = (p: SVGElement, i: number, j: number, x: number, y: number) => {
                     let name = getNm(i, j);
@@ -338,7 +338,7 @@ pointer-events: none;
                 return w;
             }
             const mkWireEnd = (p: [number, number], clr: string): SVGElement => {
-                const endW = PIN_DIST/5;
+                const endW = PIN_DIST/4;
                 let wg = svg.elt("g");
                 let x = p[0];
                 let y = p[1];
