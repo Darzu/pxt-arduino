@@ -242,6 +242,9 @@ pointer-events: none;
             let merge = svg.child(glow, "feMerge", {});
             for (let i = 0; i < 3; ++i) svg.child(merge, "feMergeNode", { in: "glow" })
 
+            // underboard
+            let underboard = svg.child(this.g, "g");
+
             // backgrounds
             svg.child(this.g, "image", 
                 { class: "sim-board", x: 0, y: TOP_MARGIN, width: WIDTH, height: BOARD_HEIGHT, 
@@ -294,8 +297,7 @@ pointer-events: none;
             }
             const boardEdges = [TOP_MARGIN, TOP_MARGIN+BOARD_HEIGHT, TOP_MARGIN+BOARD_HEIGHT+MID_MARGIN, 
                 TOP_MARGIN+BOARD_HEIGHT+MID_MARGIN+BREADBOARD_HEIGHT];
-            const mkWire = (p1: [number, number], p2: [number, number], clr: string): SVGElement => {
-                let g = svg.elt("g");
+            const drawWire = (p1: [number, number], p2: [number, number], clr: string) => {
                 const indexOfMin = (vs: number[]): number => {
                     let minIdx = 0;
                     let min = vs[0];
@@ -323,23 +325,17 @@ pointer-events: none;
                     return [p[0], y];
                 }
                 let end1 = mkWireEnd(p1, clr);
-                g.appendChild(end1);
                 let offP1 = closestPointOffBoard(p1);
                 let offSeg1 = mkWireSeg(p1, offP1, clr);
-                g.appendChild(offSeg1);
                 let end2 = mkWireEnd(p2, clr);
-                g.appendChild(end2);
                 let offP2 = closestPointOffBoard(p2);
                 let offSeg2 = mkWireSeg(p2, offP2, clr);
-                g.appendChild(offSeg2);
                 let midSeg = mkWireSeg(offP1, offP2, clr);
-                g.appendChild(midSeg);
-                return g;
-            }
-            const drawWire = (p1: [number, number], p2: [number, number], clr: string): SVGElement => {
-                let w = mkWire(p1, p2, clr);
-                this.g.appendChild(w);
-                return w;
+                this.g.appendChild(end1);
+                this.g.appendChild(offSeg1);
+                this.g.appendChild(end2);
+                this.g.appendChild(offSeg2);
+                underboard.appendChild(midSeg);
             }
             drawWire(this.bbLoc("a1"), this.bbLoc("j6"), red);
         }
