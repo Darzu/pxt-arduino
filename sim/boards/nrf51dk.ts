@@ -328,11 +328,18 @@ pointer-events: none;
             // wires
             const wireWidth = PIN_DIST/2.5;
             const red = "rgb(240,80,80)";
-            const mkWireSeg = (p1: [number, number], p2: [number, number], clr: string): SVGPathElement => {
+            const mkCurvedWireSeg = (p1: [number, number], p2: [number, number], clr: string): SVGPathElement => {
                 const coordStr = (xy: [number, number]):string => {return `${xy[0]}, ${xy[1]}`};
                 let c1: [number, number] = [p1[0], p2[1]];
                 let c2: [number, number] = [p2[0], p1[1]];
                 let w = <SVGPathElement>svg.mkPath("sim-bb-wire", `M${coordStr(p1)} C${coordStr(c1)} ${coordStr(c2)} ${coordStr(p2)}`);
+                (<any>w).style["stroke"] = clr;
+                (<any>w).style["stroke-width"] = `${wireWidth}px`;
+                return w;
+            }
+            const mkWireSeg = (p1: [number, number], p2: [number, number], clr: string): SVGPathElement => {
+                const coordStr = (xy: [number, number]):string => {return `${xy[0]}, ${xy[1]}`};
+                let w = <SVGPathElement>svg.mkPath("sim-bb-wire", `M${coordStr(p1)} L${coordStr(p2)}`);
                 (<any>w).style["stroke"] = clr;
                 (<any>w).style["stroke-width"] = `${wireWidth}px`;
                 return w;
