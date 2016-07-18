@@ -258,7 +258,7 @@ pointer-events: none;
                     {x: 1734, y: 1667, labels: ["A0", "A1", "A2", "A3", "A4", "A5"]},
                 ]
             }
-            const azScale = (n: number) => (n * arduinoZero.scale) * (PIN_DIST / (arduinoZero.pinDist * arduinoZero.scale));
+            const azScale = (n: number) => n * (PIN_DIST / arduinoZero.pinDist);
             const boardHeight = azScale(arduinoZero.height);
             console.log(`[DZ] final board height: ${boardHeight}`)
             const boardXOff = (WIDTH - azScale(arduinoZero.width))/2.0;
