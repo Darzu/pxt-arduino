@@ -327,7 +327,6 @@ pointer-events: none;
 
             // wires
             const wireWidth = PIN_DIST/2.5;
-            const red = "rgb(240,80,80)";
             const mkCurvedWireSeg = (p1: [number, number], p2: [number, number], clr: string): SVGPathElement => {
                 const coordStr = (xy: [number, number]):string => {return `${xy[0]}, ${xy[1]}`};
                 let c1: [number, number] = [p1[0], p2[1]];
@@ -408,28 +407,36 @@ pointer-events: none;
             }
 
             // draw wires
+            let wireClrs = {
+                red: "rgb(240,80,80)",
+                black: "#444",
+                green: "#1bbe5f",
+                blue: "#2d90df",
+                yellow: "rgb(245,230,50)",
+                orange: "#dc8628",
+            }
             let wireDisc = [
-                //gnd
-                ["-1", "GND1"],
                 //btn1
-                ["j1","7"],
-                ["c3","-3"],
+                ["j1","7", wireClrs.yellow],
+                ["c3","-3", wireClrs.black],
                 //btn2
-                ["j28","~6"],
-                ["b30","-25"],
+                ["j28","~6", wireClrs.orange],
+                ["c30","-25", wireClrs.black],
                 //display
-                ["a12","~5"],
-                ["a13","~4"],
-                ["a14","~3"],
-                ["a15","2"],
-                ["j16","TX->1"],
-                ["j12","A4"],
-                ["a16","A0"],
-                ["a17","A1"],
-                ["a18","A2"],
-                ["a19","A3"],
+                ["a12","~5", wireClrs.blue],
+                ["a13","~4", wireClrs.blue],
+                ["a14","~3", wireClrs.blue],
+                ["a15","2", wireClrs.blue],
+                ["j16","TX->1", wireClrs.blue],
+                ["a16","A0", wireClrs.green],
+                ["a17","A1", wireClrs.green],
+                ["a18","A2", wireClrs.green],
+                ["a19","A3", wireClrs.green],
+                ["j12","A4", wireClrs.green],
+                //gnd
+                ["-1", "GND1", wireClrs.black],
             ]
-            wireDisc.forEach(w => drawWire(w[0], w[1], red));
+            wireDisc.forEach(w => drawWire(w[0], w[1], w[2]));
         }
 
         private attachEvents() {
