@@ -79,15 +79,6 @@ namespace pxsim.boardsvg {
         disableTilt?: boolean;
     }
 
-    const WIDTH = 498;
-    const HEIGHT = 812;
-    const BOARD_HEIGHT = 380;
-    const BREADBOARD_HEIGHT = 323; //TODO: relate to PIN_DIST
-    const TOP_MARGIN = 20;
-    const MID_MARGIN = 40;
-    const BB_X = 0;
-    const BB_Y = TOP_MARGIN + BOARD_HEIGHT + MID_MARGIN;
-
     export class Nrf51dkSvg {
         public element: SVGSVGElement;
         private style: SVGStyleElement;
@@ -150,21 +141,11 @@ namespace pxsim.boardsvg {
             else svg.removeClass(this.element, "grayscale");
         }
 
-        private bbLoc(pinName: string): [number, number] {
-            let bbLoc = this.breadboard.getPinLoc(pinName);
-            return [bbLoc[0] + BB_X, bbLoc[1] + BB_Y];
-        }
-        private boardLoc(pinName: string): [number, number] {
-            if (!(pinName in this.nameToBoardPinLoc)) {
-                return null;
-            }
-            return this.nameToBoardPinLoc[pinName];
-        }
-        private loc(pinName: string): [number, number] {
-            return this.boardLoc(pinName) || this.bbLoc(pinName);
-        }
-
         private buildDom() {
+            const WIDTH = 498;
+            const HEIGHT = 812;
+            const TOP_MARGIN = 20;
+            const MID_MARGIN = 40;
 
             this.element = <SVGSVGElement>svg.elt("svg")
             svg.hydrate(this.element, {
@@ -238,7 +219,7 @@ pointer-events: none;
 .sim-board-pin {
     fill:#999;
     stroke:#000;
-    stroke-width:${PIN_DIST/3.0}
+    stroke-width:${0.1}px;
 }
             `;
             this.style.textContent += this.buttonPairSvg.style;
@@ -263,10 +244,28 @@ pointer-events: none;
             // underboard
             let underboard = svg.child(this.g, "g");
 
+            // arduino zero description
+            const arduinoZero = {
+                photo: "arduino-zero-pkg-photo.png",
+                width: 2366,
+                height: 1803,
+                pinDist: 84,
+                pins: [
+                    {x: 655, y: 42, labels: ["SCL", "SDA","AREF", "GND0", "~13", "~12", "~11", "~10", "~9", "~8"]},
+                    {x: 1551, y: 42, labels: ["7", "~6", "~5", "~4", "~3", "2", "TX->1", "RX<-0"]},
+                    {x: 974, y: 1667, labels: ["ATN", "IOREF", "RESET", "3.3V", "5V", "GND1", "GND2", "VIN"]},
+                    {x: 1734, y: 1667, labels: ["A0", "A1", "A2", "A3", "A4", "A5"]},
+                ]
+            }
+            const azScaler = PIN_DIST/arduinoZero.pinDist;
+            const boardHeight = arduinoZero.height * azScaler;
+            const boardXOff = (WIDTH - arduinoZero.width * azScaler)/2.0;
+            const boardYOff = TOP_MARGIN;
+
             // main board
             svg.child(this.g, "image", 
-                { class: "sim-board", x: 0, y: TOP_MARGIN, width: WIDTH, height: BOARD_HEIGHT, 
-                    "href": "/images/arduino-zero-photo-sml.png"});
+                { class: "sim-board", x: 0, y: TOP_MARGIN, width: WIDTH, height: boardHeight, 
+                    "href": `/images/${arduinoZero.photo}`});
             const mkPinGrid = (l: number, t: number, rs: number, cs: number, getNm: (i: number, j: number) => string) => {
                 const size = PIN_DIST/1.0;
                 let props = { class: "sim-board-pin" }
@@ -278,22 +277,39 @@ pointer-events: none;
                 };
                 return mkGrid(l, t, rs, cs, size, props, pinFn);
             }
-            const arduinoZeroPins = [
-                ["SCL", "SDA","AREF", "GND0", "~13", "~12", "~11", "~10", "~9", "~8"],
-                ["7", "~6", "~5", "~4", "~3", "2", "TX->1", "RX<-0"],
-                ["ATN", "IOREF", "RESET", "3.3V", "5V", "GND1", "GND2", "VIN"],
-                ["A0", "A1", "A2", "A3", "A4", "A5"],
-            ];
-            let pins1 = mkPinGrid(100, 100, 1, 10, (i, j) => arduinoZeroPins[0][j-1]);
-            this.g.appendChild(pins1);
+            arduinoZero.pins.forEach(pinDisc => {
+                let l = boardXOff + pinDisc.x * azScaler + PIN_DIST/2.0;
+                let t = boardYOff + pinDisc.y * azScaler + PIN_DIST/2.0;
+                let rs = 1;
+                let cs = pinDisc.labels.length;
+                let pins = mkPinGrid(l, t, rs, cs, (i, j) => pinDisc.labels[j]);
+                this.g.appendChild(pins);
+            })
 
             // breadboard
-            this.breadboard.buildDom(this.g, this.defs, WIDTH, BREADBOARD_HEIGHT);
-            this.breadboard.updateLocation(BB_X, BB_Y);
+            const bbHeight = 323; //TODO: relate to PIN_DIST
+            const bbX = 0;
+            const bbY = TOP_MARGIN + boardHeight + MID_MARGIN;
+
+            const bbLoc = (pinName: string): [number, number] => {
+                let bbLoc = this.breadboard.getPinLoc(pinName);
+                return [bbLoc[0] + bbX, bbLoc[1] + bbY];
+            }
+            const boardLoc = (pinName: string): [number, number] => {
+                if (!(pinName in this.nameToBoardPinLoc)) {
+                    return null;
+                }
+                return this.nameToBoardPinLoc[pinName];
+            }
+            const loc =(pinName: string): [number, number] => {
+                return boardLoc(pinName) || bbLoc(pinName);
+            }
+            this.breadboard.buildDom(this.g, this.defs, WIDTH, bbHeight);
+            this.breadboard.updateLocation(bbX, bbY);
 
             // display 
             this.displaySvg.buildDom(this.g, PIN_DIST);
-            this.displaySvg.updateLocation(this.bbLoc("h12"))
+            this.displaySvg.updateLocation(bbLoc("h12"))
 
             // compass
             this.compassSvg.buildDom(this.g);
@@ -305,9 +321,9 @@ pointer-events: none;
 
             // buttons
             this.buttonPairSvg.buildDom(this.g, PIN_DIST);
-            this.buttonPairSvg.updateLocation(0, this.bbLoc("f1"));
-            this.buttonPairSvg.updateLocation(1, this.bbLoc("f28"));
-            this.buttonPairSvg.updateLocation(2, this.bbLoc("d28"));//TODO move to virtual space
+            this.buttonPairSvg.updateLocation(0, bbLoc("f1"));
+            this.buttonPairSvg.updateLocation(1, bbLoc("f28"));
+            this.buttonPairSvg.updateLocation(2, bbLoc("d28"));//TODO move to virtual space
 
             // wires
             const wireWidth = PIN_DIST/2.5;
@@ -332,11 +348,11 @@ pointer-events: none;
                 (<any>w).style["stroke-width"] = `${endW}px`;
                 return wg;
             }
-            const boardEdges = [TOP_MARGIN, TOP_MARGIN+BOARD_HEIGHT, TOP_MARGIN+BOARD_HEIGHT+MID_MARGIN, 
-                TOP_MARGIN+BOARD_HEIGHT+MID_MARGIN+BREADBOARD_HEIGHT];
+            const boardEdges = [TOP_MARGIN, TOP_MARGIN+boardHeight, TOP_MARGIN+boardHeight+MID_MARGIN, 
+                TOP_MARGIN+boardHeight+MID_MARGIN+bbHeight];
             const drawWire = (pin1: string, pin2: string, clr: string) => {
-                let p1 = this.loc(pin1);
-                let p2 = this.loc(pin2);
+                let p1 = loc(pin1);
+                let p2 = loc(pin2);
                 const indexOfMin = (vs: number[]): number => {
                     let minIdx = 0;
                     let min = vs[0];
