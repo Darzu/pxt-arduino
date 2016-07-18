@@ -246,7 +246,8 @@ pointer-events: none;
 
             // arduino zero description
             const arduinoZero = {
-                photo: "arduino-zero-pkg-photo.png",
+                photo: "arduino-zero-photo-sml.png",
+                scale: 0.422654269,
                 width: 2366,
                 height: 1803,
                 pinDist: 84,
@@ -257,9 +258,10 @@ pointer-events: none;
                     {x: 1734, y: 1667, labels: ["A0", "A1", "A2", "A3", "A4", "A5"]},
                 ]
             }
-            const azScaler = PIN_DIST/arduinoZero.pinDist;
-            const boardHeight = arduinoZero.height * azScaler;
-            const boardXOff = (WIDTH - arduinoZero.width * azScaler)/2.0;
+            const azScale = (n: number) => (n * arduinoZero.scale) * (PIN_DIST / (arduinoZero.pinDist * arduinoZero.scale));
+            const boardHeight = azScale(arduinoZero.height);
+            console.log(`[DZ] final board height: ${boardHeight}`)
+            const boardXOff = (WIDTH - azScale(arduinoZero.width))/2.0;
             const boardYOff = TOP_MARGIN;
 
             // main board
@@ -278,8 +280,8 @@ pointer-events: none;
                 return mkGrid(l, t, rs, cs, size, props, pinFn);
             }
             arduinoZero.pins.forEach(pinDisc => {
-                let l = boardXOff + pinDisc.x * azScaler + PIN_DIST/2.0;
-                let t = boardYOff + pinDisc.y * azScaler + PIN_DIST/2.0;
+                let l = boardXOff + azScale(pinDisc.x) + PIN_DIST/2.0;
+                let t = boardYOff + azScale(pinDisc.y) + PIN_DIST/2.0;
                 let rs = 1;
                 let cs = pinDisc.labels.length;
                 let pins = mkPinGrid(l, t, rs, cs, (i, j) => pinDisc.labels[j]);
