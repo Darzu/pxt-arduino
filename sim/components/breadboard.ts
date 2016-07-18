@@ -1,7 +1,27 @@
 namespace pxsim.boardsvg {
     export const PIN_DIST = 15; //original dist: 15.25
 
-    declare type PinFn = (p: SVGElement, i: number, j: number, x: number, y: number)=>string;
+    export declare type PinFn = (p: SVGRectElement, i: number, j: number, x: number, y: number)=>void;
+
+    export const mkGrid = (l: number, t: number, rs: number, cs: number, size: number, props: any, pinFn: PinFn): SVGGElement => {
+        const x = l - size/2;
+        const y = t - size/2;
+
+        let grid = <SVGGElement>svg.elt("g");
+        for (let i = 0; i < rs; i++) {
+            for (let j = 0; j < cs; j++) {
+                let pin = <SVGRectElement>svg.elt("rect")
+                let pinX = x+j*PIN_DIST;
+                let pinY = y+i*PIN_DIST;
+                svg.hydrate(pin, props)
+                svg.hydrate(pin, { x: pinX, y: pinY, width: size, height: size })
+                grid.appendChild(pin);
+                pinFn(pin, i, j, pinX+size/2, pinY+size/2);
+
+            }
+        }
+        return grid;
+    }
 
     export class Breadboard {
         private bb: SVGGElement;
@@ -71,48 +91,6 @@ namespace pxsim.boardsvg {
             //     { class: "sim-board", x: 0, y: 0, width: width, height: height, 
             //         "href": "/images/breadboard-photo-sml.png"});
 
-            const mkGrid = (l: number, t: number, rs: number, cs: number,  pinFn: PinFn): SVGGElement => {
-                const size = PIN_DIST/2.5;
-                const rounding = size/3;
-                const x = l - size/2;
-                const y = t - size/2;
-
-                let grid = <SVGGElement>svg.elt("g");
-                for (let i = 0; i < rs; i++) {
-                    for (let j = 0; j < cs; j++) {
-                        let pin = svg.elt("rect")
-                        let pinX = x+j*PIN_DIST;
-                        let pinY = y+i*PIN_DIST;
-                        let name = pinFn(pin, i, j, pinX+size/2, pinY+size/2);
-                        let title = `${name[0]}, ${name[1] + (name[2] || "") + (name[3] || "")}`
-                        let props = { class: "sim-bb-pin", x: pinX, y: pinY, rx: rounding, ry: rounding, width: size, height: size, title: title };
-                        svg.hydrate(pin, props)
-                        grid.appendChild(pin);
-
-                    }
-                }
-                return grid;
-            }
-
-            const mkBar = (x: number, y: number, pinFn: PinFn) => {
-                return [
-                     mkGrid(x + 0*PIN_DIST, y, 2, 5, (p, i, j, x, y) => pinFn(p, i, j+0, x, y)),
-                     mkGrid(x + 6*PIN_DIST, y, 2, 5, (p, i, j, x, y) => pinFn(p, i, j+5, x, y)),
-                     mkGrid(x + 12*PIN_DIST, y, 2, 5, (p, i, j, x, y) => pinFn(p, i, j+10, x, y)),
-                     mkGrid(x + 18*PIN_DIST, y, 2, 5, (p, i, j, x, y) => pinFn(p, i, j+15, x, y)),
-                     mkGrid(x + 24*PIN_DIST, y, 2, 5, (p, i, j, x, y) => pinFn(p, i, j+20, x, y)),
-                ]
-            }
-
-            const notePin = (getNm: (i: number, j: number) => string): PinFn => {
-                return (p, i, j, x, y) => {
-                    let name = getNm(i, j);
-                    this.nameToPin[name] = p;
-                    this.nameToLoc[name] = [x, y];
-                    return name;
-                }
-            }
-
             //wrapper
             this.bb = <SVGGElement>svg.child(g, "g")
             svg.hydrate(this.bb, {class: "sim-bb"});
@@ -145,18 +123,42 @@ namespace pxsim.boardsvg {
             mkChannel(barH+midH, smlChannelH);
 
             //grids
+            const mkBBGrid = (l: number, t: number, rs: number, cs: number, getNm: (i: number, j: number)=>string) => {
+                const size = PIN_DIST/2.5;
+                const rounding = size/3;
+                let props = { class: "sim-bb-pin", rx: rounding, ry: rounding }
+                let pinFn: PinFn = (p, i, j, x, y) => {
+                    let name = getNm(i, j);
+                    this.nameToPin[name] = p;
+                    this.nameToLoc[name] = [x, y];
+                    let title = `${name[0]}, ${name[1] + (name[2] || "") + (name[3] || "")}`
+                    svg.hydrate(p, {title: title});
+                }
+                return mkGrid(l, t, rs, cs, size, props, pinFn);
+            }
+
+            const mkBar = (x: number, y: number, getNm: (i: number, j: number)=>string) => {
+                return [
+                     mkBBGrid(x + 0*PIN_DIST, y, 2, 5, (i, j) => getNm(i, j+0)),
+                     mkBBGrid(x + 6*PIN_DIST, y, 2, 5, (i, j) => getNm(i, j+5)),
+                     mkBBGrid(x + 12*PIN_DIST, y, 2, 5, (i, j) => getNm(i, j+10)),
+                     mkBBGrid(x + 18*PIN_DIST, y, 2, 5, (i, j) => getNm(i, j+15)),
+                     mkBBGrid(x + 24*PIN_DIST, y, 2, 5, (i, j) => getNm(i, j+20)),
+                ]
+            }
+
             let ae = ["e", "d", "c", "b", "a", ];
             let fj = ["j", "i", "h", "g", "f", ];
             let mp = ["-", "+"];
             const jStr = (j: number):string => {return (j+1)+""};
 
-            let midGrid1 = mkGrid(midGridX,midGridY,5,30, notePin((i, j) => fj[i]+jStr(j)));
+            let midGrid1 = mkBBGrid(midGridX,midGridY,5,30, (i, j) => fj[i]+jStr(j));
             this.bb.appendChild(midGrid1);
-            let midGrid2 = mkGrid(midGridX,midGridY+7*PIN_DIST,5,30, notePin((i, j) => ae[i]+jStr(j)));
+            let midGrid2 = mkBBGrid(midGridX,midGridY+7*PIN_DIST,5,30, (i, j) => ae[i]+jStr(j));
             this.bb.appendChild(midGrid2);
-            let topGrid = mkBar(topBarGridX, topBarGridY, notePin((i, j) => mp[i]+jStr(j+25)));
+            let topGrid = mkBar(topBarGridX, topBarGridY, (i, j) => mp[i]+jStr(j+25));
             topGrid.forEach(e => this.bb.appendChild(e));
-            let botGrid = mkBar(botBarGridX, botBarGridY, notePin((i, j) => mp[i]+jStr(j)));
+            let botGrid = mkBar(botBarGridX, botBarGridY, (i, j) => mp[i]+jStr(j));
             botGrid.forEach(e => this.bb.appendChild(e));
 
             //labels

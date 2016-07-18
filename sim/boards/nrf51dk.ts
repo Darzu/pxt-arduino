@@ -107,6 +107,10 @@ namespace pxsim.boardsvg {
         private lightSensorSvg = new LightSensorSvg();
         private breadboard = new Breadboard();
 
+        //board pins
+        private nameToBoardPin: Map<SVGElement> = {};
+        private nameToBoardPinLoc: Map<[number, number]> = {};
+
         constructor(public props: INrf51dkProps) {
             this.board = this.props.runtime.board as pxsim.Nrf51dkBoard;
             this.board.updateView = () => this.updateState();
@@ -149,6 +153,15 @@ namespace pxsim.boardsvg {
         private bbLoc(pinName: string): [number, number] {
             let bbLoc = this.breadboard.getPinLoc(pinName);
             return [bbLoc[0] + BB_X, bbLoc[1] + BB_Y];
+        }
+        private boardLoc(pinName: string): [number, number] {
+            if (!(pinName in this.nameToBoardPinLoc)) {
+                return null;
+            }
+            return this.nameToBoardPinLoc[pinName];
+        }
+        private loc(pinName: string): [number, number] {
+            return this.boardLoc(pinName) || this.bbLoc(pinName);
         }
 
         private buildDom() {
@@ -222,6 +235,11 @@ pointer-events: none;
 .sim-bb-wire-end {
     stroke:#333;
 }
+.sim-board-pin {
+    fill:#999;
+    stroke:#000;
+    stroke-width:${PIN_DIST/3.0}
+}
             `;
             this.style.textContent += this.buttonPairSvg.style;
             this.style.textContent += this.edgeConnectorSvg.style;
@@ -245,12 +263,31 @@ pointer-events: none;
             // underboard
             let underboard = svg.child(this.g, "g");
 
-            // backgrounds
+            // main board
             svg.child(this.g, "image", 
                 { class: "sim-board", x: 0, y: TOP_MARGIN, width: WIDTH, height: BOARD_HEIGHT, 
                     "href": "/images/arduino-zero-photo-sml.png"});
+            const mkPinGrid = (l: number, t: number, rs: number, cs: number, getNm: (i: number, j: number) => string) => {
+                const size = PIN_DIST/1.0;
+                let props = { class: "sim-board-pin" }
+                let pinFn = (p: SVGElement, i: number, j: number, x: number, y: number) => {
+                    let name = getNm(i, j);
+                    this.nameToBoardPin[name] = p;
+                    this.nameToBoardPinLoc[name] = [x, y];
+                    svg.hydrate(p, {title: name});
+                };
+                return mkGrid(l, t, rs, cs, size, props, pinFn);
+            }
+            const arduinoZeroPins = [
+                ["SCL", "SDA","AREF", "GND0", "~13", "~12", "~11", "~10", "~9", "~8"],
+                ["7", "~6", "~5", "~4", "~3", "2", "TX->1", "RX<-0"],
+                ["ATN", "IOREF", "RESET", "3.3V", "5V", "GND1", "GND2", "VIN"],
+                ["A0", "A1", "A2", "A3", "A4", "A5"],
+            ];
+            let pins1 = mkPinGrid(100, 100, 1, 10, (i, j) => arduinoZeroPins[0][j-1]);
+            this.g.appendChild(pins1);
 
-            // hand-drawn breadboard
+            // breadboard
             this.breadboard.buildDom(this.g, this.defs, WIDTH, BREADBOARD_HEIGHT);
             this.breadboard.updateLocation(BB_X, BB_Y);
 
@@ -297,7 +334,9 @@ pointer-events: none;
             }
             const boardEdges = [TOP_MARGIN, TOP_MARGIN+BOARD_HEIGHT, TOP_MARGIN+BOARD_HEIGHT+MID_MARGIN, 
                 TOP_MARGIN+BOARD_HEIGHT+MID_MARGIN+BREADBOARD_HEIGHT];
-            const drawWire = (p1: [number, number], p2: [number, number], clr: string) => {
+            const drawWire = (pin1: string, pin2: string, clr: string) => {
+                let p1 = this.loc(pin1);
+                let p2 = this.loc(pin2);
                 const indexOfMin = (vs: number[]): number => {
                     let minIdx = 0;
                     let min = vs[0];
@@ -337,7 +376,7 @@ pointer-events: none;
                 this.g.appendChild(offSeg2);
                 underboard.appendChild(midSeg);
             }
-            drawWire(this.bbLoc("a1"), this.bbLoc("j6"), red);
+            drawWire("a1", "~12", red);
         }
 
         private attachEvents() {
