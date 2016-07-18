@@ -387,19 +387,49 @@ pointer-events: none;
                     return [p[0], y];
                 }
                 let end1 = mkWireEnd(p1, clr);
-                let offP1 = closestPointOffBoard(p1);
-                let offSeg1 = mkWireSeg(p1, offP1, clr);
                 let end2 = mkWireEnd(p2, clr);
-                let offP2 = closestPointOffBoard(p2);
-                let offSeg2 = mkWireSeg(p2, offP2, clr);
-                let midSeg = mkWireSeg(offP1, offP2, clr);
                 this.g.appendChild(end1);
-                this.g.appendChild(offSeg1);
                 this.g.appendChild(end2);
-                this.g.appendChild(offSeg2);
-                underboard.appendChild(midSeg);
+                let edge1 = closestEdge(p1);
+                let edge2 = closestEdge(p2);
+                if (edge1 == edge2) {
+                    let seg = mkWireSeg(p1, p2, clr);
+                    this.g.appendChild(seg);
+                } else {
+                    let offP1 = closestPointOffBoard(p1);
+                    let offP2 = closestPointOffBoard(p2);
+                    let offSeg1 = mkWireSeg(p1, offP1, clr);
+                    let offSeg2 = mkWireSeg(p2, offP2, clr);
+                    let midSeg = mkWireSeg(offP1, offP2, clr);
+                    this.g.appendChild(offSeg1);
+                    this.g.appendChild(offSeg2);
+                    underboard.appendChild(midSeg);
+                }
             }
-            drawWire("a1", "~12", red);
+
+            // draw wires
+            let wireDisc = [
+                //gnd
+                ["-1", "GND1"],
+                //btn1
+                ["j1","7"],
+                ["c3","-3"],
+                //btn2
+                ["j28","~6"],
+                ["b30","-25"],
+                //display
+                ["a12","~5"],
+                ["a13","~4"],
+                ["a14","~3"],
+                ["a15","2"],
+                ["j16","TX->1"],
+                ["j12","A4"],
+                ["a16","A0"],
+                ["a17","A1"],
+                ["a18","A2"],
+                ["a19","A3"],
+            ]
+            wireDisc.forEach(w => drawWire(w[0], w[1], red));
         }
 
         private attachEvents() {
