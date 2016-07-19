@@ -453,7 +453,7 @@ pointer-events: none;
             let wireDisc = [
                 //btn1
                 ["j1","7", wireClrs.yellow],
-                ["c3","-3", wireClrs.black],
+                ["c3","-2", wireClrs.black],
                 //btn2
                 ["j28","~6", wireClrs.orange],
                 ["c30","-25", wireClrs.black],
