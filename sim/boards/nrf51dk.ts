@@ -132,7 +132,7 @@ namespace pxsim.boardsvg {
             this.displaySvg.updateState(state.displayCmp);
             this.buttonPairSvg.updateState(state.buttonPairState, this.props.theme.buttonPairTheme);
             this.edgeConnectorSvg.updateState(this.g, state.edgeConnectorState, this.props.theme.edgeConnectorTheme);
-            this.accelerometerSvg.updateState(this.g, state.accelerometerCmp, this.props.theme.accelerometerTheme, pointerEvents, state.bus, !this.props.disableTilt, this.element);
+            this.accelerometerSvg.updateState(this.g, state.accelerometerCmp, this.props.theme.accelerometerTheme, state.bus, !this.props.disableTilt, this.element);
             this.thermometerSvg.updateState(state.thermometerCmp, this.g, this.element, this.props.theme.thermometerTheme, this.defs);
             this.lightSensorSvg.updateState(state.lightSensorCmp, this.g, this.element, this.props.theme.lightSensorTheme, this.defs);
             this.compassSvg.updateState(state.compassCmp, this.props.theme.compassTheme, this.element);

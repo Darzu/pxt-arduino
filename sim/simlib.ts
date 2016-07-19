@@ -232,8 +232,9 @@ namespace pxsim.boardsvg {
         leave: "mouseleave"
     };
 
-    export function translateEls(els: SVGElement[], x: number, y: number) {
-        els.forEach(e => svg.hydrate(e, {transform: `translate(${x} ${y})`})) 
+    export function translateEl(el: SVGElement, xy: [number, number]) {
+        //TODO append translation instead of replacing the full transform
+        svg.hydrate(el, {transform: `translate(${xy[0]} ${xy[1]})`});
     }
 
     //TODO(DZ): convert all components to implement this interface
@@ -241,9 +242,9 @@ namespace pxsim.boardsvg {
         style: string,
         element: SVGElement,
         defs: SVGElement[],
-        setLocations: (...xys: [number,number][])=>void;
-        updateState: (state: T)=>void;
-        attachEvents: (state: T, bus: EventBus)=>void;
+        new (bus: EventBus, state: T): IBoardComponent<T>;
+        setLocations (...xys: [number,number][]): void;
+        updateState (): void;
     }
 }
 

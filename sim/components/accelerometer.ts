@@ -416,8 +416,7 @@ namespace pxsim.boardsvg {
             if (this.shakeButton) svg.fill(this.shakeButton, theme.gestureButtonUp);
         }
 
-        public updateState(g: SVGElement, state: AccelerometerCmp, theme: IAccelerometerTheme, 
-            pointerEvents: IPointerEvents, bus: EventBus, enableTilt: boolean, tiltTarget: SVGSVGElement) {
+        public updateState(g: SVGElement, state: AccelerometerCmp, theme: IAccelerometerTheme, bus: EventBus, enableTilt: boolean, tiltTarget: SVGSVGElement) {
             // update gestures
             if (state.useShake && !this.shakeButton) {
                 this.shakeButton = svg.child(g, "circle", { cx: 380, cy: 100, r: 16.5 }) as SVGCircleElement;

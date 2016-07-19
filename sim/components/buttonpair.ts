@@ -43,44 +43,40 @@ namespace pxsim.boardsvg {
         virtualButtonUp: "#fff",
     };
 
-    export class ButtonPairSvg {
-        private buttons: SVGElement[];
-        private buttonsOuter: SVGElement[];
-        private buttonABText: SVGTextElement;
+    export class ButtonPairSvg implements IBoardComponent<ButtonPairCmp> {
+        public element: SVGElement;
+        public defs: SVGElement[];
         public style = `
-.sim-button {
-    pointer-events: none;    
-}
-.sim-button-outer:hover {
-    stroke:grey;
-    stroke-width: 3px;
-}
-.sim-button-nut {
-    fill:#000;
-    pointer-events:none;
-}
-.sim-button-nut:hover {
-    stroke:1px solid #704A4A; 
-}
-.sim-button-tab {
-    fill:#FFF;
-    pointer-events:none;
-}
+            .sim-button {
+                pointer-events: none;    
+            }
+            .sim-button-outer:hover {
+                stroke:grey;
+                stroke-width: 3px;
+            }
+            .sim-button-nut {
+                fill:#000;
+                pointer-events:none;
+            }
+            .sim-button-nut:hover {
+                stroke:1px solid #704A4A; 
+            }
+            .sim-button-tab {
+                fill:#FFF;
+                pointer-events:none;
+            }
             `;
 
-        public updateLocation(idx: number, xy: [number, number]) {
-            //TODO(DZ): come up with a better abstraction/interface for customizing placement
-            if (idx < 0 || 2 < idx)
-                return; //TODO(DZ): throw error
-            let els = [this.buttons[idx], this.buttonsOuter[idx], this.buttonABText]
-            translateEls(els, xy[0], xy[1]);
-        }
+        private aBtn: SVGElement;
+        private bBtn: SVGElement;
+        private abBtn: SVGElement;
 
-        public updateTheme(buttonPairTheme: IButtonPairTheme) {
-            svg.fills(this.buttonsOuter.slice(0, 2), buttonPairTheme.buttonOuter);
-            svg.fills(this.buttons.slice(0, 2), buttonPairTheme.buttonUp);
-            svg.fill(this.buttonsOuter[2], buttonPairTheme.virtualButtonOuter);
-            svg.fill(this.buttons[2], buttonPairTheme.virtualButtonUp);
+        public updateLocations(...xys: [number, number][]) {
+            //TODO(DZ): come up with a better abstraction/interface for customizing placement
+            xys.forEach((xy, i) => {
+                let el = [this.aBtn, this.bBtn, this.abBtn][i];
+                translateEl(el, xy)
+            })
         }
 
         public updateState(state: ButtonPairCmp, buttonPairTheme: IButtonPairTheme) {
@@ -97,6 +93,13 @@ namespace pxsim.boardsvg {
         }
 
         public buildDom(g: SVGElement, pinDist: number) {
+            //TODO:
+            /*
+            svg.fills(this.buttonsOuter.slice(0, 2), buttonPairTheme.buttonOuter);
+            svg.fills(this.buttons.slice(0, 2), buttonPairTheme.buttonUp);
+            svg.fill(this.buttonsOuter[2], buttonPairTheme.virtualButtonOuter);
+            svg.fill(this.buttons[2], buttonPairTheme.virtualButtonUp);
+            */
             this.buttonsOuter = []; this.buttons = [];
 
             const tabSize = pinDist/2.5;
