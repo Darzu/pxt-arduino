@@ -235,6 +235,16 @@ namespace pxsim.boardsvg {
     export function translateEls(els: SVGElement[], x: number, y: number) {
         els.forEach(e => svg.hydrate(e, {transform: `translate(${x} ${y})`})) 
     }
+
+    //TODO(DZ): convert all components to implement this interface
+    export interface IBoardComponent<T> {
+        style: string,
+        element: SVGElement,
+        defs: SVGElement[],
+        setLocations: (...xys: [number,number][])=>void;
+        updateState: (state: T)=>void;
+        attachEvents: (state: T, bus: EventBus)=>void;
+    }
 }
 
 namespace pxsim {
