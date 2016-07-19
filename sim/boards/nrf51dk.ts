@@ -372,10 +372,13 @@ pointer-events: none;
                     }
                     return minIdx;
                 }
-                const closestEdge = (p: [number, number]): number => {
+                const closestEdgeIdx = (p: [number, number]): number => {
                     let dists = boardEdges.map(e => Math.abs(p[1] - e));
                     let edgeIdx =  indexOfMin(dists);
-                    return boardEdges[edgeIdx];
+                    return edgeIdx;
+                }
+                const closestEdge = (p: [number, number]): number => {
+                    return boardEdges[closestEdgeIdx(p)];
                 }
                 const closestPointOffBoard = (p: [number, number]): [number, number] => {
                     const offset = PIN_DIST/2;
@@ -391,9 +394,9 @@ pointer-events: none;
                 let end2 = mkWireEnd(p2, clr);
                 this.g.appendChild(end1);
                 this.g.appendChild(end2);
-                let edge1 = closestEdge(p1);
-                let edge2 = closestEdge(p2);
-                if (edge1 == edge2) {
+                let edgeIdx1 = closestEdgeIdx(p1);
+                let edgeIdx2 = closestEdgeIdx(p2);
+                if (edgeIdx1 == edgeIdx2) {
                     let seg = mkWireSeg(p1, p2, clr);
                     this.g.appendChild(seg);
                 } else {
@@ -401,7 +404,13 @@ pointer-events: none;
                     let offP2 = closestPointOffBoard(p2);
                     let offSeg1 = mkWireSeg(p1, offP1, clr);
                     let offSeg2 = mkWireSeg(p2, offP2, clr);
-                    let midSeg = mkWireSeg(offP1, offP2, clr);
+                    let midSeg: SVGElement;
+                    //If the wire is between the two middle edges
+                    if ((edgeIdx1 == 1 || edgeIdx1 == 2) && (edgeIdx2 == 1 || edgeIdx2 == 2)) {
+                        midSeg = mkCurvedWireSeg(offP1, offP2, clr);
+                    } else {
+                        midSeg = mkWireSeg(offP1, offP2, clr);
+                    }
                     this.g.appendChild(offSeg1);
                     this.g.appendChild(offSeg2);
                     underboard.appendChild(midSeg);
