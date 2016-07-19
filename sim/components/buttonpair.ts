@@ -9,6 +9,10 @@ namespace pxsim.input {
             b.usesButtonAB = true;
             runtime.queueDisplayUpdate();
         }
+        if (!b.used) {
+            b.used = true;
+            runtime.queueDisplayUpdate();
+        }
         pxt.registerWithDal(button, DAL.MICROBIT_BUTTON_EVT_CLICK, handler);
     }
 
@@ -16,6 +20,10 @@ namespace pxsim.input {
         let b = board().buttonPairState;
         if (button == DAL.MICROBIT_ID_BUTTON_AB && !b.usesButtonAB) {
             b.usesButtonAB = true;
+            runtime.queueDisplayUpdate();
+        }
+        if (!b.used) {
+            b.used = true;
             runtime.queueDisplayUpdate();
         }
         let bts = b.buttons;
@@ -67,6 +75,10 @@ namespace pxsim.boardsvg {
     pointer-events:none;
 }
             `;
+
+        public elements(): SVGElement[] {
+            return this.buttons.concat(this.buttonsOuter).concat([this.buttonABText]);
+        }
 
         public updateLocation(idx: number, xy: [number, number]) {
             //TODO(DZ): come up with a better abstraction/interface for customizing placement
@@ -211,6 +223,7 @@ namespace pxsim {
     export class ButtonPairCmp {
         usesButtonAB: boolean = false;
         buttons: Button[];
+        used = false;
 
         constructor() {
             this.buttons = [

@@ -13,6 +13,7 @@ namespace pxsim {
         brigthness = 255;
         displayMode = DisplayMode.bw;
         font: Image = createFont();
+        used = false;
 
         animationQ: AnimationQueue;
 
@@ -199,19 +200,23 @@ namespace pxsim.boardsvg {
         private ACTIVE_SIZE = 5; 
 
         public style = `
-.sim-led-back:hover {
-    stroke:#a0a0a0;
-    stroke-width:3px;
-}
-.sim-led:hover {
-    stroke:#ff7f7f;
-    stroke-width:3px;
-}
-`;
+            .sim-led-back:hover {
+                stroke:#a0a0a0;
+                stroke-width:3px;
+            }
+            .sim-led:hover {
+                stroke:#ff7f7f;
+                stroke-width:3px;
+            }
+            `;
+
+        public elements(): SVGElement[] {
+            return [this.background].concat(this.leds).concat(this.ledsOuter);
+        }
 
         public updateLocation(xy: [number, number]) {
             //TODO(DZ): come up with a better abstraction/interface for customizing placement
-            let els = [this.background].concat(this.leds).concat(this.ledsOuter)
+            let els = this.elements();
             translateEls(els, xy[0], xy[1]);
         }
 
@@ -266,12 +271,31 @@ namespace pxsim.boardsvg {
 }
 
 namespace pxsim.images {
-    export function createImage(img: Image) { return img }
-    export function createBigImage(img: Image) { return img }
+    export function createImage(img: Image) { 
+        
+        if (!board().displayCmp.used) {
+            board().displayCmp.used = true;
+            runtime.queueDisplayUpdate();
+        }
+        return img 
+    }
+    export function createBigImage(img: Image) { 
+        
+        if (!board().displayCmp.used) {
+            board().displayCmp.used = true;
+            runtime.queueDisplayUpdate();
+        }
+        return img 
+    }
 }
 
 namespace pxsim.ImageMethods {
     export function showImage(leds: Image, offset: number) {
+        
+        if (!board().displayCmp.used) {
+            board().displayCmp.used = true;
+            runtime.queueDisplayUpdate();
+        }
         if (!leds) panic(PanicCode.MICROBIT_NULL_DEREFERENCE);
 
         leds.copyTo(offset, 5, board().displayCmp.image, 0)
@@ -279,6 +303,11 @@ namespace pxsim.ImageMethods {
     }
 
     export function plotImage(leds: Image, offset: number): void {
+        
+        if (!board().displayCmp.used) {
+            board().displayCmp.used = true;
+            runtime.queueDisplayUpdate();
+        }
         if (!leds) panic(PanicCode.MICROBIT_NULL_DEREFERENCE);
 
         leds.copyTo(offset, 5, board().displayCmp.image, 0)
@@ -286,52 +315,102 @@ namespace pxsim.ImageMethods {
     }
 
     export function height(leds: Image): number {
+        
+        if (!board().displayCmp.used) {
+            board().displayCmp.used = true;
+            runtime.queueDisplayUpdate();
+        }
         if (!leds) panic(PanicCode.MICROBIT_NULL_DEREFERENCE);
         return Image.height;
     }
 
     export function width(leds: Image): number {
+        
+        if (!board().displayCmp.used) {
+            board().displayCmp.used = true;
+            runtime.queueDisplayUpdate();
+        }
         if (!leds) panic(PanicCode.MICROBIT_NULL_DEREFERENCE);
         return leds.width;
     }
 
     export function plotFrame(leds: Image, frame: number) {
+        
+        if (!board().displayCmp.used) {
+            board().displayCmp.used = true;
+            runtime.queueDisplayUpdate();
+        }
         ImageMethods.plotImage(leds, frame * Image.height);
     }
 
     export function showFrame(leds: Image, frame: number) {
+        
+        if (!board().displayCmp.used) {
+            board().displayCmp.used = true;
+            runtime.queueDisplayUpdate();
+        }
         ImageMethods.showImage(leds, frame * Image.height);
     }
 
     export function pixel(leds: Image, x: number, y: number): number {
+        
+        if (!board().displayCmp.used) {
+            board().displayCmp.used = true;
+            runtime.queueDisplayUpdate();
+        }
         if (!leds) panic(PanicCode.MICROBIT_NULL_DEREFERENCE);
         return leds.get(x, y);
     }
 
     export function setPixel(leds: Image, x: number, y: number, v: number) {
+        
+        if (!board().displayCmp.used) {
+            board().displayCmp.used = true;
+            runtime.queueDisplayUpdate();
+        }
         if (!leds) panic(PanicCode.MICROBIT_NULL_DEREFERENCE);
         leds.set(x, y, v);
     }
 
     export function clear(leds: Image) {
+        
+        if (!board().displayCmp.used) {
+            board().displayCmp.used = true;
+            runtime.queueDisplayUpdate();
+        }
         if (!leds) panic(PanicCode.MICROBIT_NULL_DEREFERENCE);
 
         leds.clear();
     }
 
     export function setPixelBrightness(i: Image, x: number, y: number, b: number) {
+        
+        if (!board().displayCmp.used) {
+            board().displayCmp.used = true;
+            runtime.queueDisplayUpdate();
+        }
         if (!i) panic(PanicCode.MICROBIT_NULL_DEREFERENCE);
 
         i.set(x, y, b);
     }
 
     export function pixelBrightness(i: Image, x: number, y: number): number {
+        
+        if (!board().displayCmp.used) {
+            board().displayCmp.used = true;
+            runtime.queueDisplayUpdate();
+        }
         if (!i) panic(PanicCode.MICROBIT_NULL_DEREFERENCE);
 
         return i.get(x, y);
     }
 
     export function scrollImage(leds: Image, stride: number, interval: number): void {
+        
+        if (!board().displayCmp.used) {
+            board().displayCmp.used = true;
+            runtime.queueDisplayUpdate();
+        }
         if (!leds) panic(PanicCode.MICROBIT_NULL_DEREFERENCE);
         if (stride == 0) stride = 1;
 
@@ -356,6 +435,11 @@ namespace pxsim.ImageMethods {
 
 namespace pxsim.basic {
     export function showNumber(x: number, interval: number) {
+        
+        if (!board().displayCmp.used) {
+            board().displayCmp.used = true;
+            runtime.queueDisplayUpdate();
+        }
         if (interval < 0) return;
 
         let leds = createImageFromString(x.toString());
@@ -364,6 +448,11 @@ namespace pxsim.basic {
     }
 
     export function showString(s: string, interval: number) {
+        
+        if (!board().displayCmp.used) {
+            board().displayCmp.used = true;
+            runtime.queueDisplayUpdate();
+        }
         if (interval < 0) return;
         if (s.length == 0) {
             clearScreen();
@@ -375,57 +464,117 @@ namespace pxsim.basic {
     }
 
     export function showLeds(leds: Image, delay: number): void {
+        
+        if (!board().displayCmp.used) {
+            board().displayCmp.used = true;
+            runtime.queueDisplayUpdate();
+        }
         showAnimation(leds, delay);
     }
 
     export function clearScreen() {
+        
+        if (!board().displayCmp.used) {
+            board().displayCmp.used = true;
+            runtime.queueDisplayUpdate();
+        }
         board().displayCmp.image.clear();
         runtime.queueDisplayUpdate()
     }
 
     export function showAnimation(leds: Image, interval: number): void {
+        
+        if (!board().displayCmp.used) {
+            board().displayCmp.used = true;
+            runtime.queueDisplayUpdate();
+        }
         ImageMethods.scrollImage(leds, 5, interval);
     }
 
     export function plotLeds(leds: Image): void {
+        
+        if (!board().displayCmp.used) {
+            board().displayCmp.used = true;
+            runtime.queueDisplayUpdate();
+        }
         ImageMethods.plotImage(leds, 0);
     }
 }
 
 namespace pxsim.led {
     export function plot(x: number, y: number) {
+        
+        if (!board().displayCmp.used) {
+            board().displayCmp.used = true;
+            runtime.queueDisplayUpdate();
+        }
         board().displayCmp.image.set(x, y, 255);
         runtime.queueDisplayUpdate()
     }
 
     export function unplot(x: number, y: number) {
+        
+        if (!board().displayCmp.used) {
+            board().displayCmp.used = true;
+            runtime.queueDisplayUpdate();
+        }
         board().displayCmp.image.set(x, y, 0);
         runtime.queueDisplayUpdate()
     }
 
     export function point(x: number, y: number): boolean {
+        
+        if (!board().displayCmp.used) {
+            board().displayCmp.used = true;
+            runtime.queueDisplayUpdate();
+        }
         return !!board().displayCmp.image.get(x, y);
     }
 
     export function brightness(): number {
+        
+        if (!board().displayCmp.used) {
+            board().displayCmp.used = true;
+            runtime.queueDisplayUpdate();
+        }
         return board().displayCmp.brigthness;
     }
 
     export function setBrightness(value: number): void {
+        
+        if (!board().displayCmp.used) {
+            board().displayCmp.used = true;
+            runtime.queueDisplayUpdate();
+        }
         board().displayCmp.brigthness = value;
         runtime.queueDisplayUpdate()
     }
 
     export function stopAnimation(): void {
+        
+        if (!board().displayCmp.used) {
+            board().displayCmp.used = true;
+            runtime.queueDisplayUpdate();
+        }
         board().displayCmp.animationQ.cancelAll();
     }
 
     export function setDisplayMode(mode: DisplayMode): void {
+        
+        if (!board().displayCmp.used) {
+            board().displayCmp.used = true;
+            runtime.queueDisplayUpdate();
+        }
         board().displayCmp.displayMode = mode;
         runtime.queueDisplayUpdate()
     }
 
     export function screenshot(): Image {
+        
+        if (!board().displayCmp.used) {
+            board().displayCmp.used = true;
+            runtime.queueDisplayUpdate();
+        }
         let img = createImage(5)
         board().displayCmp.image.copyTo(0, 5, img, 0);
         return img;

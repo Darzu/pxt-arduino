@@ -139,6 +139,18 @@ namespace pxsim.boardsvg {
 
             if (!runtime || runtime.dead) svg.addClass(this.element, "grayscale");
             else svg.removeClass(this.element, "grayscale");
+
+            //show/hide
+            if (this.board.displayCmp.used){
+                svg.removeClass(this.g, "hide-display-cmp")
+            } else {
+                svg.addClass(this.g, "hide-display-cmp")
+            }
+            if (this.board.buttonPairState.used){
+                svg.removeClass(this.g, "hide-buttonpair-cmp")
+            } else {
+                svg.addClass(this.g, "hide-buttonpair-cmp")
+            }
         }
 
         private buildDom() {
@@ -318,6 +330,8 @@ namespace pxsim.boardsvg {
             // display 
             this.displaySvg.buildDom(this.g, PIN_DIST);
             this.displaySvg.updateLocation(bbLoc("h12"))
+            let displayEls = this.displaySvg.elements();
+            displayEls.forEach(e => svg.addClass(e, "sim-bb-display-cmp"))
 
             // compass
             this.compassSvg.buildDom(this.g);
@@ -332,6 +346,8 @@ namespace pxsim.boardsvg {
             this.buttonPairSvg.updateLocation(0, bbLoc("f1"));
             this.buttonPairSvg.updateLocation(1, bbLoc("f28"));
             this.buttonPairSvg.updateLocation(2, bbLoc("d28"));//TODO move to virtual space
+            let btnEls = this.buttonPairSvg.elements();
+            btnEls.forEach(e => svg.addClass(e, "sim-bb-buttonpair-cmp"))
 
             // wires
             const mkCurvedWireSeg = (p1: [number, number], p2: [number, number], clr: string): SVGPathElement => {
@@ -362,7 +378,8 @@ namespace pxsim.boardsvg {
             const boardEdges = [TOP_MARGIN, TOP_MARGIN+boardHeight, TOP_MARGIN+boardHeight+MID_MARGIN, 
                 TOP_MARGIN+boardHeight+MID_MARGIN+bbHeight];
             let nextWireId = 0;
-            const drawWire = (pin1: string, pin2: string, clr: string) => {
+            const drawWire = (pin1: string, pin2: string, clr: string): SVGElement[] => {
+                let result: SVGElement[] = [];
                 let p1 = loc(pin1);
                 let p2 = loc(pin2);
                 const indexOfMin = (vs: number[]): number => {
@@ -398,6 +415,7 @@ namespace pxsim.boardsvg {
                 let end1 = mkWireEnd(p1, clr);
                 let end2 = mkWireEnd(p2, clr);
                 let endG = svg.child(this.g, "g", {class: "sim-bb-wire-ends-g"});
+                result.push(endG);
                 endG.appendChild(end1);
                 endG.appendChild(end2);
                 let edgeIdx1 = closestEdgeIdx(p1);
@@ -405,6 +423,7 @@ namespace pxsim.boardsvg {
                 if (edgeIdx1 == edgeIdx2) {
                     let seg = mkWireSeg(p1, p2, clr);
                     this.g.appendChild(seg);
+                    result.push(seg);
                 } else {
                     let offP1 = closestPointOffBoard(p1);
                     let offP2 = closestPointOffBoard(p2);
@@ -422,9 +441,13 @@ namespace pxsim.boardsvg {
                     } 
                     svg.addClass(midSegHover, "sim-bb-wire-hover");
                     this.g.appendChild(offSeg1);
+                    result.push(offSeg1);
                     this.g.appendChild(offSeg2);
+                    result.push(offSeg2);
                     underboard.appendChild(midSeg);
+                    result.push(midSeg);
                     this.g.appendChild(midSegHover);
+                    result.push(midSegHover);
                     //set hover mechanism
                     let wireIdClass = `sim-bb-wire-id${wireId}`;
                     const setId = (e: SVGElement) => svg.addClass(e, wireIdClass);
@@ -438,6 +461,7 @@ namespace pxsim.boardsvg {
                             stroke: red; 
                         }`
                 }
+                return result;
             }
 
             // draw wires
@@ -451,26 +475,40 @@ namespace pxsim.boardsvg {
             }
             let wireDisc = [
                 //btn1
-                ["j1","7", wireClrs.yellow],
-                ["c3","-2", wireClrs.black],
+                ["j1","7", wireClrs.yellow, "sim-bb-buttonpair-cmp"],
+                ["c3","-2", wireClrs.black, "sim-bb-buttonpair-cmp"],
                 //btn2
-                ["j28","~6", wireClrs.orange],
-                ["c30","-25", wireClrs.black],
+                ["j28","~6", wireClrs.orange, "sim-bb-buttonpair-cmp"],
+                ["c30","-25", wireClrs.black, "sim-bb-buttonpair-cmp"],
                 //display
-                ["a12","~5", wireClrs.blue],
-                ["a13","~4", wireClrs.blue],
-                ["a14","~3", wireClrs.blue],
-                ["a15","2", wireClrs.blue],
-                ["j16","TX->1", wireClrs.blue],
-                ["a16","A0", wireClrs.green],
-                ["a17","A1", wireClrs.green],
-                ["a18","A2", wireClrs.green],
-                ["a19","A3", wireClrs.green],
-                ["j12","A4", wireClrs.green],
+                ["a12","~5", wireClrs.blue, "sim-bb-display-cmp"],
+                ["a13","~4", wireClrs.blue, "sim-bb-display-cmp"],
+                ["a14","~3", wireClrs.blue, "sim-bb-display-cmp"],
+                ["a15","2", wireClrs.blue, "sim-bb-display-cmp"],
+                ["j16","TX->1", wireClrs.blue, "sim-bb-display-cmp"],
+                ["a16","A0", wireClrs.green, "sim-bb-display-cmp"],
+                ["a17","A1", wireClrs.green, "sim-bb-display-cmp"],
+                ["a18","A2", wireClrs.green, "sim-bb-display-cmp"],
+                ["a19","A3", wireClrs.green, "sim-bb-display-cmp"],
+                ["j12","A4", wireClrs.green, "sim-bb-display-cmp"],
                 //gnd
                 ["-1", "GND1", wireClrs.black],
             ]
-            wireDisc.forEach(w => drawWire(w[0], w[1], w[2]));
+            wireDisc.forEach(w => {
+                let els = drawWire(w[0], w[1], w[2])
+                let cls = w[3];
+                if (cls)
+                    els.forEach(e => svg.addClass(e, cls));
+            });
+
+            //show/hide components
+            this.style.textContent += `
+                .hide-display-cmp .sim-bb-display-cmp {
+                    display: none;
+                }
+                .hide-buttonpair-cmp .sim-bb-buttonpair-cmp {
+                    display: none;
+                }`
         }
 
         private attachEvents() {
