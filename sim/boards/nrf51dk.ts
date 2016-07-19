@@ -146,6 +146,7 @@ namespace pxsim.boardsvg {
             const HEIGHT = 812;
             const TOP_MARGIN = 20;
             const MID_MARGIN = 40;
+            const WIRE_WIDTH = PIN_DIST/2.5;
 
             this.element = <SVGSVGElement>svg.elt("svg")
             svg.hydrate(this.element, {
@@ -212,6 +213,8 @@ pointer-events: none;
 .sim-bb-wire {
     fill:none;
     stroke-linecap: round;
+    stroke-width:${WIRE_WIDTH}px;
+    pointer-events: none;
 }
 .sim-bb-wire-end {
     stroke:#333;
@@ -220,6 +223,11 @@ pointer-events: none;
     fill:#999;
     stroke:#000;
     stroke-width:${PIN_DIST/3.0}px;
+}
+.sim-bb-wire-hover {
+    stroke-width: ${WIRE_WIDTH}px;
+    visibility: hidden;
+    stroke-dasharray: ${PIN_DIST/2.0},${PIN_DIST/1.0};
 }
             `;
             this.style.textContent += this.buttonPairSvg.style;
@@ -260,7 +268,6 @@ pointer-events: none;
             }
             const azScale = (n: number) => n * (PIN_DIST / arduinoZero.pinDist);
             const boardHeight = azScale(arduinoZero.height);
-            console.log(`[DZ] final board height: ${boardHeight}`)
             const boardXOff = (WIDTH - azScale(arduinoZero.width))/2.0;
             const boardYOff = TOP_MARGIN;
 
@@ -328,36 +335,34 @@ pointer-events: none;
             this.buttonPairSvg.updateLocation(2, bbLoc("d28"));//TODO move to virtual space
 
             // wires
-            const wireWidth = PIN_DIST/2.5;
             const mkCurvedWireSeg = (p1: [number, number], p2: [number, number], clr: string): SVGPathElement => {
                 const coordStr = (xy: [number, number]):string => {return `${xy[0]}, ${xy[1]}`};
                 let c1: [number, number] = [p1[0], p2[1]];
                 let c2: [number, number] = [p2[0], p1[1]];
                 let w = <SVGPathElement>svg.mkPath("sim-bb-wire", `M${coordStr(p1)} C${coordStr(c1)} ${coordStr(c2)} ${coordStr(p2)}`);
                 (<any>w).style["stroke"] = clr;
-                (<any>w).style["stroke-width"] = `${wireWidth}px`;
                 return w;
             }
             const mkWireSeg = (p1: [number, number], p2: [number, number], clr: string): SVGPathElement => {
                 const coordStr = (xy: [number, number]):string => {return `${xy[0]}, ${xy[1]}`};
                 let w = <SVGPathElement>svg.mkPath("sim-bb-wire", `M${coordStr(p1)} L${coordStr(p2)}`);
                 (<any>w).style["stroke"] = clr;
-                (<any>w).style["stroke-width"] = `${wireWidth}px`;
                 return w;
             }
             const mkWireEnd = (p: [number, number], clr: string): SVGElement => {
                 const endW = PIN_DIST/4;
-                let wg = svg.elt("g");
+                let w = svg.elt("circle");
                 let x = p[0];
                 let y = p[1];
-                let r = wireWidth/2 + endW/2;
-                let w = svg.child(wg, "circle", {cx: x, cy: y, r: r, class: "sim-bb-wire-end"});
+                let r = WIRE_WIDTH/2 + endW/2;
+                svg.hydrate(w, {cx: x, cy: y, r: r, class: "sim-bb-wire-end"});
                 (<any>w).style["fill"] = clr;
                 (<any>w).style["stroke-width"] = `${endW}px`;
-                return wg;
+                return w;
             }
             const boardEdges = [TOP_MARGIN, TOP_MARGIN+boardHeight, TOP_MARGIN+boardHeight+MID_MARGIN, 
                 TOP_MARGIN+boardHeight+MID_MARGIN+bbHeight];
+            let nextWireId = 0;
             const drawWire = (pin1: string, pin2: string, clr: string) => {
                 let p1 = loc(pin1);
                 let p2 = loc(pin2);
@@ -390,10 +395,12 @@ pointer-events: none;
                         y = e + offset;
                     return [p[0], y];
                 }
+                let wireId = nextWireId++;
                 let end1 = mkWireEnd(p1, clr);
                 let end2 = mkWireEnd(p2, clr);
-                this.g.appendChild(end1);
-                this.g.appendChild(end2);
+                let endG = svg.child(this.g, "g", {class: "sim-bb-wire-ends-g"});
+                endG.appendChild(end1);
+                endG.appendChild(end2);
                 let edgeIdx1 = closestEdgeIdx(p1);
                 let edgeIdx2 = closestEdgeIdx(p2);
                 if (edgeIdx1 == edgeIdx2) {
@@ -405,15 +412,32 @@ pointer-events: none;
                     let offSeg1 = mkWireSeg(p1, offP1, clr);
                     let offSeg2 = mkWireSeg(p2, offP2, clr);
                     let midSeg: SVGElement;
-                    //If the wire is between the two middle edges
-                    if ((edgeIdx1 == 1 || edgeIdx1 == 2) && (edgeIdx2 == 1 || edgeIdx2 == 2)) {
+                    let midSegHover: SVGElement;
+                    let isBetweenMiddleTwoEdges = (edgeIdx1 == 1 || edgeIdx1 == 2) && (edgeIdx2 == 1 || edgeIdx2 == 2);
+                    if (isBetweenMiddleTwoEdges) {
                         midSeg = mkCurvedWireSeg(offP1, offP2, clr);
+                        midSegHover = mkCurvedWireSeg(offP1, offP2, clr);
                     } else {
                         midSeg = mkWireSeg(offP1, offP2, clr);
-                    }
+                        midSegHover = mkWireSeg(offP1, offP2, clr);
+                    } 
+                    svg.addClass(midSegHover, "sim-bb-wire-hover");
                     this.g.appendChild(offSeg1);
                     this.g.appendChild(offSeg2);
                     underboard.appendChild(midSeg);
+                    this.g.appendChild(midSegHover);
+                    //set hover mechanism
+                    let wireIdClass = `sim-bb-wire-id${wireId}`;
+                    const setId = (e: SVGElement) => svg.addClass(e, wireIdClass);
+                    setId(endG);
+                    setId(midSegHover);
+                    this.style.textContent += `
+                        .${wireIdClass}:hover ~ .${wireIdClass}.sim-bb-wire-hover { 
+                            visibility: visible; 
+                        }
+                        .sim-bb-wire-ends-g:hover .sim-bb-wire-end { 
+                            stroke: red; 
+                        }`
                 }
             }
 
