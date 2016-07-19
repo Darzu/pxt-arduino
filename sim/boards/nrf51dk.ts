@@ -160,76 +160,75 @@ namespace pxsim.boardsvg {
             this.style = <SVGStyleElement>svg.child(this.element, "style", {});
             //TODO(DZ): generalize flash animation for components 
             this.style.textContent = `
-svg.sim {
-    margin-bottom:1em;
-}
-svg.sim.grayscale {    
-    -moz-filter: grayscale(1);
-    -webkit-filter: grayscale(1);
-    filter: grayscale(1);
-}
+                svg.sim {
+                    margin-bottom:1em;
+                }
+                svg.sim.grayscale {    
+                    -moz-filter: grayscale(1);
+                    -webkit-filter: grayscale(1);
+                    filter: grayscale(1);
+                }
 
-.sim-text {
-font-family:"Lucida Console", Monaco, monospace;
-font-size:25px;
-fill:#fff;
-pointer-events: none;
-}
+                .sim-text {
+                font-family:"Lucida Console", Monaco, monospace;
+                font-size:25px;
+                fill:#fff;
+                pointer-events: none;
+                }
 
-/* animations */
-.sim-theme-glow {
-    animation-name: sim-theme-glow-animation;
-    animation-timing-function: ease-in-out;
-    animation-direction: alternate;
-    animation-iteration-count: infinite;
-    animation-duration: 1.25s;
-}
-@keyframes sim-theme-glow-animation {  
-    from { opacity: 1; }
-    to   { opacity: 0.75; }
-}
+                /* animations */
+                .sim-theme-glow {
+                    animation-name: sim-theme-glow-animation;
+                    animation-timing-function: ease-in-out;
+                    animation-direction: alternate;
+                    animation-iteration-count: infinite;
+                    animation-duration: 1.25s;
+                }
+                @keyframes sim-theme-glow-animation {  
+                    from { opacity: 1; }
+                    to   { opacity: 0.75; }
+                }
 
-.sim-flash {
-    animation-name: sim-flash-animation;
-    animation-duration: 0.1s;
-}
+                .sim-flash {
+                    animation-name: sim-flash-animation;
+                    animation-duration: 0.1s;
+                }
 
-@keyframes sim-flash-animation {  
-    from { fill: yellow; }
-    to   { fill: default; }
-}
+                @keyframes sim-flash-animation {  
+                    from { fill: yellow; }
+                    to   { fill: default; }
+                }
 
-.sim-flash-stroke {
-    animation-name: sim-flash-stroke-animation;
-    animation-duration: 0.4s;
-    animation-timing-function: ease-in;
-}
+                .sim-flash-stroke {
+                    animation-name: sim-flash-stroke-animation;
+                    animation-duration: 0.4s;
+                    animation-timing-function: ease-in;
+                }
 
-@keyframes sim-flash-stroke-animation {  
-    from { stroke: yellow; }
-    to   { stroke: default; }
-}
+                @keyframes sim-flash-stroke-animation {  
+                    from { stroke: yellow; }
+                    to   { stroke: default; }
+                }
 
-.sim-bb-wire {
-    fill:none;
-    stroke-linecap: round;
-    stroke-width:${WIRE_WIDTH}px;
-    pointer-events: none;
-}
-.sim-bb-wire-end {
-    stroke:#333;
-}
-.sim-board-pin {
-    fill:#999;
-    stroke:#000;
-    stroke-width:${PIN_DIST/3.0}px;
-}
-.sim-bb-wire-hover {
-    stroke-width: ${WIRE_WIDTH}px;
-    visibility: hidden;
-    stroke-dasharray: ${PIN_DIST/2.0},${PIN_DIST/1.0};
-}
-            `;
+                .sim-bb-wire {
+                    fill:none;
+                    stroke-linecap: round;
+                    stroke-width:${WIRE_WIDTH}px;
+                    pointer-events: none;
+                }
+                .sim-bb-wire-end {
+                    stroke:#333;
+                }
+                .sim-board-pin {
+                    fill:#999;
+                    stroke:#000;
+                    stroke-width:${PIN_DIST/3.0}px;
+                }
+                .sim-bb-wire-hover {
+                    stroke-width: ${WIRE_WIDTH}px;
+                    visibility: hidden;
+                    stroke-dasharray: ${PIN_DIST/2.0},${PIN_DIST/1.0};
+                }`;
             this.style.textContent += this.buttonPairSvg.style;
             this.style.textContent += this.edgeConnectorSvg.style;
             this.style.textContent += this.radioSvg.style;
