@@ -35,16 +35,17 @@ namespace pxsim.boardsvg {
         };
         public element: SVGElement;
         public defs: SVGElement[];
-        private BTN_DOWN_CLS = "sim-button-down";
         public style = `
             .sim-button {
                 pointer-events: none;   
                 fill: ${this.theme.buttonUp}; 
             }
-            .${this.BTN_DOWN_CLS} {
+            .sim-button-outer:active ~ .sim-button,
+            .sim-button-virtual-outer:active ~ .sim-button-virtual {
                 fill: ${this.theme.buttonDown}; 
             }
             .sim-button-outer {
+                cursor: pointer;
                 fill: ${this.theme.buttonOuter};
             }
             .sim-button-outer:hover {
@@ -93,12 +94,6 @@ namespace pxsim.boardsvg {
         public updateState() {
             let stateBtns = [this.state.aBtn, this.state.bBtn, this.state.abBtn];
             let svgBtns = [this.aBtn, this.bBtn, this.abBtn];
-            stateBtns.forEach((btn, index) => {
-                if (btn.pressed)
-                    svg.addClass(svgBtns[index], this.BTN_DOWN_CLS)
-                else
-                    svg.removeClass(svgBtns[index], this.BTN_DOWN_CLS)
-            });
 
             if (this.state.usesButtonAB && this.abBtn.style.visibility != "visible") {
                 this.abBtn.style.visibility = "visible";
@@ -120,10 +115,9 @@ namespace pxsim.boardsvg {
 
             const mkBtn = (innerCls: string, outerCls: string) => {
                 let btng = <SVGGElement>svg.elt("g");
-                let btnOuter = svg.child(btng, "g");
                 //tabs
                 const mkTab = (x: number, y: number) => {
-                    svg.child(btnOuter, "rect", { class: "sim-button-tab", x: x, y: y, width: tabSize, height: tabSize})
+                    svg.child(btng, "rect", { class: "sim-button-tab", x: x, y: y, width: tabSize, height: tabSize})
                 }
                 mkTab(left, top);
                 mkTab(left + 2*PIN_DIST, top);
@@ -133,11 +127,11 @@ namespace pxsim.boardsvg {
                 //plate
                 const plateL = left;
                 const plateT = top + tabSize;
-                svg.child(btnOuter, "rect", { class: outerCls, x: plateL, y: plateT, rx: plateR, ry: plateR, width: plateW, height: plateH });
+                svg.child(btng, "rect", { class: outerCls, x: plateL, y: plateT, rx: plateR, ry: plateR, width: plateW, height: plateH });
 
                 //pegs
                 const mkPeg = (x: number, y: number) => {
-                    svg.child(btnOuter, "circle", { class: "sim-button-nut", cx: x, cy: y, r: pegR });
+                    svg.child(btng, "circle", { class: "sim-button-nut", cx: x, cy: y, r: pegR });
                 }
                 mkPeg(plateL + pegOffset, plateT + pegOffset)
                 mkPeg(plateL + plateW - pegOffset, plateT + pegOffset)
@@ -170,21 +164,17 @@ namespace pxsim.boardsvg {
             btnSvgs.forEach((btn, index) => {
                 btn.addEventListener(pointerEvents.down, ev => {
                     btnStates[index].pressed = true;
-                    svg.addClass(btnSvgs[index], this.BTN_DOWN_CLS)
                 })
                 btn.addEventListener(pointerEvents.leave, ev => {
                     btnStates[index].pressed = false;
-                    svg.removeClass(btnSvgs[index], this.BTN_DOWN_CLS)
                 })
                 btn.addEventListener(pointerEvents.up, ev => {
                     btnStates[index].pressed = false;
-                    svg.removeClass(btnSvgs[index], this.BTN_DOWN_CLS)
                     this.bus.queue(btnStates[index].id, DAL.MICROBIT_BUTTON_EVT_CLICK);
                 })
             })
             let updateBtns = (s: boolean) => {
                 btnStates.forEach(b => b.pressed = s)
-                btnSvgs.forEach(b => s ? svg.addClass(b, this.BTN_DOWN_CLS) : svg.removeClass(b, this.BTN_DOWN_CLS));
             };
             this.abBtn.addEventListener(pointerEvents.down, ev => {
                 updateBtns(true);
