@@ -26,47 +26,47 @@ namespace pxsim.input {
 
 namespace pxsim.boardsvg {
     export class ButtonPairSvg implements IBoardComponent<ButtonPairCmp> {
-        private theme = {
-            buttonOuter: "#979797",
-            buttonUp: "#000",
-            buttonDown: "#FFA500",
-            virtualButtonOuter: "#333",
-            virtualButtonUp: "#fff",
-        };
         public element: SVGElement;
         public defs: SVGElement[];
         public style = `
             .sim-button {
                 pointer-events: none;   
-                fill: ${this.theme.buttonUp}; 
+                fill: #000; 
             }
             .sim-button-outer:active ~ .sim-button,
-            .sim-button-virtual-outer:active ~ .sim-button-virtual {
-                fill: ${this.theme.buttonDown}; 
+            .sim-button-virtual:active {
+                fill: #FFA500; 
             }
             .sim-button-outer {
                 cursor: pointer;
-                fill: ${this.theme.buttonOuter};
+                fill: #979797;
             }
             .sim-button-outer:hover {
                 stroke:grey;
-                stroke-width: 3px;
-            }
-            .sim-button-virtual {
-                fill: ${this.theme.virtualButtonUp}; 
-            }
-            .sim-button-virtual-outer {
-                fill: ${this.theme.virtualButtonOuter}; 
+                stroke-width: ${PIN_DIST/5}px;
             }
             .sim-button-nut {
                 fill:#000;
                 pointer-events:none;
             }
             .sim-button-nut:hover {
-                stroke:1px solid #704A4A; 
+                stroke:${PIN_DIST/15}px solid #704A4A; 
             }
             .sim-button-tab {
                 fill:#FFF;
+                pointer-events:none;
+            }
+            .sim-button-virtual {
+                cursor: pointer;
+                fill: rgba(255, 255, 255, 0.6); 
+                stroke: rgba(255, 255, 255, 1);
+                stroke-width: ${PIN_DIST/5}px;
+            }
+            .sim-button-virtual:hover {
+                stroke: rgba(128, 128, 128, 1);
+            }
+            .sim-text-virtual {
+                fill: #000;
                 pointer-events:none;
             }
             `;
@@ -101,19 +101,23 @@ namespace pxsim.boardsvg {
         }
 
         private mkBtns() {
-            const tabSize = PIN_DIST/2.5;
-            const pegR = PIN_DIST/5;
-            const btnR = PIN_DIST*.8;
-            const pegMargin = PIN_DIST/8;
-            const plateR = PIN_DIST/12;
-
-            const pegOffset = pegMargin + pegR;
-            const left = 0 - tabSize/2;
-            const top = 0 - tabSize/2; 
-            const plateH = 3*PIN_DIST-tabSize;
-            const plateW = 2*PIN_DIST+tabSize;
-
             const mkBtn = (innerCls: string, outerCls: string) => {
+                const tabSize = PIN_DIST/2.5;
+                const pegR = PIN_DIST/5;
+                const btnR = PIN_DIST*.8;
+                const pegMargin = PIN_DIST/8;
+                const plateR = PIN_DIST/12;
+
+                const pegOffset = pegMargin + pegR;
+                const left = 0 - tabSize/2;
+                const top = 0 - tabSize/2; 
+                const plateH = 3*PIN_DIST-tabSize;
+                const plateW = 2*PIN_DIST+tabSize;
+                const plateL = left;
+                const plateT = top + tabSize;
+                const btnCX = plateL + plateW/2;
+                const btnCY = plateT + plateH/2;
+                
                 let btng = <SVGGElement>svg.elt("g");
                 //tabs
                 const mkTab = (x: number, y: number) => {
@@ -125,8 +129,6 @@ namespace pxsim.boardsvg {
                 mkTab(left + 2*PIN_DIST, top + 3*PIN_DIST);
 
                 //plate
-                const plateL = left;
-                const plateT = top + tabSize;
                 svg.child(btng, "rect", { class: outerCls, x: plateL, y: plateT, rx: plateR, ry: plateR, width: plateW, height: plateH });
 
                 //pegs
@@ -139,14 +141,35 @@ namespace pxsim.boardsvg {
                 mkPeg(plateL + plateW - pegOffset, plateT + plateH - pegOffset)
 
                 //inner btn
-                let innerBtn = svg.child(btng, "circle", { class: innerCls, cx: plateL + plateW/2, cy: plateT + plateH/2, r: btnR });
+                let innerBtn = svg.child(btng, "circle", { class: innerCls, cx: btnCX, cy: btnCY, r: btnR });
                 return btng;
             }
 
             this.aBtn = mkBtn("sim-button", "sim-button-outer");
             this.bBtn = mkBtn("sim-button", "sim-button-outer");
-            this.abBtn = mkBtn("sim-button-virtual", "sim-button-virtual-outer");
-            this.abBtn.style.visibility = "hidden";
+
+            const mkVirtualBtn = () => {
+                const numPins = 2;
+                const w = PIN_DIST*2.8;
+                const offset = (w - (numPins*PIN_DIST))/2;
+                const corner = PIN_DIST/2;
+                const cx = 0 - offset + w/2;
+                const cy = cx;
+                const txtSize = PIN_DIST*1.3;
+                const x = -offset;
+                const y = -offset;
+                const txtXOff = PIN_DIST/7;
+                const txtYOff = PIN_DIST/10;
+
+                let btng = <SVGGElement>svg.elt("g");
+                let btn = svg.child(btng, "rect", { class: "sim-button-virtual", x: x, y: y, rx: corner, ry: corner, width: w, height: w});
+                let btnTxt = mkTxt(cx+txtXOff, cy+txtYOff, txtSize, 0, "A+B", "sim-text sim-text-virtual");
+                btng.appendChild(btnTxt);
+
+                return btng;
+            }
+
+            this.abBtn = mkVirtualBtn();
             this.abBtn.style.visibility = "hidden";
 
             let el = svg.elt("g");

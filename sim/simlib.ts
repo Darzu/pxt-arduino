@@ -249,6 +249,19 @@ namespace pxsim.boardsvg {
         setLocations (...xys: [number,number][]): void;
         updateState (): void;
     }
+
+    export function mkTxt(cx: number, cy: number, size: number, r: number, txt: string, cls: string): SVGElement {
+        const txtXOffFactor = -0.33333;//Found by trial and error
+        const txtYOffFactor = 0.3;
+        const xOff = txtXOffFactor*size*txt.length;
+        const yOff = txtYOffFactor*size;
+        let g = svg.elt("g");
+        svg.hydrate(g, {transform: `translate(${cx} ${cy})`});
+        let el = svg.child(g, "text", { class: "noselect " + cls, x: xOff, y: yOff, style: `font-size:${size}px;`,
+            transform: `translate(${0} ${0}) rotate(${r})` }) as SVGTextElement;
+        el.textContent = txt;
+        return g
+    }
 }
 
 namespace pxsim {

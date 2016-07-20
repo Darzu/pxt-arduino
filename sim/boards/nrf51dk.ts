@@ -84,6 +84,15 @@ namespace pxsim.boardsvg {
     const MID_MARGIN = 40;
     const WIRE_WIDTH = PIN_DIST/2.5;
     const BOARD_SYTLE = `
+        .noselect {
+            -webkit-touch-callout: none; /* iOS Safari */
+            -webkit-user-select: none;   /* Chrome/Safari/Opera */
+            -khtml-user-select: none;    /* Konqueror */
+            -moz-user-select: none;      /* Firefox */
+            -ms-user-select: none;       /* Internet Explorer/Edge */
+            user-select: none;           /* Non-prefixed version, currently
+                                            not supported by any browser */
+        }
         svg.sim {
             margin-bottom:1em;
         }
@@ -456,10 +465,10 @@ namespace pxsim.boardsvg {
             let wireDisc = [
                 //btn1
                 ["j1","7", wireClrs.yellow],
-                ["c3","-2", wireClrs.black],
+                ["a3","-2", wireClrs.black],
                 //btn2
                 ["j28","~6", wireClrs.orange],
-                ["c30","-25", wireClrs.black],
+                ["a30","-25", wireClrs.black],
                 //display
                 ["a12","~5", wireClrs.blue],
                 ["a13","~4", wireClrs.blue],
