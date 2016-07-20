@@ -186,7 +186,7 @@ namespace pxsim.boardsvg {
     }
     export var defaultLedMatrixTheme : ILedMatrixTheme = {
         background: "#000",
-        ledOn: "#ff7f7f",
+        ledOn: "#ff5f5f",
         ledOff: "#DDD",
     };
 
