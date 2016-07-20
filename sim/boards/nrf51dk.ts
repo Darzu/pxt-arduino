@@ -287,12 +287,13 @@ namespace pxsim.boardsvg {
             }
             const azScale = (n: number) => n * (PIN_DIST / arduinoZero.pinDist);
             const boardHeight = azScale(arduinoZero.height);
-            const boardXOff = (WIDTH - azScale(arduinoZero.width))/2.0;
+            const boardWidth = azScale(arduinoZero.width);
+            const boardXOff = (WIDTH - boardWidth)/2.0;
             const boardYOff = TOP_MARGIN;
 
             // main board
             svg.child(this.g, "image", 
-                { class: "sim-board", x: 0, y: TOP_MARGIN, width: WIDTH, height: boardHeight, 
+                { class: "sim-board", x: boardXOff, y: boardYOff, width: boardWidth, height: boardHeight, 
                     "href": `/images/${arduinoZero.photo}`});
             const mkPinGrid = (l: number, t: number, rs: number, cs: number, getNm: (i: number, j: number) => string) => {
                 const size = PIN_DIST*0.66666;
