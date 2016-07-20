@@ -18,41 +18,44 @@ namespace pxsim.input {
             b.usesButtonAB = true;
             runtime.queueDisplayUpdate();
         }
-        let bts = b.buttons;
-        if (button == DAL.MICROBIT_ID_BUTTON_A) return bts[0].pressed;
-        if (button == DAL.MICROBIT_ID_BUTTON_B) return bts[1].pressed;
-        return bts[2].pressed || (bts[0].pressed && bts[1].pressed);
+        if (button == DAL.MICROBIT_ID_BUTTON_A) return b.aBtn.pressed;
+        if (button == DAL.MICROBIT_ID_BUTTON_B) return b.bBtn.pressed;
+        return b.abBtn.pressed || (b.aBtn.pressed && b.bBtn.pressed);
     }
 }
 
 namespace pxsim.boardsvg {
-    export interface IButtonPairTheme {
-        buttonOuter?: string;
-        buttonUp?: string;
-        buttonDown?: string;
-        virtualButtonOuter?: string;
-        virtualButtonUp?: string;
-        virtualButtonDown?: string;
-    }
-
-    export var defaultButtonPairTheme: IButtonPairTheme = {
-        buttonOuter: "#979797",
-        buttonUp: "#000",
-        buttonDown: "#FFA500",
-        virtualButtonOuter: "#333",
-        virtualButtonUp: "#fff",
-    };
-
     export class ButtonPairSvg implements IBoardComponent<ButtonPairCmp> {
+        private theme = {
+            buttonOuter: "#979797",
+            buttonUp: "#000",
+            buttonDown: "#FFA500",
+            virtualButtonOuter: "#333",
+            virtualButtonUp: "#fff",
+        };
         public element: SVGElement;
         public defs: SVGElement[];
+        private BTN_DOWN_CLS = "sim-button-down";
         public style = `
             .sim-button {
-                pointer-events: none;    
+                pointer-events: none;   
+                fill: ${this.theme.buttonUp}; 
+            }
+            .${this.BTN_DOWN_CLS} {
+                fill: ${this.theme.buttonDown}; 
+            }
+            .sim-button-outer {
+                fill: ${this.theme.buttonOuter};
             }
             .sim-button-outer:hover {
                 stroke:grey;
                 stroke-width: 3px;
+            }
+            .sim-button-virtual {
+                fill: ${this.theme.virtualButtonUp}; 
+            }
+            .sim-button-virtual-outer {
+                fill: ${this.theme.virtualButtonOuter}; 
             }
             .sim-button-nut {
                 fill:#000;
@@ -66,75 +69,75 @@ namespace pxsim.boardsvg {
                 pointer-events:none;
             }
             `;
+        private state: ButtonPairCmp;
+        private bus: EventBus;
+        private aBtn: SVGGElement;
+        private bBtn: SVGGElement;
+        private abBtn: SVGGElement;
 
-        private aBtn: SVGElement;
-        private bBtn: SVGElement;
-        private abBtn: SVGElement;
+        public constructor(bus: EventBus, state: ButtonPairCmp) {
+            this.state = state;
+            this.bus = bus;
+            this.element = this.mkBtns();
+            this.updateState();
+            this.attachEvents();
+        }
 
-        public updateLocations(...xys: [number, number][]) {
-            //TODO(DZ): come up with a better abstraction/interface for customizing placement
+        public setLocations(...xys: [number, number][]) {
             xys.forEach((xy, i) => {
                 let el = [this.aBtn, this.bBtn, this.abBtn][i];
                 translateEl(el, xy)
             })
         }
 
-        public updateState(state: ButtonPairCmp, buttonPairTheme: IButtonPairTheme) {
-            state.buttons.forEach((btn, index) => {
-                svg.fill(this.buttons[index], btn.pressed ? buttonPairTheme.buttonDown : buttonPairTheme.buttonUp);
+        public updateState() {
+            let stateBtns = [this.state.aBtn, this.state.bBtn, this.state.abBtn];
+            let svgBtns = [this.aBtn, this.bBtn, this.abBtn];
+            stateBtns.forEach((btn, index) => {
+                if (btn.pressed)
+                    svg.addClass(svgBtns[index], this.BTN_DOWN_CLS)
+                else
+                    svg.removeClass(svgBtns[index], this.BTN_DOWN_CLS)
             });
 
-            if (state.usesButtonAB && this.buttonABText.style.visibility != "visible") {
-                (<any>this.buttonsOuter[2]).style.visibility = "visible";
-                (<any>this.buttons[2]).style.visibility = "visible";
-                this.buttonABText.style.visibility = "visible";
-                this.updateTheme(buttonPairTheme);
+            if (this.state.usesButtonAB && this.abBtn.style.visibility != "visible") {
+                this.abBtn.style.visibility = "visible";
             }
         }
 
-        public buildDom(g: SVGElement, pinDist: number) {
-            //TODO:
-            /*
-            svg.fills(this.buttonsOuter.slice(0, 2), buttonPairTheme.buttonOuter);
-            svg.fills(this.buttons.slice(0, 2), buttonPairTheme.buttonUp);
-            svg.fill(this.buttonsOuter[2], buttonPairTheme.virtualButtonOuter);
-            svg.fill(this.buttons[2], buttonPairTheme.virtualButtonUp);
-            */
-            this.buttonsOuter = []; this.buttons = [];
-
-            const tabSize = pinDist/2.5;
-            const pegR = pinDist/5;
-            const btnR = pinDist*.8;
-            const pegMargin = pinDist/8;
-            const plateR = pinDist/12;
+        private mkBtns() {
+            const tabSize = PIN_DIST/2.5;
+            const pegR = PIN_DIST/5;
+            const btnR = PIN_DIST*.8;
+            const pegMargin = PIN_DIST/8;
+            const plateR = PIN_DIST/12;
 
             const pegOffset = pegMargin + pegR;
             const left = 0 - tabSize/2;
             const top = 0 - tabSize/2; 
-            const plateH = 3*pinDist-tabSize;
-            const plateW = 2*pinDist+tabSize;
+            const plateH = 3*PIN_DIST-tabSize;
+            const plateW = 2*PIN_DIST+tabSize;
 
-            const mkBtn = () => {
-                let btng = svg.child(g, "g");
-                this.buttonsOuter.push(btng);
-
+            const mkBtn = (innerCls: string, outerCls: string) => {
+                let btng = <SVGGElement>svg.elt("g");
+                let btnOuter = svg.child(btng, "g");
                 //tabs
                 const mkTab = (x: number, y: number) => {
-                    svg.child(btng, "rect", { class: "sim-button-tab", x: x, y: y, width: tabSize, height: tabSize})
+                    svg.child(btnOuter, "rect", { class: "sim-button-tab", x: x, y: y, width: tabSize, height: tabSize})
                 }
                 mkTab(left, top);
-                mkTab(left + 2*pinDist, top);
-                mkTab(left, top + 3*pinDist);
-                mkTab(left + 2*pinDist, top + 3*pinDist);
+                mkTab(left + 2*PIN_DIST, top);
+                mkTab(left, top + 3*PIN_DIST);
+                mkTab(left + 2*PIN_DIST, top + 3*PIN_DIST);
 
                 //plate
                 const plateL = left;
                 const plateT = top + tabSize;
-                svg.child(btng, "rect", { class: "sim-button-outer", x: plateL, y: plateT, rx: plateR, ry: plateR, width: plateW, height: plateH });
+                svg.child(btnOuter, "rect", { class: outerCls, x: plateL, y: plateT, rx: plateR, ry: plateR, width: plateW, height: plateH });
 
                 //pegs
                 const mkPeg = (x: number, y: number) => {
-                    svg.child(btng, "circle", { class: "sim-button-nut", cx: x, cy: y, r: pegR });
+                    svg.child(btnOuter, "circle", { class: "sim-button-nut", cx: x, cy: y, r: pegR });
                 }
                 mkPeg(plateL + pegOffset, plateT + pegOffset)
                 mkPeg(plateL + plateW - pegOffset, plateT + pegOffset)
@@ -142,64 +145,56 @@ namespace pxsim.boardsvg {
                 mkPeg(plateL + plateW - pegOffset, plateT + plateH - pegOffset)
 
                 //inner btn
-                let innerBtn = svg.child(g, "circle", { class: "sim-button", cx: plateL + plateW/2, cy: plateT + plateH/2, r: btnR });
-                this.buttons.push(innerBtn);
+                let innerBtn = svg.child(btng, "circle", { class: innerCls, cx: plateL + plateW/2, cy: plateT + plateH/2, r: btnR });
+                return btng;
             }
 
-            mkBtn();
-            mkBtn();
-            mkBtn();
-            (<any>this.buttonsOuter[2]).style.visibility = "hidden";
-            (<any>this.buttons[2]).style.visibility = "hidden";
+            this.aBtn = mkBtn("sim-button", "sim-button-outer");
+            this.bBtn = mkBtn("sim-button", "sim-button-outer");
+            this.abBtn = mkBtn("sim-button-virtual", "sim-button-virtual-outer");
+            this.abBtn.style.visibility = "hidden";
+            this.abBtn.style.visibility = "hidden";
 
-            //TODO parameterize text location
-            this.buttonABText = svg.child(g, "text", { class: "sim-text", x: 370, y: 272 }) as SVGTextElement;
-            this.buttonABText.textContent = "A+B";
-            this.buttonABText.style.visibility = "hidden";
+            let el = svg.elt("g");
+            svg.addClass(el, "sim-buttonpair")
+            el.appendChild(this.aBtn);
+            el.appendChild(this.bBtn);
+            el.appendChild(this.abBtn);
+
+            return el;
         }
 
-        public attachEvents(bus: EventBus, state: ButtonPairCmp, buttonPairTheme: IButtonPairTheme) {
-            this.buttonsOuter.slice(0, 2).forEach((btn, index) => {
+        private attachEvents() {
+            let btnStates = [this.state.aBtn, this.state.bBtn];
+            let btnSvgs = [this.aBtn, this.bBtn];
+            btnSvgs.forEach((btn, index) => {
                 btn.addEventListener(pointerEvents.down, ev => {
-                    state.buttons[index].pressed = true;
-                    svg.fill(this.buttons[index], buttonPairTheme.buttonDown);
+                    btnStates[index].pressed = true;
+                    svg.addClass(btnSvgs[index], this.BTN_DOWN_CLS)
                 })
                 btn.addEventListener(pointerEvents.leave, ev => {
-                    state.buttons[index].pressed = false;
-                    svg.fill(this.buttons[index], buttonPairTheme.buttonUp);
+                    btnStates[index].pressed = false;
+                    svg.removeClass(btnSvgs[index], this.BTN_DOWN_CLS)
                 })
                 btn.addEventListener(pointerEvents.up, ev => {
-                    state.buttons[index].pressed = false;
-                    svg.fill(this.buttons[index], buttonPairTheme.buttonUp);
-
-                    bus.queue(state.buttons[index].id, DAL.MICROBIT_BUTTON_EVT_CLICK);
+                    btnStates[index].pressed = false;
+                    svg.removeClass(btnSvgs[index], this.BTN_DOWN_CLS)
+                    this.bus.queue(btnStates[index].id, DAL.MICROBIT_BUTTON_EVT_CLICK);
                 })
             })
-            this.buttonsOuter[2].addEventListener(pointerEvents.down, ev => {
-                state.buttons[0].pressed = true;
-                state.buttons[1].pressed = true;
-                state.buttons[2].pressed = true;
-                svg.fill(this.buttons[0], buttonPairTheme.buttonDown);
-                svg.fill(this.buttons[1], buttonPairTheme.buttonDown);
-                svg.fill(this.buttons[2], buttonPairTheme.buttonDown);
+            let updateBtns = (s: boolean) => {
+                btnStates.forEach(b => b.pressed = s)
+                btnSvgs.forEach(b => s ? svg.addClass(b, this.BTN_DOWN_CLS) : svg.removeClass(b, this.BTN_DOWN_CLS));
+            };
+            this.abBtn.addEventListener(pointerEvents.down, ev => {
+                updateBtns(true);
             })
-            this.buttonsOuter[2].addEventListener(pointerEvents.leave, ev => {
-                state.buttons[0].pressed = false;
-                state.buttons[1].pressed = false;
-                state.buttons[2].pressed = false;
-                svg.fill(this.buttons[0], buttonPairTheme.buttonUp);
-                svg.fill(this.buttons[1], buttonPairTheme.buttonUp);
-                svg.fill(this.buttons[2], buttonPairTheme.virtualButtonUp);
+            this.abBtn.addEventListener(pointerEvents.leave, ev => {
+                updateBtns(false);
             })
-            this.buttonsOuter[2].addEventListener(pointerEvents.up, ev => {
-                state.buttons[0].pressed = false;
-                state.buttons[1].pressed = false;
-                state.buttons[2].pressed = false;
-                svg.fill(this.buttons[0], buttonPairTheme.buttonUp);
-                svg.fill(this.buttons[1], buttonPairTheme.buttonUp);
-                svg.fill(this.buttons[2], buttonPairTheme.virtualButtonUp);
-
-                bus.queue(state.buttons[2].id, DAL.MICROBIT_BUTTON_EVT_CLICK);
+            this.abBtn.addEventListener(pointerEvents.up, ev => {
+                updateBtns(false);
+                this.bus.queue(this.state.abBtn.id, DAL.MICROBIT_BUTTON_EVT_CLICK);
             })
         }
     }
@@ -213,14 +208,14 @@ namespace pxsim {
 
     export class ButtonPairCmp {
         usesButtonAB: boolean = false;
-        buttons: Button[];
+        aBtn: Button;
+        bBtn: Button;
+        abBtn: Button;
 
         constructor() {
-            this.buttons = [
-                new Button(DAL.MICROBIT_ID_BUTTON_A),
-                new Button(DAL.MICROBIT_ID_BUTTON_B),
-                new Button(DAL.MICROBIT_ID_BUTTON_AB)
-            ];
+            this.aBtn = new Button(DAL.MICROBIT_ID_BUTTON_A);
+            this.bBtn = new Button(DAL.MICROBIT_ID_BUTTON_B);
+            this.abBtn = new Button(DAL.MICROBIT_ID_BUTTON_AB);
         }
     }
 }

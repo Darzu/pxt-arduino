@@ -238,11 +238,14 @@ namespace pxsim.boardsvg {
     }
 
     //TODO(DZ): convert all components to implement this interface
+    // [ ] - button pair
+    // [ ] - display
+    // [ ] - accelerometer
     export interface IBoardComponent<T> {
         style: string,
         element: SVGElement,
         defs: SVGElement[],
-        new (bus: EventBus, state: T): IBoardComponent<T>;
+        //constructor (bus: EventBus, state: T); <-- unsupported by TS
         setLocations (...xys: [number,number][]): void;
         updateState (): void;
     }

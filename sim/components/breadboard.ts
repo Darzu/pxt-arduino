@@ -1,6 +1,4 @@
 namespace pxsim.boardsvg {
-    export const PIN_DIST = 15; //original dist: 15.25
-
     export declare type PinFn = (p: SVGRectElement, i: number, j: number, x: number, y: number)=>void;
 
     export const mkGrid = (l: number, t: number, rs: number, cs: number, size: number, props: any, pinFn: PinFn): SVGGElement => {
@@ -52,20 +50,12 @@ namespace pxsim.boardsvg {
 }`
 
         public updateLocation(x: number, y: number) {
-            //TODO(DZ): come up with a better abstraction/interface for customizing placement
-            let els = [this.bb];
-            translateEls(els, x, y);
-        }
-
-        public getPinLoc(pinName: string): [number, number] {
-            if (!(pinName in this.nameToLoc)) {
-                console.error("Unknown pin: " + pinName)
-                return [0,0];
-            }
-            return this.nameToLoc[pinName];
+            translateEl(this.bb, [x, y]);
         }
         
-        public buildDom(g: SVGElement, defs: SVGDefsElement, width: number, height: number) {
+        public buildDom(g: SVGElement, defs: SVGDefsElement, width: number, height: number, 
+            addLoc: (nm: string, xy: [number, number])=>void) 
+        {
             const midRatio = 0.66666666;
             const midH = height*midRatio;
             const barRatio = 0.16666666;
@@ -131,6 +121,7 @@ namespace pxsim.boardsvg {
                     let name = getNm(i, j);
                     this.nameToPin[name] = p;
                     this.nameToLoc[name] = [x, y];
+                    addLoc(name, [x,y]);
                     let title = `${name[0]}, ${name[1] + (name[2] || "") + (name[3] || "")}`
                     svg.hydrate(p, {title: title});
                 }
@@ -174,7 +165,7 @@ namespace pxsim.boardsvg {
                 return el
             }
             const mkLabel = (pinName: string, label: string, xOff: number, yOff: number, r: number, s: number) => {
-                let loc = this.getPinLoc(pinName);
+                let loc = this.nameToLoc[pinName];
                 return mkTxt(loc[0] + xOff, loc[1] + yOff, s, r, label, "sim-bb-label");
             }
 

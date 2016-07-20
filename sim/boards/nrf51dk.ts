@@ -11,7 +11,6 @@ namespace pxsim {
         private mkTheme(accent: string): boardsvg.INrf51dkTheme {
             return {
                 accent: accent,
-                buttonPairTheme: boardsvg.defaultButtonPairTheme,
                 edgeConnectorTheme: boardsvg.defaultEdgeConnectorTheme,
                 accelerometerTheme: boardsvg.defaultAccelerometerTheme,
                 radioTheme: boardsvg.defaultRadioTheme,
@@ -62,7 +61,6 @@ namespace pxsim.boardsvg {
 
     export interface INrf51dkTheme {
         accent?: string;
-        buttonPairTheme: IButtonPairTheme;
         edgeConnectorTheme: IEdgeConnectorTheme;
         accelerometerTheme: IAccelerometerTheme;
         radioTheme: IRadioTheme;
@@ -79,6 +77,83 @@ namespace pxsim.boardsvg {
         disableTilt?: boolean;
     }
 
+    export const PIN_DIST = 15; //original dist: 15.25
+    const WIDTH = 498;
+    const HEIGHT = 812;
+    const TOP_MARGIN = 20;
+    const MID_MARGIN = 40;
+    const WIRE_WIDTH = PIN_DIST/2.5;
+    const BOARD_SYTLE = `
+        svg.sim {
+            margin-bottom:1em;
+        }
+        svg.sim.grayscale {    
+            -moz-filter: grayscale(1);
+            -webkit-filter: grayscale(1);
+            filter: grayscale(1);
+        }
+
+        .sim-text {
+        font-family:"Lucida Console", Monaco, monospace;
+        font-size:25px;
+        fill:#fff;
+        pointer-events: none;
+        }
+
+        /* animations */
+        .sim-theme-glow {
+            animation-name: sim-theme-glow-animation;
+            animation-timing-function: ease-in-out;
+            animation-direction: alternate;
+            animation-iteration-count: infinite;
+            animation-duration: 1.25s;
+        }
+        @keyframes sim-theme-glow-animation {  
+            from { opacity: 1; }
+            to   { opacity: 0.75; }
+        }
+
+        .sim-flash {
+            animation-name: sim-flash-animation;
+            animation-duration: 0.1s;
+        }
+
+        @keyframes sim-flash-animation {  
+            from { fill: yellow; }
+            to   { fill: default; }
+        }
+
+        .sim-flash-stroke {
+            animation-name: sim-flash-stroke-animation;
+            animation-duration: 0.4s;
+            animation-timing-function: ease-in;
+        }
+
+        @keyframes sim-flash-stroke-animation {  
+            from { stroke: yellow; }
+            to   { stroke: default; }
+        }
+
+        .sim-bb-wire {
+            fill:none;
+            stroke-linecap: round;
+            stroke-width:${WIRE_WIDTH}px;
+            pointer-events: none;
+        }
+        .sim-bb-wire-end {
+            stroke:#333;
+        }
+        .sim-board-pin {
+            fill:#999;
+            stroke:#000;
+            stroke-width:${PIN_DIST/3.0}px;
+        }
+        .sim-bb-wire-hover {
+            stroke-width: ${WIRE_WIDTH}px;
+            visibility: hidden;
+            stroke-dasharray: ${PIN_DIST/2.0},${PIN_DIST/1.0};
+        }`;
+
     export class Nrf51dkSvg {
         public element: SVGSVGElement;
         private style: SVGStyleElement;
@@ -87,9 +162,9 @@ namespace pxsim.boardsvg {
 
         public board: pxsim.Nrf51dkBoard;
 
+        //Legacy componenets
         private compassSvg = new CompassSvg();
         private displaySvg = new LedMatrixSvg();
-        private buttonPairSvg = new ButtonPairSvg();
         private edgeConnectorSvg = new EdgeConnectorSvg();
         private serialSvg = new SerialSvg();
         private radioSvg = new RadioSvg();
@@ -98,23 +173,59 @@ namespace pxsim.boardsvg {
         private lightSensorSvg = new LightSensorSvg();
         private breadboard = new Breadboard();
 
-        //board pins
-        private nameToBoardPin: Map<SVGElement> = {};
-        private nameToBoardPinLoc: Map<[number, number]> = {};
+        //IBoardComponents
+        private buttonPairSvg: ButtonPairSvg;
+
+        //locations
+        private nameToLoc: Map<[number, number]> = {};
 
         constructor(public props: INrf51dkProps) {
             this.board = this.props.runtime.board as pxsim.Nrf51dkBoard;
             this.board.updateView = () => this.updateState();
+            this.element = <SVGSVGElement>svg.elt("svg")
+            svg.hydrate(this.element, {
+                "version": "1.0",
+                "viewBox": `0 0 ${WIDTH} ${HEIGHT}`,
+                "enable-background": `new 0 0 ${WIDTH} ${HEIGHT}`,
+                "class": "sim",
+                "x": "0px",
+                "y": "0px"
+            });
+            this.style = <SVGStyleElement>svg.child(this.element, "style", {});
+            this.style.textContent += BOARD_SYTLE;
+            this.defs = <SVGDefsElement>svg.child(this.element, "defs", {});
+            this.g = svg.elt("g");
+            this.element.appendChild(this.g);
+
             this.buildDom();
+
+            this.buttonPairSvg = new ButtonPairSvg(this.board.bus, this.board.buttonPairState);
+            this.attachComponent(this.buttonPairSvg);
+            this.buttonPairSvg.setLocations(this.loc("f1"), this.loc("f28"), this.loc("d28"));
+            
             this.updateTheme();
             this.updateState();
             this.attachEvents();
         }
 
+        private loc(name: string): [number, number] {
+            if (!(name in this.nameToLoc)) {
+                console.error("Unknown location: " + name)
+                return [0,0];
+            }
+            return this.nameToLoc[name];
+        }
+
+        private attachComponent<T>(comp: IBoardComponent<T>) {
+            this.g.appendChild(comp.element);
+            if (comp.defs)
+                comp.defs.forEach(d => this.defs.appendChild(d));
+            this.style.textContent += comp.style || "";
+        }
+
         private updateTheme() {
             let theme = this.props.theme;
 
-            this.buttonPairSvg.updateTheme(theme.buttonPairTheme);
             this.edgeConnectorSvg.updateTheme(theme.edgeConnectorTheme);
             this.accelerometerSvg.updateTheme(theme.accelerometerTheme);
             this.radioSvg.updateTheme(theme.radioTheme);
@@ -129,8 +240,9 @@ namespace pxsim.boardsvg {
             if (!state) return;
             let theme = this.props.theme;
 
+            this.buttonPairSvg.updateState();
+
             this.displaySvg.updateState(state.displayCmp);
-            this.buttonPairSvg.updateState(state.buttonPairState, this.props.theme.buttonPairTheme);
             this.edgeConnectorSvg.updateState(this.g, state.edgeConnectorState, this.props.theme.edgeConnectorTheme);
             this.accelerometerSvg.updateState(this.g, state.accelerometerCmp, this.props.theme.accelerometerTheme, state.bus, !this.props.disableTilt, this.element);
             this.thermometerSvg.updateState(state.thermometerCmp, this.g, this.element, this.props.theme.thermometerTheme, this.defs);
@@ -142,94 +254,6 @@ namespace pxsim.boardsvg {
         }
 
         private buildDom() {
-            const WIDTH = 498;
-            const HEIGHT = 812;
-            const TOP_MARGIN = 20;
-            const MID_MARGIN = 40;
-            const WIRE_WIDTH = PIN_DIST/2.5;
-
-            this.element = <SVGSVGElement>svg.elt("svg")
-            svg.hydrate(this.element, {
-                "version": "1.0",
-                "viewBox": `0 0 ${WIDTH} ${HEIGHT}`,
-                "enable-background": `new 0 0 ${WIDTH} ${HEIGHT}`,
-                "class": "sim",
-                "x": "0px",
-                "y": "0px"
-            });
-            this.style = <SVGStyleElement>svg.child(this.element, "style", {});
-            //TODO(DZ): generalize flash animation for components 
-            this.style.textContent = `
-                svg.sim {
-                    margin-bottom:1em;
-                }
-                svg.sim.grayscale {    
-                    -moz-filter: grayscale(1);
-                    -webkit-filter: grayscale(1);
-                    filter: grayscale(1);
-                }
-
-                .sim-text {
-                font-family:"Lucida Console", Monaco, monospace;
-                font-size:25px;
-                fill:#fff;
-                pointer-events: none;
-                }
-
-                /* animations */
-                .sim-theme-glow {
-                    animation-name: sim-theme-glow-animation;
-                    animation-timing-function: ease-in-out;
-                    animation-direction: alternate;
-                    animation-iteration-count: infinite;
-                    animation-duration: 1.25s;
-                }
-                @keyframes sim-theme-glow-animation {  
-                    from { opacity: 1; }
-                    to   { opacity: 0.75; }
-                }
-
-                .sim-flash {
-                    animation-name: sim-flash-animation;
-                    animation-duration: 0.1s;
-                }
-
-                @keyframes sim-flash-animation {  
-                    from { fill: yellow; }
-                    to   { fill: default; }
-                }
-
-                .sim-flash-stroke {
-                    animation-name: sim-flash-stroke-animation;
-                    animation-duration: 0.4s;
-                    animation-timing-function: ease-in;
-                }
-
-                @keyframes sim-flash-stroke-animation {  
-                    from { stroke: yellow; }
-                    to   { stroke: default; }
-                }
-
-                .sim-bb-wire {
-                    fill:none;
-                    stroke-linecap: round;
-                    stroke-width:${WIRE_WIDTH}px;
-                    pointer-events: none;
-                }
-                .sim-bb-wire-end {
-                    stroke:#333;
-                }
-                .sim-board-pin {
-                    fill:#999;
-                    stroke:#000;
-                    stroke-width:${PIN_DIST/3.0}px;
-                }
-                .sim-bb-wire-hover {
-                    stroke-width: ${WIRE_WIDTH}px;
-                    visibility: hidden;
-                    stroke-dasharray: ${PIN_DIST/2.0},${PIN_DIST/1.0};
-                }`;
-            this.style.textContent += this.buttonPairSvg.style;
             this.style.textContent += this.edgeConnectorSvg.style;
             this.style.textContent += this.radioSvg.style;
             this.style.textContent += this.displaySvg.style;
@@ -237,10 +261,6 @@ namespace pxsim.boardsvg {
             this.style.textContent += this.thermometerSvg.style;
             this.style.textContent += this.lightSensorSvg.style;
             this.style.textContent += this.breadboard.style;
-
-            this.defs = <SVGDefsElement>svg.child(this.element, "defs", {});
-            this.g = svg.elt("g");
-            this.element.appendChild(this.g);
 
             // filters
             let glow = svg.child(this.defs, "filter", { id: "filterglow", x: "-5%", y: "-5%", width: "120%", height: "120%" });
@@ -279,8 +299,7 @@ namespace pxsim.boardsvg {
                 let props = { class: "sim-board-pin" }
                 let pinFn = (p: SVGElement, i: number, j: number, x: number, y: number) => {
                     let name = getNm(i, j);
-                    this.nameToBoardPin[name] = p;
-                    this.nameToBoardPinLoc[name] = [x, y];
+                    this.nameToLoc[name] = [x, y];
                     svg.hydrate(p, {title: name});
                 };
                 return mkGrid(l, t, rs, cs, size, props, pinFn);
@@ -299,25 +318,15 @@ namespace pxsim.boardsvg {
             const bbX = 0;
             const bbY = TOP_MARGIN + boardHeight + MID_MARGIN;
 
-            const bbLoc = (pinName: string): [number, number] => {
-                let bbLoc = this.breadboard.getPinLoc(pinName);
-                return [bbLoc[0] + bbX, bbLoc[1] + bbY];
+            const addBBLoc = (name: string, relativeXY: [number, number]): void => {
+                this.nameToLoc[name] = [bbX + relativeXY[0], bbY + relativeXY[1]];
             }
-            const boardLoc = (pinName: string): [number, number] => {
-                if (!(pinName in this.nameToBoardPinLoc)) {
-                    return null;
-                }
-                return this.nameToBoardPinLoc[pinName];
-            }
-            const loc =(pinName: string): [number, number] => {
-                return boardLoc(pinName) || bbLoc(pinName);
-            }
-            this.breadboard.buildDom(this.g, this.defs, WIDTH, bbHeight);
+            this.breadboard.buildDom(this.g, this.defs, WIDTH, bbHeight, addBBLoc);
             this.breadboard.updateLocation(bbX, bbY);
 
             // display 
             this.displaySvg.buildDom(this.g, PIN_DIST);
-            this.displaySvg.updateLocation(bbLoc("h12"))
+            this.displaySvg.updateLocation(this.loc("h12"))
 
             // compass
             this.compassSvg.buildDom(this.g);
@@ -326,12 +335,6 @@ namespace pxsim.boardsvg {
             // pins
             this.edgeConnectorSvg.buildDom(this.g, this.defs);
             this.edgeConnectorSvg.hide();
-
-            // buttons
-            this.buttonPairSvg.buildDom(this.g, PIN_DIST);
-            this.buttonPairSvg.updateLocation(0, bbLoc("f1"));
-            this.buttonPairSvg.updateLocation(1, bbLoc("f28"));
-            this.buttonPairSvg.updateLocation(2, bbLoc("d28"));//TODO move to virtual space
 
             // wires
             const mkCurvedWireSeg = (p1: [number, number], p2: [number, number], clr: string): SVGPathElement => {
@@ -363,8 +366,8 @@ namespace pxsim.boardsvg {
                 TOP_MARGIN+boardHeight+MID_MARGIN+bbHeight];
             let nextWireId = 0;
             const drawWire = (pin1: string, pin2: string, clr: string) => {
-                let p1 = loc(pin1);
-                let p2 = loc(pin2);
+                let p1 = this.loc(pin1);
+                let p2 = this.loc(pin2);
                 const indexOfMin = (vs: number[]): number => {
                     let minIdx = 0;
                     let min = vs[0];
@@ -478,7 +481,6 @@ namespace pxsim.boardsvg {
             this.radioSvg.attachEvents(this.g, this.props.theme.radioTheme);
             this.accelerometerSvg.attachEvents(this.board.accelerometerCmp, !this.props.disableTilt, this.element);
             this.edgeConnectorSvg.attachEvents(this.board.bus, this.board.edgeConnectorState, this.element);
-            this.buttonPairSvg.attachEvents(this.board.bus, this.board.buttonPairState, this.props.theme.accelerometerTheme);
         }
     }
 }
