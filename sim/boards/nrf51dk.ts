@@ -4,27 +4,27 @@
 
 namespace pxsim {
 
+    const accents = ["#3ADCFE", "#FFD43A", "#3AFFB3", "#FF3A54"];
+
+    export function mkTheme(accent: string): boardsvg.INrf51dkTheme {
+        return {
+            accent: accent,
+            edgeConnectorTheme: boardsvg.defaultEdgeConnectorTheme,
+            accelerometerTheme: boardsvg.defaultAccelerometerTheme,
+            radioTheme: boardsvg.defaultRadioTheme,
+            displayTheme: boardsvg.defaultLedMatrixTheme,
+            serialTheme: boardsvg.defaultSerialTheme,
+            thermometerTheme: boardsvg.defaultThermometerTheme,
+            lightSensorTheme: boardsvg.defaultLightSensorTheme,
+            compassTheme: boardsvg.defaultCompassTheme,
+        }
+    }
+    export function mkRandomTheme(): boardsvg.INrf51dkTheme {
+        let accent = accents[Math.floor(Math.random() * accents.length)];
+        return mkTheme(accent);
+    }
+
     export class Nrf51dkBoard extends DalBoard {
-
-        private accents = ["#3ADCFE", "#FFD43A", "#3AFFB3", "#FF3A54"];
-
-        private mkTheme(accent: string): boardsvg.INrf51dkTheme {
-            return {
-                accent: accent,
-                edgeConnectorTheme: boardsvg.defaultEdgeConnectorTheme,
-                accelerometerTheme: boardsvg.defaultAccelerometerTheme,
-                radioTheme: boardsvg.defaultRadioTheme,
-                displayTheme: boardsvg.defaultLedMatrixTheme,
-                serialTheme: boardsvg.defaultSerialTheme,
-                thermometerTheme: boardsvg.defaultThermometerTheme,
-                lightSensorTheme: boardsvg.defaultLightSensorTheme,
-                compassTheme: boardsvg.defaultCompassTheme,
-            }
-        }
-        public mkRandomTheme(): boardsvg.INrf51dkTheme {
-            let accent = this.accents[Math.floor(Math.random() * this.accents.length)];
-            return this.mkTheme(accent);
-        }
 
         constructor() {
             super()
@@ -34,11 +34,11 @@ namespace pxsim {
             let options = (msg.options || {}) as RuntimeOptions;
             let theme: boardsvg.INrf51dkTheme;
             switch (options.theme) {
-                case 'blue': theme = this.mkTheme(this.accents[0]); break;
-                case 'yellow': theme = this.mkTheme(this.accents[1]); break;
-                case 'green': theme = this.mkTheme(this.accents[2]); break;
-                case 'red': theme = this.mkTheme(this.accents[3]); break;
-                default: theme = this.mkRandomTheme();
+                case 'blue': theme = mkTheme(accents[0]); break;
+                case 'yellow': theme = mkTheme(accents[1]); break;
+                case 'green': theme = mkTheme(accents[2]); break;
+                case 'red': theme = mkTheme(accents[3]); break;
+                default: theme = mkRandomTheme();
             }
             
             theme.compassTheme.color = theme.accent;
