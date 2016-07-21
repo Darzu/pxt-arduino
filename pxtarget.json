@@ -62,7 +62,7 @@
     },
     "simulator": {
         "autoRun": true,
-        "aspectRatio": 0.61
+        "aspectRatio": 0.68
     },
     "compileService": {
         "yottaTarget": "nrf51dk-classic-gcc",

@@ -79,9 +79,10 @@ namespace pxsim.boardsvg {
 
     export const PIN_DIST = 15; //original dist: 15.25
     const WIDTH = 498;
-    const HEIGHT = 812;
+    const HEIGHT = 725;
     const TOP_MARGIN = 20;
     const MID_MARGIN = 40;
+    const BOT_MARGIN = 20;
     const WIRE_WIDTH = PIN_DIST/2.5;
     const BOARD_SYTLE = `
         .noselect {
