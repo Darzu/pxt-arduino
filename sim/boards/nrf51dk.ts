@@ -2,8 +2,8 @@
 /// <reference path="../../node_modules/pxt-core/built/pxtsim.d.ts"/>
 /// <reference path="../../libs/microbit/dal.d.ts"/>
 
+// themes
 namespace pxsim {
-
     const accents = ["#3ADCFE", "#FFD43A", "#3AFFB3", "#FF3A54"];
 
     export function mkTheme(accent: string): boardsvg.INrf51dkTheme {
@@ -23,7 +23,9 @@ namespace pxsim {
         let accent = accents[Math.floor(Math.random() * accents.length)];
         return mkTheme(accent);
     }
+}
 
+namespace pxsim {
     export class Nrf51dkBoard extends DalBoard {
 
         constructor() {
@@ -32,14 +34,7 @@ namespace pxsim {
 
         initAsync(msg: SimulatorRunMessage): Promise<void> {
             let options = (msg.options || {}) as RuntimeOptions;
-            let theme: boardsvg.INrf51dkTheme;
-            switch (options.theme) {
-                case 'blue': theme = mkTheme(accents[0]); break;
-                case 'yellow': theme = mkTheme(accents[1]); break;
-                case 'green': theme = mkTheme(accents[2]); break;
-                case 'red': theme = mkTheme(accents[3]); break;
-                default: theme = mkRandomTheme();
-            }
+            let theme = mkRandomTheme();
             
             theme.compassTheme.color = theme.accent;
 
