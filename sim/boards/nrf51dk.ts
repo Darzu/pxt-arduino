@@ -72,12 +72,78 @@ namespace pxsim.boardsvg {
         disableTilt?: boolean;
     }
 
+    export const WIRE_COLOR = {
+        red: "rgb(240,80,80)",
+        black: "#444",
+        green: "#1bbe5f",
+        blue: "#2d90df",
+        yellow: "rgb(245,230,50)",
+        orange: "#dc8628",
+    }
+
+    // board description
+    // arduino zero description
+    export type Component = "buttonpair" | "display";
+    export type WireDescription = {bb: string, pin:  string, color: string, component?: Component, instructionStep: number}; 
+    export interface BoardDescription {
+        photo: "arduino-zero-photo-sml.png",
+        width: number,
+        height: number,
+        pinDist: number,
+        pins: { x: number, y: number, labels: string[] }[],
+        wiring: WireDescription[], 
+    }
+    
+    export const ARDUINO_ZERO: BoardDescription = {
+        photo: "arduino-zero-photo-sml.png",
+        width: 1000,
+        height: 762,
+        pinDist: 35.5,
+        pins: [
+            {x: 276.8, y: 17.8, labels: ["SCL", "SDA","AREF", "GND0", "~13", "~12", "~11", "~10", "~9", "~8"]},
+            {x: 655.5, y: 17.8, labels: ["7", "~6", "~5", "~4", "~3", "2", "TX->1", "RX<-0"]},
+            {x: 411.7, y: 704.6, labels: ["ATN", "IOREF", "RESET", "3.3V", "5V", "GND1", "GND2", "VIN"]},
+            {x: 732.9, y: 704.6, labels: ["A0", "A1", "A2", "A3", "A4", "A5"]},
+        ],
+        wiring: [
+            {bb: "-1", pin:  "GND1", color: WIRE_COLOR.black, instructionStep: 0},
+            {bb: "j1", pin: "7", color: WIRE_COLOR.yellow, instructionStep: 0, component: "buttonpair"},
+            {bb: "a3", pin: "-2", color: WIRE_COLOR.black, instructionStep: 0, component: "buttonpair"},
+            {bb: "j28", pin: "~6", color: WIRE_COLOR.orange, instructionStep: 1, component: "buttonpair"},
+            {bb: "a30", pin: "-25", color: WIRE_COLOR.black, instructionStep: 1, component: "buttonpair"},
+            {bb: "a12", pin: "~5", color: WIRE_COLOR.blue, instructionStep: 0, component: "display"},
+            {bb: "a13", pin: "~4", color: WIRE_COLOR.blue, instructionStep: 0, component: "display"},
+            {bb: "a14", pin: "~3", color: WIRE_COLOR.blue, instructionStep: 0, component: "display"},
+            {bb: "a15", pin: "2", color: WIRE_COLOR.blue, instructionStep: 0, component: "display"},
+            {bb: "j16", pin: "TX->1", color: WIRE_COLOR.blue, instructionStep: 0, component: "display"},
+            {bb: "a16", pin: "A0", color: WIRE_COLOR.green, instructionStep: 0, component: "display"},
+            {bb: "a17", pin: "A1", color: WIRE_COLOR.green, instructionStep: 0, component: "display"},
+            {bb: "a18", pin: "A2", color: WIRE_COLOR.green, instructionStep: 0, component: "display"},
+            {bb: "a19", pin: "A3", color: WIRE_COLOR.green, instructionStep: 0, component: "display"},
+            {bb: "j12", pin: "A4", color: WIRE_COLOR.green, instructionStep: 0, component: "display"},
+        ],
+    }
+
     export const PIN_DIST = 15; //original dist: 15.25
     const WIDTH = 498;
     const HEIGHT = 725;
     const TOP_MARGIN = 20;
     const MID_MARGIN = 40;
     const BOT_MARGIN = 20;
+
+    export function getBoardDimensions(b: BoardDescription):
+        {scaleFn: (n: number)=>number, height: number, width: number, xOff: number, yOff: number} {
+        let scaleFn = (n: number) => n * (PIN_DIST / b.pinDist);
+        let width = scaleFn(b.width);
+        return {
+            scaleFn: scaleFn,
+            height: scaleFn(b.height),
+            width: width,
+            xOff: (WIDTH - width)/2.0,
+            yOff: TOP_MARGIN
+        }
+    }
+
     const WIRE_WIDTH = PIN_DIST/2.5;
     const BOARD_SYTLE = `
         .noselect {
@@ -289,30 +355,12 @@ namespace pxsim.boardsvg {
             // underboard
             let underboard = svg.child(this.g, "g");
 
-            // arduino zero description
-            const arduinoZero = {
-                photo: "arduino-zero-photo-sml.png",
-                scale: 0.422654269,
-                width: 2366,
-                height: 1803,
-                pinDist: 84,
-                pins: [
-                    {x: 655, y: 42, labels: ["SCL", "SDA","AREF", "GND0", "~13", "~12", "~11", "~10", "~9", "~8"]},
-                    {x: 1551, y: 42, labels: ["7", "~6", "~5", "~4", "~3", "2", "TX->1", "RX<-0"]},
-                    {x: 974, y: 1667, labels: ["ATN", "IOREF", "RESET", "3.3V", "5V", "GND1", "GND2", "VIN"]},
-                    {x: 1734, y: 1667, labels: ["A0", "A1", "A2", "A3", "A4", "A5"]},
-                ]
-            }
-            const azScale = (n: number) => n * (PIN_DIST / arduinoZero.pinDist);
-            const boardHeight = azScale(arduinoZero.height);
-            const boardWidth = azScale(arduinoZero.width);
-            const boardXOff = (WIDTH - boardWidth)/2.0;
-            const boardYOff = TOP_MARGIN;
-
             // main board
+            let boardDesc = ARDUINO_ZERO;
+            let boardDim = getBoardDimensions(ARDUINO_ZERO);
             svg.child(this.g, "image", 
-                { class: "sim-board", x: boardXOff, y: boardYOff, width: boardWidth, height: boardHeight, 
-                    "href": `/images/${arduinoZero.photo}`});
+                { class: "sim-board", x: boardDim.xOff, y: boardDim.yOff, width: boardDim.width, height: boardDim.height, 
+                    "href": `/images/${boardDesc.photo}`});
             const mkPinGrid = (l: number, t: number, rs: number, cs: number, getNm: (i: number, j: number) => string) => {
                 const size = PIN_DIST*0.66666;
                 let props = { class: "sim-board-pin" }
@@ -323,9 +371,9 @@ namespace pxsim.boardsvg {
                 };
                 return mkGrid(l, t, rs, cs, size, props, pinFn);
             }
-            arduinoZero.pins.forEach(pinDisc => {
-                let l = boardXOff + azScale(pinDisc.x) + PIN_DIST/2.0;
-                let t = boardYOff + azScale(pinDisc.y) + PIN_DIST/2.0;
+            boardDesc.pins.forEach(pinDisc => {
+                let l = boardDim.xOff + boardDim.scaleFn(pinDisc.x) + PIN_DIST/2.0;
+                let t = boardDim.yOff + boardDim.scaleFn(pinDisc.y) + PIN_DIST/2.0;
                 let rs = 1;
                 let cs = pinDisc.labels.length;
                 let pins = mkPinGrid(l, t, rs, cs, (i, j) => pinDisc.labels[j]);
@@ -335,7 +383,7 @@ namespace pxsim.boardsvg {
             // breadboard
             const bbHeight = 323; //TODO: relate to PIN_DIST
             const bbX = 0;
-            const bbY = TOP_MARGIN + boardHeight + MID_MARGIN;
+            const bbY = TOP_MARGIN + boardDim.height + MID_MARGIN;
 
             const addBBLoc = (name: string, relativeXY: [number, number]): void => {
                 this.nameToLoc[name] = [bbX + relativeXY[0], bbY + relativeXY[1]];
@@ -383,8 +431,8 @@ namespace pxsim.boardsvg {
                 (<any>w).style["stroke-width"] = `${endW}px`;
                 return w;
             }
-            const boardEdges = [TOP_MARGIN, TOP_MARGIN+boardHeight, TOP_MARGIN+boardHeight+MID_MARGIN, 
-                TOP_MARGIN+boardHeight+MID_MARGIN+bbHeight];
+            const boardEdges = [TOP_MARGIN, TOP_MARGIN+boardDesc.height, TOP_MARGIN+boardDim.height+MID_MARGIN, 
+                TOP_MARGIN+boardDim.height+MID_MARGIN+bbHeight];
             let nextWireId = 0;
             const drawWire = (pin1: string, pin2: string, clr: string) => {
                 let result: SVGElement[] = [];
@@ -473,41 +521,11 @@ namespace pxsim.boardsvg {
             }
 
             // draw wires
-            let wireClrs = {
-                red: "rgb(240,80,80)",
-                black: "#444",
-                green: "#1bbe5f",
-                blue: "#2d90df",
-                yellow: "rgb(245,230,50)",
-                orange: "#dc8628",
-            }
-            let wireDisc = [
-                //btn1
-                ["j1","7", wireClrs.yellow, "sim-bb-buttonpair-cmp"],
-                ["a3","-2", wireClrs.black, "sim-bb-buttonpair-cmp"],
-                //btn2
-                ["j28","~6", wireClrs.orange, "sim-bb-buttonpair-cmp"],
-                ["a30","-25", wireClrs.black, "sim-bb-buttonpair-cmp"],
-                //display
-                ["a12","~5", wireClrs.blue, "sim-bb-display-cmp"],
-                ["a13","~4", wireClrs.blue, "sim-bb-display-cmp"],
-                ["a14","~3", wireClrs.blue, "sim-bb-display-cmp"],
-                ["a15","2", wireClrs.blue, "sim-bb-display-cmp"],
-                ["j16","TX->1", wireClrs.blue, "sim-bb-display-cmp"],
-                ["a16","A0", wireClrs.green, "sim-bb-display-cmp"],
-                ["a17","A1", wireClrs.green, "sim-bb-display-cmp"],
-                ["a18","A2", wireClrs.green, "sim-bb-display-cmp"],
-                ["a19","A3", wireClrs.green, "sim-bb-display-cmp"],
-                ["j12","A4", wireClrs.green, "sim-bb-display-cmp"],
-                //gnd
-                ["-1", "GND1", wireClrs.black],
-            ]
-            wireDisc.forEach(w => {
-                let els = drawWire(w[0], w[1], w[2])
-                let cls = w[3];
-                if (cls)
-                    els.forEach(e => svg.addClass(e, cls));
-            });
+            boardDesc.wiring.forEach(w => {
+                let els = drawWire(w.bb, w.pin, w.color)
+                if (w.component)
+                    els.forEach(e => svg.addClass(e, `sim-bb-${w.component}-cmp`));
+            })
 
             //show/hide components
             this.style.textContent += `
