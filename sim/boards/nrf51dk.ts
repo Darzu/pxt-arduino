@@ -84,14 +84,16 @@ namespace pxsim.boardsvg {
     // board description
     // arduino zero description
     export type Component = "buttonpair" | "display";
-    export type WireDescription = {bb: string, pin:  string, color: string, component?: Component, instructionStep: number}; 
+    export type WireDescription = {bb: string, pin:  string, color: string, component?: Component, instructionStep: number};
+    export type ComponentDescription = {type: Component, locations: Coord[], wires: WireDescription[]} 
     export interface BoardDescription {
         photo: "arduino-zero-photo-sml.png",
         width: number,
         height: number,
         pinDist: number,
         pins: { x: number, y: number, labels: string[] }[],
-        wiring: WireDescription[], 
+        basicWires: WireDescription[], 
+        components: ComponentDescription[],
     }
     
     export const ARDUINO_ZERO: BoardDescription = {
@@ -105,23 +107,29 @@ namespace pxsim.boardsvg {
             {x: 411.7, y: 704.6, labels: ["ATN", "IOREF", "RESET", "3.3V", "5V", "GND1", "GND2", "VIN"]},
             {x: 732.9, y: 704.6, labels: ["A0", "A1", "A2", "A3", "A4", "A5"]},
         ],
-        wiring: [
+        basicWires: [
             {bb: "-1", pin:  "GND1", color: WIRE_COLOR.black, instructionStep: 0},
-            {bb: "j1", pin: "7", color: WIRE_COLOR.yellow, instructionStep: 0, component: "buttonpair"},
-            {bb: "a3", pin: "-2", color: WIRE_COLOR.black, instructionStep: 0, component: "buttonpair"},
-            {bb: "j28", pin: "~6", color: WIRE_COLOR.orange, instructionStep: 1, component: "buttonpair"},
-            {bb: "a30", pin: "-25", color: WIRE_COLOR.black, instructionStep: 1, component: "buttonpair"},
-            {bb: "a12", pin: "~5", color: WIRE_COLOR.blue, instructionStep: 0, component: "display"},
-            {bb: "a13", pin: "~4", color: WIRE_COLOR.blue, instructionStep: 0, component: "display"},
-            {bb: "a14", pin: "~3", color: WIRE_COLOR.blue, instructionStep: 0, component: "display"},
-            {bb: "a15", pin: "2", color: WIRE_COLOR.blue, instructionStep: 0, component: "display"},
-            {bb: "j16", pin: "TX->1", color: WIRE_COLOR.blue, instructionStep: 0, component: "display"},
-            {bb: "a16", pin: "A0", color: WIRE_COLOR.green, instructionStep: 0, component: "display"},
-            {bb: "a17", pin: "A1", color: WIRE_COLOR.green, instructionStep: 0, component: "display"},
-            {bb: "a18", pin: "A2", color: WIRE_COLOR.green, instructionStep: 0, component: "display"},
-            {bb: "a19", pin: "A3", color: WIRE_COLOR.green, instructionStep: 0, component: "display"},
-            {bb: "j12", pin: "A4", color: WIRE_COLOR.green, instructionStep: 0, component: "display"},
         ],
+        components: [
+            {type: "display", locations:[], wires: [
+                {bb: "a12", pin: "~5", color: WIRE_COLOR.blue, instructionStep: 0},
+                {bb: "a13", pin: "~4", color: WIRE_COLOR.blue, instructionStep: 0},
+                {bb: "a14", pin: "~3", color: WIRE_COLOR.blue, instructionStep: 0},
+                {bb: "a15", pin: "2", color: WIRE_COLOR.blue, instructionStep: 0},
+                {bb: "j16", pin: "TX->1", color: WIRE_COLOR.blue, instructionStep: 0},
+                {bb: "a16", pin: "A0", color: WIRE_COLOR.green, instructionStep: 1},
+                {bb: "a17", pin: "A1", color: WIRE_COLOR.green, instructionStep: 1},
+                {bb: "a18", pin: "A2", color: WIRE_COLOR.green, instructionStep: 1},
+                {bb: "a19", pin: "A3", color: WIRE_COLOR.green, instructionStep: 1},
+                {bb: "j12", pin: "A4", color: WIRE_COLOR.green, instructionStep: 1},
+            ]},
+            {type: "buttonpair", locations:[], wires: [
+                {bb: "j1", pin: "7", color: WIRE_COLOR.yellow, instructionStep: 0},
+                {bb: "a3", pin: "-2", color: WIRE_COLOR.black, instructionStep: 0},
+                {bb: "j28", pin: "~6", color: WIRE_COLOR.orange, instructionStep: 1},
+                {bb: "a30", pin: "-25", color: WIRE_COLOR.black, instructionStep: 1},
+            ]},
+        ]
     }
 
     export const PIN_DIST = 15; //original dist: 15.25

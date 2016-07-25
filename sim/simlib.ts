@@ -237,6 +237,8 @@ namespace pxsim.boardsvg {
         svg.hydrate(el, {transform: `translate(${xy[0]} ${xy[1]})`});
     }
 
+    export type Coord = [number, number];
+
     //TODO(DZ): convert all components to implement this interface
     // [ ] - button pair
     // [ ] - display
@@ -246,7 +248,7 @@ namespace pxsim.boardsvg {
         element: SVGElement,
         defs: SVGElement[],
         //constructor (bus: EventBus, state: T); <-- unsupported by TS
-        setLocations (...xys: [number,number][]): void;
+        setLocations (...xys: Coord[]): void;
         updateState (): void;
     }
 
