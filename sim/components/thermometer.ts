@@ -21,6 +21,9 @@ namespace pxsim.boardsvg {
         background: "#202020"
     }
 
+    const TMIN = -5;
+    const TMAX = 50;
+
     export class ThermometerSvg implements IBoardComponent<ThermometerCmp> {
         private thermometerGradient: SVGLinearGradientElement;
         private thermometer: SVGRectElement;
@@ -56,42 +59,40 @@ namespace pxsim.boardsvg {
         }
 
         private buildDom() {
-            return svg.elt('g');
+            let g = svg.elt('g');
+
+            let gid = "gradient-thermometer";
+            this.thermometerGradient = svg.mkLinearGradient(gid);
+            this.defs.push(this.thermometerGradient);
+            this.thermometer = <SVGRectElement>svg.child(g, "rect", {
+                class: "sim-thermometer",
+                x: 120,
+                y: 110,
+                width: 20,
+                height: 160,
+                rx: 5, ry: 5,
+                fill: `url(#${gid})`
+            });
+            this.thermometerText = svg.child(g, "text", { class: 'sim-text', x: 58, y: 130 }) as SVGTextElement;
+            this.updateTheme();
+
+            let pt = this.svgEl.createSVGPoint();
+            svg.buttonEvents(this.thermometer,
+                (ev) => {
+                    let cur = svg.cursorPoint(pt, this.svgEl, ev);
+                    let t = Math.max(0, Math.min(1, (260 - cur.y) / 140))
+                    this.state.temperature = Math.floor(TMIN + t * (TMAX - TMIN));
+                    this.updateState();
+                }, ev => { }, ev => { })
+
+            return g;
         }
 
         public updateState() {
             if (!this.state || !this.state.usesTemperature) return;
 
-            let tmin = -5;
-            let tmax = 50;
-            if (!this.thermometer) {
-                let gid = "gradient-thermometer";
-                this.thermometerGradient = svg.mkLinearGradient(gid);
-                this.defs.push(this.thermometerGradient);
-                this.thermometer = <SVGRectElement>svg.child(this.element, "rect", {
-                    class: "sim-thermometer",
-                    x: 120,
-                    y: 110,
-                    width: 20,
-                    height: 160,
-                    rx: 5, ry: 5,
-                    fill: `url(#${gid})`
-                });
-                this.thermometerText = svg.child(this.element, "text", { class: 'sim-text', x: 58, y: 130 }) as SVGTextElement;
-                this.updateTheme();
-
-                let pt = this.svgEl.createSVGPoint();
-                svg.buttonEvents(this.thermometer,
-                    (ev) => {
-                        let cur = svg.cursorPoint(pt, this.svgEl, ev);
-                        let t = Math.max(0, Math.min(1, (260 - cur.y) / 140))
-                        this.state.temperature = Math.floor(tmin + t * (tmax - tmin));
-                        this.updateState();
-                    }, ev => { }, ev => { })
-            }
-
-            let t = Math.max(tmin, Math.min(tmax, this.state.temperature))
-            let per = Math.floor((this.state.temperature - tmin) / (tmax - tmin) * 100)
+            let t = Math.max(TMIN, Math.min(TMAX, this.state.temperature))
+            let per = Math.floor((this.state.temperature - TMIN) / (TMAX - TMIN) * 100)
             svg.setGradientValue(this.thermometerGradient, 100 - per + "%");
             this.thermometerText.textContent = t + "°C";
         }

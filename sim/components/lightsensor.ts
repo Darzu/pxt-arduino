@@ -56,38 +56,38 @@ namespace pxsim.boardsvg {
         }
 
         public buildDom() {
-            return svg.elt("g");
+            let g = svg.elt("g");
+
+            let gid = "gradient-light-level";
+            this.lightLevelGradient = svg.mkLinearGradient(gid)
+            this.defs.push(this.lightLevelGradient);
+            let cy = 50;
+            let r = 35;
+            this.lightLevelButton = svg.child(g, "circle", {
+                cx: `50px`, cy: `${cy}px`, r: `${r}px`,
+                class: 'sim-light-level-button',
+                fill: `url(#${gid})`
+            }) as SVGCircleElement;
+            let pt = this.svgEl.createSVGPoint();
+            svg.buttonEvents(this.lightLevelButton,
+                (ev) => {
+                    let pos = svg.cursorPoint(pt, this.svgEl, ev);
+                    let rs = r / 2;
+                    let level = Math.max(0, Math.min(255, Math.floor((pos.y - (cy - rs)) / (2 * rs) * 255)));
+                    if (level != this.state.lightLevel) {
+                        this.state.lightLevel = level;
+                        this.applyLightLevel();
+                    }
+                }, ev => { },
+                ev => { })
+            this.lightLevelText = svg.child(g, "text", { x: 85, y: cy + r - 5, text: '', class: 'sim-text' }) as SVGTextElement;
+            this.updateTheme();
+
+            return g;
         }
 
         public updateState() {
             if (!this.state || !this.state.usesLightLevel) return;
-
-            if (!this.lightLevelButton) {
-                let gid = "gradient-light-level";
-                this.lightLevelGradient = svg.mkLinearGradient(gid)
-                this.defs.push(this.lightLevelGradient);
-                let cy = 50;
-                let r = 35;
-                this.lightLevelButton = svg.child(this.element, "circle", {
-                    cx: `50px`, cy: `${cy}px`, r: `${r}px`,
-                    class: 'sim-light-level-button',
-                    fill: `url(#${gid})`
-                }) as SVGCircleElement;
-                let pt = this.svgEl.createSVGPoint();
-                svg.buttonEvents(this.lightLevelButton,
-                    (ev) => {
-                        let pos = svg.cursorPoint(pt, this.svgEl, ev);
-                        let rs = r / 2;
-                        let level = Math.max(0, Math.min(255, Math.floor((pos.y - (cy - rs)) / (2 * rs) * 255)));
-                        if (level != this.state.lightLevel) {
-                            this.state.lightLevel = level;
-                            this.applyLightLevel();
-                        }
-                    }, ev => { },
-                    ev => { })
-                this.lightLevelText = svg.child(this.element, "text", { x: 85, y: cy + r - 5, text: '', class: 'sim-text' }) as SVGTextElement;
-                this.updateTheme();
-            }
 
             svg.setGradientValue(this.lightLevelGradient, Math.min(100, Math.max(0, Math.floor(this.state.lightLevel * 100 / 255))) + '%')
             this.lightLevelText.textContent = this.state.lightLevel.toString();
