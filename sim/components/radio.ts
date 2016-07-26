@@ -102,27 +102,53 @@ namespace pxsim.boardsvg {
         antenna: "#555"
     };
 
-    export class RadioSvg {
+    export class RadioSvg implements IBoardComponent<RadioCmp> {
         private antenna: SVGPolylineElement;
         public style = `
 .sim-antenna {
     stroke-width: 2px;
 }
 `;
+        private state: RadioCmp;
+        public element: SVGElement;
+        public defs: SVGElement[];
+        private bus: EventBus;  
+        private theme: IRadioTheme;   
 
-        public updateTheme(theme: IRadioTheme) {
-            if (this.antenna) this.antenna.style.stroke = theme.antenna;
+        public init(bus: EventBus, state: RadioCmp) {
+            this.state = state;
+            this.bus = bus;
+            this.defs = [];
+            this.theme = defaultRadioTheme;
+            this.element = this.buildDom();
+            this.attachEvents();
+        }   
+
+        public setLocations(...xys: Coord[]) {
+            //TODO
+        }
+
+        public updateTheme() {
+            if (this.antenna) this.antenna.style.stroke = this.theme.antenna;
+        }
+
+        private buildDom() {
+            return svg.elt("g");
+        }
+
+        public updateState() {
+
         }
 
         private lastAntennaFlash: number = 0;
-        public flashAntenna(g: SVGElement, theme: IRadioTheme) {
+        public flashAntenna() {
             if (!this.antenna) {
                 let ax = 380;
                 let dax = 18;
                 let ayt = 10;
                 let ayb = 40;
-                this.antenna = <SVGPolylineElement>svg.child(g, "polyline", { class: "sim-antenna", points: `${ax},${ayb} ${ax},${ayt} ${ax += dax},${ayt} ${ax},${ayb} ${ax += dax},${ayb} ${ax},${ayt} ${ax += dax},${ayt} ${ax},${ayb} ${ax += dax},${ayb} ${ax},${ayt} ${ax += dax},${ayt}` })
-                this.updateTheme(theme);
+                this.antenna = <SVGPolylineElement>svg.child(this.element, "polyline", { class: "sim-antenna", points: `${ax},${ayb} ${ax},${ayt} ${ax += dax},${ayt} ${ax},${ayb} ${ax += dax},${ayb} ${ax},${ayt} ${ax += dax},${ayt} ${ax},${ayb} ${ax += dax},${ayb} ${ax},${ayt} ${ax += dax},${ayt}` })
+                this.updateTheme();
             }
             let now = Date.now();
             if (now - this.lastAntennaFlash > 200) {
@@ -131,10 +157,10 @@ namespace pxsim.boardsvg {
             }
         }
 
-        public attachEvents(g: SVGElement, theme: IRadioTheme) {
+        public attachEvents() {
             Runtime.messagePosted = (msg) => {
                 switch (msg.type || '') {
-                    case 'radiopacket': this.flashAntenna(g, theme); break;
+                    case 'radiopacket': this.flashAntenna(); break;
                 }
             }
         }

@@ -247,9 +247,10 @@ namespace pxsim.boardsvg {
         style: string,
         element: SVGElement,
         defs: SVGElement[],
-        //constructor (bus: EventBus, state: T); <-- unsupported by TS
-        setLocations (...xys: Coord[]): void;
-        updateState (): void;
+        init(bus: EventBus, state: T, svgEl: SVGSVGElement): void, //NOTE: constructors not supported in interfaces
+        setLocations (...xys: Coord[]): void,
+        updateState (): void,
+        updateTheme (): void,
     }
 
     export function mkTxt(cx: number, cy: number, size: number, r: number, txt: string, cls: string): SVGElement {

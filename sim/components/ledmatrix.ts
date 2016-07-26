@@ -191,10 +191,15 @@ namespace pxsim.boardsvg {
         ledOff: "#DDD",
     };
 
-    export class LedMatrixSvg {
+    export class LedMatrixSvg implements IBoardComponent<LedMatrixCmp> {
         private background: SVGElement;
         private ledsOuter: SVGElement[];
         private leds: SVGElement[];
+        private state: LedMatrixCmp;
+        private bus: EventBus;
+        public element: SVGElement;
+        public defs: SVGElement[];
+        private theme: ILedMatrixTheme;
 
         private DRAW_SIZE = 8;
         private ACTIVE_SIZE = 5; 
@@ -210,24 +215,27 @@ namespace pxsim.boardsvg {
             }
             `;
 
-        public elements(): SVGElement[] {
-            return [this.background].concat(this.leds).concat(this.ledsOuter);
+        public init(bus: EventBus, state: LedMatrixCmp) {
+            this.bus = bus;
+            this.state = state;
+            this.theme = defaultLedMatrixTheme;
+            this.defs = [];
+            this.element = this.buildDom();
         }
 
-        public updateLocation(xy: [number, number]) {
-            let els = this.elements();
-            els.forEach(e => translateEl(e, xy));
+        public setLocations(...xys: Coord[]) {
+            translateEl(this.element, xys[0]);
         }
 
-        public updateTheme(theme: ILedMatrixTheme) {
-            svg.fill(this.background, theme.background);
-            svg.fills(this.leds, theme.ledOn);
-            svg.fills(this.ledsOuter, theme.ledOff);
+        public updateTheme() {
+            svg.fill(this.background, this.theme.background);
+            svg.fills(this.leds, this.theme.ledOn);
+            svg.fills(this.ledsOuter, this.theme.ledOff);
         }
 
-        public updateState(state: LedMatrixCmp) {
-            let bw = state.displayMode == pxsim.DisplayMode.bw
-            let img = state.image;
+        public updateState() {
+            let bw = this.state.displayMode == pxsim.DisplayMode.bw
+            let img = this.state.image;
             this.leds.forEach((led, i) => {
                 let sel = (<SVGStylable><any>led)
                 let dx = i % this.DRAW_SIZE;
@@ -241,13 +249,15 @@ namespace pxsim.boardsvg {
             })
         }
 
-        public buildDom(g: SVGElement, pinDist: number) {
+        public buildDom() {
+            let g = svg.elt("g");
+            
             const ROWS = this.DRAW_SIZE;
             const COLS = this.DRAW_SIZE;
-            let width = COLS*pinDist;
-            let height = ROWS*pinDist;
-            let ledRad = Math.round(pinDist * .35);
-            let spacing = pinDist;
+            let width = COLS*PIN_DIST;
+            let height = ROWS*PIN_DIST;
+            let ledRad = Math.round(PIN_DIST * .35);
+            let spacing = PIN_DIST;
             let padding = (spacing - 2*ledRad) / 2.0;
             let left = -(ledRad + padding);
             let top = -(ledRad + padding);
@@ -265,6 +275,8 @@ namespace pxsim.boardsvg {
                     this.leds.push(svg.child(g, "circle", { class: "sim-led", cx: x, cy: y, r: hoverRad, title: `(${j},${i})` }));
                 }
             }
+
+            return g;
         }
     }
 }

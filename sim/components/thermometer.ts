@@ -21,10 +21,16 @@ namespace pxsim.boardsvg {
         background: "#202020"
     }
 
-    export class ThermometerSvg {
+    export class ThermometerSvg implements IBoardComponent<ThermometerCmp> {
         private thermometerGradient: SVGLinearGradientElement;
         private thermometer: SVGRectElement;
         private thermometerText: SVGTextElement;
+        private state: ThermometerCmp;
+        private bus: EventBus;
+        public element: SVGElement;
+        public defs: SVGElement[];
+        private theme: IThermometerTheme;
+        private svgEl: SVGSVGElement;
 
         //TODO(DZ): parameterize stroke
         public style = `
@@ -32,20 +38,37 @@ namespace pxsim.boardsvg {
     stroke:#aaa;
     stroke-width: 3px;
 }`;
-        
-        public updateTheme(theme: IThermometerTheme) {
-            svg.setGradientColors(this.thermometerGradient, theme.background, theme.foreground);
+
+        public init(bus: EventBus, state: ThermometerCmp, svgEl: SVGSVGElement) {
+            this.defs = [];
+            this.state = state;
+            this.bus = bus;
+            this.svgEl = svgEl;
+            this.element = this.buildDom();
         }
 
-        public updateState(state: ThermometerCmp, g: SVGElement, element: SVGSVGElement, theme: IThermometerTheme, defs: SVGDefsElement) {
-            if (!state || !state.usesTemperature) return;
+        public setLocations(...xys: Coord[]){
+            //TODO
+        }
+        
+        public updateTheme() {
+            svg.setGradientColors(this.thermometerGradient, this.theme.background, this.theme.foreground);
+        }
+
+        private buildDom() {
+            return svg.elt('g');
+        }
+
+        public updateState() {
+            if (!this.state || !this.state.usesTemperature) return;
 
             let tmin = -5;
             let tmax = 50;
             if (!this.thermometer) {
                 let gid = "gradient-thermometer";
-                this.thermometerGradient = svg.linearGradient(defs, gid);
-                this.thermometer = <SVGRectElement>svg.child(g, "rect", {
+                this.thermometerGradient = svg.mkLinearGradient(gid);
+                this.defs.push(this.thermometerGradient);
+                this.thermometer = <SVGRectElement>svg.child(this.element, "rect", {
                     class: "sim-thermometer",
                     x: 120,
                     y: 110,
@@ -54,21 +77,21 @@ namespace pxsim.boardsvg {
                     rx: 5, ry: 5,
                     fill: `url(#${gid})`
                 });
-                this.thermometerText = svg.child(g, "text", { class: 'sim-text', x: 58, y: 130 }) as SVGTextElement;
-                this.updateTheme(theme);
+                this.thermometerText = svg.child(this.element, "text", { class: 'sim-text', x: 58, y: 130 }) as SVGTextElement;
+                this.updateTheme();
 
-                let pt = element.createSVGPoint();
+                let pt = this.svgEl.createSVGPoint();
                 svg.buttonEvents(this.thermometer,
                     (ev) => {
-                        let cur = svg.cursorPoint(pt, element, ev);
+                        let cur = svg.cursorPoint(pt, this.svgEl, ev);
                         let t = Math.max(0, Math.min(1, (260 - cur.y) / 140))
-                        state.temperature = Math.floor(tmin + t * (tmax - tmin));
-                        this.updateState(state, g, element, theme, defs);
+                        this.state.temperature = Math.floor(tmin + t * (tmax - tmin));
+                        this.updateState();
                     }, ev => { }, ev => { })
             }
 
-            let t = Math.max(tmin, Math.min(tmax, state.temperature))
-            let per = Math.floor((state.temperature - tmin) / (tmax - tmin) * 100)
+            let t = Math.max(tmin, Math.min(tmax, this.state.temperature))
+            let per = Math.floor((this.state.temperature - tmin) / (tmax - tmin) * 100)
             svg.setGradientValue(this.thermometerGradient, 100 - per + "%");
             this.thermometerText.textContent = t + "°C";
         }

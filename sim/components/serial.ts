@@ -44,7 +44,7 @@ namespace pxsim.boardsvg {
         systemLedFill: "#333"
     }
 
-    export class SerialSvg {
+    export class SerialSvg implements IBoardComponent<SerialCmp> {
         private systemLed: SVGCircleElement;
 
         public style = `
@@ -52,18 +52,41 @@ namespace pxsim.boardsvg {
     stroke-width: 1px;
 }`;
 
-        public updateTheme(theme: ISerialTheme) {
+        private state: SerialCmp;
+        public element: SVGElement;
+        public defs: SVGElement[];
+        private theme: ISerialTheme;
+        private bus: EventBus;
+
+        public init(bus: EventBus, state: SerialCmp) {
+            this.bus = bus;
+            this.state = state;
+            this.defs = [];
+            this.theme = defaultSerialTheme;
+            this.element = this.buildDom();
+            this.attachEvents();
+        }
+
+        public setLocations(...xys: Coord[]) {
+            //TODO
+        }
+
+        public updateTheme() {
             if (this.systemLed) {
-                this.systemLed.style.stroke = theme.systemLedStroke
-                this.systemLed.style.fill = theme.systemLedFill
+                this.systemLed.style.stroke = this.theme.systemLedStroke
+                this.systemLed.style.fill = this.theme.systemLedFill
             }
         }
 
+        private buildDom() {
+            return svg.elt("g");
+        }
+
         private lastFlashTime: number = 0;
-        public flashSystemLed(g: SVGElement, theme: ISerialTheme) {
+        public flashSystemLed() {
             if (!this.systemLed) {
-                this.systemLed = <SVGCircleElement>svg.child(g, "circle", { class: "sim-systemled", cx: 300, cy: 20, r: 5 })
-                this.updateTheme(theme);
+                this.systemLed = <SVGCircleElement>svg.child(this.element, "circle", { class: "sim-systemled", cx: 300, cy: 20, r: 5 })
+                this.updateTheme();
             }
             let now = Date.now();
             if (now - this.lastFlashTime > 150) {
@@ -72,10 +95,14 @@ namespace pxsim.boardsvg {
             }
         }
 
-        public attachEvents(g: SVGElement, theme: ISerialTheme) {
+        public updateState() {
+            
+        }
+
+        public attachEvents() {
             Runtime.messagePosted = (msg) => {
                 switch (msg.type || '') {
-                    case 'serial': this.flashSystemLed(g, theme); break;
+                    case 'serial': this.flashSystemLed(); break;
                 }
             }
         }

@@ -84,9 +84,10 @@ namespace pxsim.boardsvg {
         private bBtn: SVGGElement;
         private abBtn: SVGGElement;
 
-        public constructor(bus: EventBus, state: ButtonPairCmp) {
+        public init(bus: EventBus, state: ButtonPairCmp) {
             this.state = state;
             this.bus = bus;
+            this.defs = [];
             this.element = this.mkBtns();
             this.updateState();
             this.attachEvents();
@@ -107,6 +108,8 @@ namespace pxsim.boardsvg {
                 this.abBtn.style.visibility = "visible";
             }
         }
+
+        public updateTheme() {}
 
         private mkBtns() {
             const mkBtn = (innerCls: string, outerCls: string) => {

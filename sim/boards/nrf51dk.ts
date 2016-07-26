@@ -37,8 +37,7 @@ namespace pxsim {
             let theme = mkRandomTheme();
             
             theme.compassTheme.color = theme.accent;
-
-            console.log("setting up nrf51dk simulator")
+            
             let view = new pxsim.boardsvg.Nrf51dkSvg({
                 theme: theme,
                 runtime: runtime
@@ -83,9 +82,10 @@ namespace pxsim.boardsvg {
 
     // board description
     // arduino zero description
-    export type Component = "buttonpair" | "display";
+    export type Component = ("buttonpair" | "display" | "edgeconnector" | "serial" 
+        | "radio" | "thermometer" | "accelerometer" | "compass" | "lightsensor");
     export type WireDescription = {bb: string, pin:  string, color: string, component?: Component, instructionStep: number};
-    export type ComponentDescription = {type: Component, locations: Coord[], wires: WireDescription[]} 
+    export type ComponentDescription = {type: Component, locations: string[], wires: WireDescription[]} 
     export interface BoardDescription {
         photo: "arduino-zero-photo-sml.png",
         width: number,
@@ -111,7 +111,7 @@ namespace pxsim.boardsvg {
             {bb: "-1", pin:  "GND1", color: WIRE_COLOR.black, instructionStep: 0},
         ],
         components: [
-            {type: "display", locations:[], wires: [
+            {type: "display", locations:["h12"], wires: [
                 {bb: "a12", pin: "~5", color: WIRE_COLOR.blue, instructionStep: 0},
                 {bb: "a13", pin: "~4", color: WIRE_COLOR.blue, instructionStep: 0},
                 {bb: "a14", pin: "~3", color: WIRE_COLOR.blue, instructionStep: 0},
@@ -123,7 +123,7 @@ namespace pxsim.boardsvg {
                 {bb: "a19", pin: "A3", color: WIRE_COLOR.green, instructionStep: 1},
                 {bb: "j12", pin: "A4", color: WIRE_COLOR.green, instructionStep: 1},
             ]},
-            {type: "buttonpair", locations:[], wires: [
+            {type: "buttonpair", locations:["f1", "f28", "d28"], wires: [
                 {bb: "j1", pin: "7", color: WIRE_COLOR.yellow, instructionStep: 0},
                 {bb: "a3", pin: "-2", color: WIRE_COLOR.black, instructionStep: 0},
                 {bb: "j28", pin: "~6", color: WIRE_COLOR.orange, instructionStep: 1},
@@ -238,22 +238,10 @@ namespace pxsim.boardsvg {
         private style: SVGStyleElement;
         private defs: SVGDefsElement;
         private g: SVGElement;
-
         public board: pxsim.Nrf51dkBoard;
-
-        //Legacy componenets
-        private compassSvg = new CompassSvg();
-        private displaySvg = new LedMatrixSvg();
-        private edgeConnectorSvg = new EdgeConnectorSvg();
-        private serialSvg = new SerialSvg();
-        private radioSvg = new RadioSvg();
-        private thermometerSvg = new ThermometerSvg();
-        private accelerometerSvg = new AccelerometerSvg();
-        private lightSensorSvg = new LightSensorSvg();
+        private components: Map<IBoardComponent<any>>;
         private breadboard = new Breadboard();
-
-        //IBoardComponents
-        private buttonPairSvg: ButtonPairSvg;
+        private underboard: SVGGElement;
 
         //locations
         private nameToLoc: Map<[number, number]> = {};
@@ -274,18 +262,18 @@ namespace pxsim.boardsvg {
             this.style.textContent += BOARD_SYTLE;
             this.defs = <SVGDefsElement>svg.child(this.element, "defs", {});
             this.g = svg.elt("g");
+            this.underboard = <SVGGElement>svg.child(this.g, "g");
             this.element.appendChild(this.g);
 
             this.buildDom();
 
-            this.buttonPairSvg = new ButtonPairSvg(this.board.bus, this.board.buttonPairState);
+            //TODO
             this.attachComponent(this.buttonPairSvg);
-            this.buttonPairSvg.setLocations(this.loc("f1"), this.loc("f28"), this.loc("d28"));
+            this.buttonPairSvg.setLocations();
             svg.addClass(this.buttonPairSvg.element, "sim-bb-buttonpair-cmp")
             
             this.updateTheme();
             this.updateState();
-            this.attachEvents();
         }
 
         private loc(name: string): [number, number] {
@@ -296,23 +284,22 @@ namespace pxsim.boardsvg {
             return this.nameToLoc[name];
         }
 
-        private attachComponent<T>(comp: IBoardComponent<T>) {
-            this.g.appendChild(comp.element);
-            if (comp.defs)
-                comp.defs.forEach(d => this.defs.appendChild(d));
-            this.style.textContent += comp.style || "";
+        public addComponent(type: Component) {
+            let attachComponent = (comp: IBoardComponent<any>) => {
+                this.g.appendChild(comp.element);
+                if (comp.defs)
+                    comp.defs.forEach(d => this.defs.appendChild(d));
+                this.style.textContent += comp.style || "";
+            }
+            //TODO
         }
 
         private updateTheme() {
             let theme = this.props.theme;
 
-            this.edgeConnectorSvg.updateTheme(theme.edgeConnectorTheme);
-            this.accelerometerSvg.updateTheme(theme.accelerometerTheme);
-            this.radioSvg.updateTheme(theme.radioTheme);
-            this.displaySvg.updateTheme(theme.displayTheme);
-            this.serialSvg.updateTheme(theme.serialTheme);
-            this.thermometerSvg.updateTheme(theme.thermometerTheme);
-            this.lightSensorSvg.updateTheme(theme.lightSensorTheme);
+            for (let nm in this.components) {
+                this.components[nm].updateTheme();
+            }
         }
 
         public updateState() {
@@ -320,14 +307,9 @@ namespace pxsim.boardsvg {
             if (!state) return;
             let theme = this.props.theme;
 
-            this.buttonPairSvg.updateState();
-
-            this.displaySvg.updateState(state.displayCmp);
-            this.edgeConnectorSvg.updateState(this.g, state.edgeConnectorState, this.props.theme.edgeConnectorTheme);
-            this.accelerometerSvg.updateState(this.g, state.accelerometerCmp, this.props.theme.accelerometerTheme, state.bus, !this.props.disableTilt, this.element);
-            this.thermometerSvg.updateState(state.thermometerCmp, this.g, this.element, this.props.theme.thermometerTheme, this.defs);
-            this.lightSensorSvg.updateState(state.lightSensorCmp, this.g, this.element, this.props.theme.lightSensorTheme, this.defs);
-            this.compassSvg.updateState(state.compassCmp, this.props.theme.compassTheme, this.element);
+            for (let nm in this.components) {
+                this.components[nm].updateState();
+            }
 
             if (!runtime || runtime.dead) svg.addClass(this.element, "grayscale");
             else svg.removeClass(this.element, "grayscale");
@@ -346,22 +328,11 @@ namespace pxsim.boardsvg {
         }
 
         private buildDom() {
-            this.style.textContent += this.edgeConnectorSvg.style;
-            this.style.textContent += this.radioSvg.style;
-            this.style.textContent += this.displaySvg.style;
-            this.style.textContent += this.serialSvg.style;
-            this.style.textContent += this.thermometerSvg.style;
-            this.style.textContent += this.lightSensorSvg.style;
-            this.style.textContent += this.breadboard.style;
-
             // filters
             let glow = svg.child(this.defs, "filter", { id: "filterglow", x: "-5%", y: "-5%", width: "120%", height: "120%" });
             svg.child(glow, "feGaussianBlur", { stdDeviation: "5", result: "glow" });
             let merge = svg.child(glow, "feMerge", {});
             for (let i = 0; i < 3; ++i) svg.child(merge, "feMergeNode", { in: "glow" })
-
-            // underboard
-            let underboard = svg.child(this.g, "g");
 
             // main board
             let boardDim = getBoardDimensions(ARDUINO_ZERO);
@@ -389,9 +360,7 @@ namespace pxsim.boardsvg {
 
             // breadboard
             const bbHeight = 323; //TODO: relate to PIN_DIST
-            const bbX = 0;
-            console.log("boardDim.height", boardDim.height)
-            console.log("MID_MARGIN", MID_MARGIN)
+            const bbX = 0;                        
             const bbY = TOP_MARGIN + boardDim.height + MID_MARGIN;
 
             const addBBLoc = (name: string, relativeXY: [number, number]): void => {
@@ -401,18 +370,8 @@ namespace pxsim.boardsvg {
             this.breadboard.updateLocation(bbX, bbY);
 
             // display 
-            this.displaySvg.buildDom(this.g, PIN_DIST);
-            this.displaySvg.updateLocation(this.loc("h12"))
-            let displayEls = this.displaySvg.elements();
+            //TODO
             displayEls.forEach(e => svg.addClass(e, "sim-bb-display-cmp"))
-
-            // compass
-            this.compassSvg.buildDom(this.g);
-            this.compassSvg.hide();
-
-            // pins
-            this.edgeConnectorSvg.buildDom(this.g, this.defs);
-            this.edgeConnectorSvg.hide();
 
             // wires
             const mkCurvedWireSeg = (p1: [number, number], p2: [number, number], clr: string): SVGPathElement => {
@@ -439,13 +398,8 @@ namespace pxsim.boardsvg {
                 (<any>w).style["fill"] = clr;
                 (<any>w).style["stroke-width"] = `${endW}px`;
                 return w;
-            }
-            console.log("TOP_MARGIN", TOP_MARGIN)
-            console.log("TOP_MARGIN+boardDesc.height",  TOP_MARGIN+boardDim.height)
-            console.log("bbY", bbY)
-            console.log("bbY+bbHeight", bbY+bbHeight)
-            const boardEdges = [TOP_MARGIN, TOP_MARGIN+boardDim.height, bbY, bbY+bbHeight];
-            console.log(boardEdges)
+            }                                                
+            const boardEdges = [TOP_MARGIN, TOP_MARGIN+boardDim.height, bbY, bbY+bbHeight];            
             let nextWireId = 0;
             const drawWire = (pin1: string, pin2: string, clr: string) => {
                 let result: SVGElement[] = [];
@@ -513,7 +467,7 @@ namespace pxsim.boardsvg {
                     result.push(offSeg1);
                     this.g.appendChild(offSeg2);
                     result.push(offSeg2);
-                    underboard.appendChild(midSeg);
+                    this.underboard.appendChild(midSeg);
                     result.push(midSeg);
                     this.g.appendChild(midSegHover);
                     result.push(midSegHover);
@@ -534,7 +488,7 @@ namespace pxsim.boardsvg {
             }
 
             // draw wires
-            ARDUINO_ZERO.wiring.forEach(w => {
+            ARDUINO_ZERO.basicWires.forEach(w => {
                 let els = drawWire(w.bb, w.pin, w.color)
                 if (w.component)
                     els.forEach(e => svg.addClass(e, `sim-bb-${w.component}-cmp`));
@@ -548,13 +502,6 @@ namespace pxsim.boardsvg {
                 .hide-buttonpair-cmp .sim-bb-buttonpair-cmp {
                     display: none;
                 }`
-        }
-
-        private attachEvents() {
-            this.serialSvg.attachEvents(this.g, this.props.theme.serialTheme);
-            this.radioSvg.attachEvents(this.g, this.props.theme.radioTheme);
-            this.accelerometerSvg.attachEvents(this.board.accelerometerCmp, !this.props.disableTilt, this.element);
-            this.edgeConnectorSvg.attachEvents(this.board.bus, this.board.edgeConnectorState, this.element);
         }
     }
 }

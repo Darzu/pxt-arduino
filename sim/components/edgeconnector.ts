@@ -30,41 +30,56 @@ namespace pxsim.boardsvg {
         pinActive: "#FF5500",
     };
 
-    export class EdgeConnectorSvg {
+    export class EdgeConnectorSvg implements IBoardComponent<EdgeConnectorCmp> {
         private pins: SVGElement[];
         private pinGradients: SVGLinearGradientElement[];
         private pinTexts: SVGTextElement[];
-
+        private state: EdgeConnectorCmp;
+        private bus: EventBus;
+        public defs: SVGElement[];
+        public element: SVGElement;
+        private theme: IEdgeConnectorTheme;
+        private svgEl: SVGSVGElement;
+        
         public style = `
-.sim-pin:hover {
-    stroke:#D4AF37;
-    stroke-width:2px;
-}
+            .sim-pin:hover {
+                stroke:#D4AF37;
+                stroke-width:2px;
+            }
 
-.sim-pin-touch.touched:hover {
-    stroke:darkorange;
-}
+            .sim-pin-touch.touched:hover {
+                stroke:darkorange;
+            }
 
-.sim-text-pin {
-  font-family:"Lucida Console", Monaco, monospace;
-  font-size:20px;
-  fill:#fff;
-  pointer-events: none;
-}`;
+            .sim-text-pin {
+            font-family:"Lucida Console", Monaco, monospace;
+            font-size:20px;
+            fill:#fff;
+            pointer-events: none;
+            }`;
 
+        
         public hide() {
             let els =  this.pins.concat(this.pinGradients).concat(this.pinTexts);
             els.forEach(e => (<any>e).style.visibility = "hidden")
         }
 
-        public updateTheme(theme: IEdgeConnectorTheme) {
-            this.pinGradients.forEach(lg => svg.setGradientColors(lg, theme.pin, theme.pinActive));
+        public init(bus: EventBus, state: EdgeConnectorCmp, svgEl: SVGSVGElement) {
+            this.bus = bus;
+            this.state = state;
+            this.theme = defaultEdgeConnectorTheme;
+            this.svgEl = svgEl;
+            this.defs = [];
+            this.element = this.buildDom();
+            this.attachEvents();
         }
 
-        public updateState(g: SVGElement, state: EdgeConnectorCmp, edgeConnectorTheme: IEdgeConnectorTheme) {
-            if (!state) return;
+        public updateTheme() {
+            this.pinGradients.forEach(lg => svg.setGradientColors(lg, this.theme.pin, this.theme.pinActive));
+        }
 
-            state.pins.forEach((pin, i) => this.updatePin(pin, i));
+        public updateState() {
+            this.state.pins.forEach((pin, i) => this.updatePin(pin, i));
         }
 
         private updatePin(pin: Pin, index: number) {
@@ -89,7 +104,12 @@ namespace pxsim.boardsvg {
             if (v) svg.setGradientValue(this.pinGradients[index], v);
         }
 
-        public buildDom(g: SVGElement, defs: SVGDefsElement) {
+        public setLocations(...xys: Coord[]) {
+            //TODO
+        }
+
+        public buildDom() {
+            let g = svg.elt("g");
             // https://www.microbit.co.uk/device/pins
             // P0, P1, P2
             this.pins = [
@@ -132,25 +152,28 @@ namespace pxsim.boardsvg {
 
             this.pinGradients = this.pins.map((pin, i) => {
                 let gid = "gradient-pin-" + i
-                let lg = svg.linearGradient(defs, gid)
+                let lg = svg.mkLinearGradient(gid)
+                this.defs.push(lg);
                 pin.setAttribute("fill", `url(#${gid})`);
                 return lg;
             })
 
             this.pinTexts = [67, 165, 275].map(x => <SVGTextElement>svg.child(g, "text", { class: "sim-text-pin", x: x, y: 345 }));
+
+            return g;
         }
         
-        public attachEvents(bus: EventBus, state: EdgeConnectorCmp, element: SVGSVGElement) {
+        public attachEvents() {
             this.pins.forEach((pin, index) => {
-                if (!state.pins[index]) return;
-                let pt = element.createSVGPoint();
+                if (!this.state.pins[index]) return;
+                let pt = this.svgEl.createSVGPoint();
                 svg.buttonEvents(pin,
                     // move
                     ev => {
-                        let pin = state.pins[index];
+                        let pin = this.state.pins[index];
                         let svgpin = this.pins[index];
                         if (pin.mode & PinFlags.Input) {
-                            let cursor = svg.cursorPoint(pt, element, ev);
+                            let cursor = svg.cursorPoint(pt, this.svgEl, ev);
                             let v = (400 - cursor.y) / 40 * 1023
                             pin.value = Math.max(0, Math.min(1023, Math.floor(v)));
                         }
@@ -158,11 +181,11 @@ namespace pxsim.boardsvg {
                     },
                     // start
                     ev => {
-                        let pin = state.pins[index];
+                        let pin = this.state.pins[index];
                         let svgpin = this.pins[index];
                         svg.addClass(svgpin, "touched");
                         if (pin.mode & PinFlags.Input) {
-                            let cursor = svg.cursorPoint(pt, element, ev);
+                            let cursor = svg.cursorPoint(pt, this.svgEl, ev);
                             let v = (400 - cursor.y) / 40 * 1023
                             pin.value = Math.max(0, Math.min(1023, Math.floor(v)));
                         }
@@ -170,7 +193,7 @@ namespace pxsim.boardsvg {
                     },
                     // stop
                     (ev: MouseEvent) => {
-                        let pin = state.pins[index];
+                        let pin = this.state.pins[index];
                         let svgpin = this.pins[index];
                         svg.removeClass(svgpin, "touched");
                         this.updatePin(pin, index);
@@ -179,17 +202,17 @@ namespace pxsim.boardsvg {
             })
             this.pins.slice(0, 3).forEach((btn, index) => {
                 btn.addEventListener(pointerEvents.down, ev => {
-                    state.pins[index].touched = true;
-                    this.updatePin(state.pins[index], index);
+                    this.state.pins[index].touched = true;
+                    this.updatePin(this.state.pins[index], index);
                 })
                 btn.addEventListener(pointerEvents.leave, ev => {
-                    state.pins[index].touched = false;
-                    this.updatePin(state.pins[index], index);
+                    this.state.pins[index].touched = false;
+                    this.updatePin(this.state.pins[index], index);
                 })
                 btn.addEventListener(pointerEvents.up, ev => {
-                    state.pins[index].touched = false;
-                    this.updatePin(state.pins[index], index);
-                    bus.queue(state.pins[index].id, DAL.MICROBIT_BUTTON_EVT_CLICK);
+                    this.state.pins[index].touched = false;
+                    this.updatePin(this.state.pins[index], index);
+                    this.bus.queue(this.state.pins[index].id, DAL.MICROBIT_BUTTON_EVT_CLICK);
                 })
             })
         }

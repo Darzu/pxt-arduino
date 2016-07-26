@@ -20,10 +20,16 @@ namespace pxsim.boardsvg {
         lightLevelOff: "#555"
     }
 
-    export class LightSensorSvg {
+    export class LightSensorSvg implements IBoardComponent<LightSensorCmp>{
         private lightLevelButton: SVGCircleElement;
         private lightLevelGradient: SVGLinearGradientElement;
         private lightLevelText: SVGTextElement;
+        private state: LightSensorCmp;
+        private bus: EventBus;
+        public element: SVGElement;
+        public defs: SVGElement[];
+        private theme: ILightSensorTheme;
+        private svgEl: SVGSVGElement;
 
         //TODO(DZ): Parameterize stroke
         public style = `
@@ -31,46 +37,64 @@ namespace pxsim.boardsvg {
     stroke:#fff;
     stroke-width: 3px;
 }`; 
-        
-        public updateTheme(theme: ILightSensorTheme) {
-            svg.setGradientColors(this.lightLevelGradient, theme.lightLevelOn, theme.lightLevelOff);
+
+        public init(bus: EventBus, state: LightSensorCmp, svgEl: SVGSVGElement) {
+            this.bus = bus;
+            this.state = state;
+            this.theme = defaultLightSensorTheme;
+            this.defs = [];
+            this.svgEl = svgEl;
+            this.element = this.buildDom();
         }
 
-        public updateState(state: LightSensorCmp, g: SVGElement, element: SVGSVGElement, theme: ILightSensorTheme, defs: SVGDefsElement) {
-            if (!state || !state.usesLightLevel) return;
+        public setLocations(...xys: Coord[]) {
+            //TODO
+        }
+        
+        public updateTheme() {
+            svg.setGradientColors(this.lightLevelGradient, this.theme.lightLevelOn, this.theme.lightLevelOff);
+        }
+
+        public buildDom() {
+            return svg.elt("g");
+        }
+
+        public updateState() {
+            if (!this.state || !this.state.usesLightLevel) return;
 
             if (!this.lightLevelButton) {
                 let gid = "gradient-light-level";
-                this.lightLevelGradient = svg.linearGradient(defs, gid)
+                this.lightLevelGradient = svg.mkLinearGradient(gid)
+                this.defs.push(this.lightLevelGradient);
                 let cy = 50;
                 let r = 35;
-                this.lightLevelButton = svg.child(g, "circle", {
+                this.lightLevelButton = svg.child(this.element, "circle", {
                     cx: `50px`, cy: `${cy}px`, r: `${r}px`,
                     class: 'sim-light-level-button',
                     fill: `url(#${gid})`
                 }) as SVGCircleElement;
-                let pt = element.createSVGPoint();
+                let pt = this.svgEl.createSVGPoint();
                 svg.buttonEvents(this.lightLevelButton,
                     (ev) => {
-                        let pos = svg.cursorPoint(pt, element, ev);
+                        let pos = svg.cursorPoint(pt, this.svgEl, ev);
                         let rs = r / 2;
                         let level = Math.max(0, Math.min(255, Math.floor((pos.y - (cy - rs)) / (2 * rs) * 255)));
-                        if (level != state.lightLevel) {
-                            state.lightLevel = level;
-                            this.applyLightLevel(state);
+                        if (level != this.state.lightLevel) {
+                            this.state.lightLevel = level;
+                            this.applyLightLevel();
                         }
                     }, ev => { },
                     ev => { })
-                this.lightLevelText = svg.child(g, "text", { x: 85, y: cy + r - 5, text: '', class: 'sim-text' }) as SVGTextElement;
-                this.updateTheme(theme);
+                this.lightLevelText = svg.child(this.element, "text", { x: 85, y: cy + r - 5, text: '', class: 'sim-text' }) as SVGTextElement;
+                this.updateTheme();
             }
 
-            svg.setGradientValue(this.lightLevelGradient, Math.min(100, Math.max(0, Math.floor(state.lightLevel * 100 / 255))) + '%')
-            this.lightLevelText.textContent = state.lightLevel.toString();
+            svg.setGradientValue(this.lightLevelGradient, Math.min(100, Math.max(0, Math.floor(this.state.lightLevel * 100 / 255))) + '%')
+            this.lightLevelText.textContent = this.state.lightLevel.toString();
         }
 
-        private applyLightLevel(state: LightSensorCmp) {
-            let lv = state.lightLevel;
+        private applyLightLevel() {
+            let lv = this.state.lightLevel;
             svg.setGradientValue(this.lightLevelGradient, Math.min(100, Math.max(0, Math.floor(lv * 100 / 255))) + '%')
             this.lightLevelText.textContent = lv.toString();
         }
