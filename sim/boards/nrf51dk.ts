@@ -364,11 +364,10 @@ namespace pxsim.boardsvg {
             let underboard = svg.child(this.g, "g");
 
             // main board
-            let boardDesc = ARDUINO_ZERO;
             let boardDim = getBoardDimensions(ARDUINO_ZERO);
             svg.child(this.g, "image", 
                 { class: "sim-board", x: boardDim.xOff, y: boardDim.yOff, width: boardDim.width, height: boardDim.height, 
-                    "href": `/images/${boardDesc.photo}`});
+                    "href": `/images/${ARDUINO_ZERO.photo}`});
             const mkPinGrid = (l: number, t: number, rs: number, cs: number, getNm: (i: number, j: number) => string) => {
                 const size = PIN_DIST*0.66666;
                 let props = { class: "sim-board-pin" }
@@ -379,7 +378,7 @@ namespace pxsim.boardsvg {
                 };
                 return mkGrid(l, t, rs, cs, size, props, pinFn);
             }
-            boardDesc.pins.forEach(pinDisc => {
+            ARDUINO_ZERO.pins.forEach(pinDisc => {
                 let l = boardDim.xOff + boardDim.scaleFn(pinDisc.x) + PIN_DIST/2.0;
                 let t = boardDim.yOff + boardDim.scaleFn(pinDisc.y) + PIN_DIST/2.0;
                 let rs = 1;
@@ -391,6 +390,8 @@ namespace pxsim.boardsvg {
             // breadboard
             const bbHeight = 323; //TODO: relate to PIN_DIST
             const bbX = 0;
+            console.log("boardDim.height", boardDim.height)
+            console.log("MID_MARGIN", MID_MARGIN)
             const bbY = TOP_MARGIN + boardDim.height + MID_MARGIN;
 
             const addBBLoc = (name: string, relativeXY: [number, number]): void => {
@@ -439,8 +440,12 @@ namespace pxsim.boardsvg {
                 (<any>w).style["stroke-width"] = `${endW}px`;
                 return w;
             }
-            const boardEdges = [TOP_MARGIN, TOP_MARGIN+boardDesc.height, TOP_MARGIN+boardDim.height+MID_MARGIN, 
-                TOP_MARGIN+boardDim.height+MID_MARGIN+bbHeight];
+            console.log("TOP_MARGIN", TOP_MARGIN)
+            console.log("TOP_MARGIN+boardDesc.height",  TOP_MARGIN+boardDim.height)
+            console.log("bbY", bbY)
+            console.log("bbY+bbHeight", bbY+bbHeight)
+            const boardEdges = [TOP_MARGIN, TOP_MARGIN+boardDim.height, bbY, bbY+bbHeight];
+            console.log(boardEdges)
             let nextWireId = 0;
             const drawWire = (pin1: string, pin2: string, clr: string) => {
                 let result: SVGElement[] = [];
@@ -529,7 +534,7 @@ namespace pxsim.boardsvg {
             }
 
             // draw wires
-            boardDesc.wiring.forEach(w => {
+            ARDUINO_ZERO.wiring.forEach(w => {
                 let els = drawWire(w.bb, w.pin, w.color)
                 if (w.component)
                     els.forEach(e => svg.addClass(e, `sim-bb-${w.component}-cmp`));
