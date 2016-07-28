@@ -16,7 +16,8 @@ namespace pxsim {
             //runtime.board = new MicrobitBoard();
             console.error("Microbit board not yet supported")
         } else if (boardType == BoardTypes.nrf51dk) {
-            runtime.board = new Nrf51dkBoard();
+            let b = new Nrf51dkBoard();
+            runtime.board = b;
         }
     }
 
@@ -264,6 +265,80 @@ namespace pxsim.boardsvg {
             transform: `translate(${0} ${0}) rotate(${r})` }) as SVGTextElement;
         el.textContent = txt;
         return g
+    }
+
+    export const WIRE_COLOR = {
+        red: "rgb(240,80,80)",
+        black: "#444",
+        green: "#1bbe5f",
+        blue: "#2d90df",
+        yellow: "rgb(245,230,50)",
+        orange: "#dc8628",
+    }
+
+    // board description
+    // arduino zero description
+    export type Component = ("buttonpair" | "display" | "edgeconnector" | "serial" 
+        | "radio" | "thermometer" | "accelerometer" | "compass" | "lightsensor");
+    //TODO this type decleration without the last ", any" goofs VS Code's syntax highlighting
+    export type CnstrAndStateFns = [ () => IBoardComponent<any>, (d: DalBoard) => any, any ];
+    export const ComponenetToCnstrAndState: {[key: string]: CnstrAndStateFns} = {
+        "buttonpair": [() => new ButtonPairSvg(), (d: DalBoard) => d.buttonPairState, null],
+        "display": [() => new LedMatrixSvg(), (d: DalBoard) => d.displayCmp, null],
+        "edgeconnector": [() => new EdgeConnectorSvg(), (d: DalBoard) => d.edgeConnectorState, null],
+        "serial": [() => new SerialSvg(), (d: DalBoard) => d.serialCmp, null],
+        "radio": [() => new RadioSvg(), (d: DalBoard) => d.radioCmp, null],
+        "thermometer": [() => new ThermometerSvg(), (d: DalBoard) => d.thermometerCmp, null],
+        "accelerometer": [() => new AccelerometerSvg(), (d: DalBoard) => d.accelerometerCmp, null],
+        "compass": [() => new CompassSvg(), (d: DalBoard) => d.compassCmp, null],
+        "lightsensor": [() => new LightSensorSvg(), (d: DalBoard) => d.lightSensorCmp, null]
+    }
+    export type WireDescription = {bb: string, pin:  string, color: string, component?: Component, instructionStep: number};
+    export type ComponentDescription = {type: Component, locations: string[], wires: WireDescription[]} 
+    export interface BoardDescription {
+        photo: "arduino-zero-photo-sml.png",
+        width: number,
+        height: number,
+        pinDist: number,
+        pins: { x: number, y: number, labels: string[] }[],
+        basicWires: WireDescription[], 
+        components: ComponentDescription[],
+    }
+    
+    export const ARDUINO_ZERO: BoardDescription = {
+        photo: "arduino-zero-photo-sml.png",
+        width: 1000,
+        height: 762,
+        pinDist: 35.5,
+        pins: [
+            {x: 276.8, y: 17.8, labels: ["SCL", "SDA","AREF", "GND0", "~13", "~12", "~11", "~10", "~9", "~8"]},
+            {x: 655.5, y: 17.8, labels: ["7", "~6", "~5", "~4", "~3", "2", "TX->1", "RX<-0"]},
+            {x: 411.7, y: 704.6, labels: ["ATN", "IOREF", "RESET", "3.3V", "5V", "GND1", "GND2", "VIN"]},
+            {x: 732.9, y: 704.6, labels: ["A0", "A1", "A2", "A3", "A4", "A5"]},
+        ],
+        basicWires: [
+            {bb: "-1", pin:  "GND1", color: WIRE_COLOR.black, instructionStep: 0},
+        ],
+        components: [
+            {type: "display", locations:["h12"], wires: [
+                {bb: "a12", pin: "~5", color: WIRE_COLOR.blue, instructionStep: 0},
+                {bb: "a13", pin: "~4", color: WIRE_COLOR.blue, instructionStep: 0},
+                {bb: "a14", pin: "~3", color: WIRE_COLOR.blue, instructionStep: 0},
+                {bb: "a15", pin: "2", color: WIRE_COLOR.blue, instructionStep: 0},
+                {bb: "j16", pin: "TX->1", color: WIRE_COLOR.blue, instructionStep: 0},
+                {bb: "a16", pin: "A0", color: WIRE_COLOR.green, instructionStep: 1},
+                {bb: "a17", pin: "A1", color: WIRE_COLOR.green, instructionStep: 1},
+                {bb: "a18", pin: "A2", color: WIRE_COLOR.green, instructionStep: 1},
+                {bb: "a19", pin: "A3", color: WIRE_COLOR.green, instructionStep: 1},
+                {bb: "j12", pin: "A4", color: WIRE_COLOR.green, instructionStep: 1},
+            ]},
+            {type: "buttonpair", locations:["f1", "f28", "d28"], wires: [
+                {bb: "j1", pin: "7", color: WIRE_COLOR.yellow, instructionStep: 0},
+                {bb: "a3", pin: "-2", color: WIRE_COLOR.black, instructionStep: 0},
+                {bb: "j28", pin: "~6", color: WIRE_COLOR.orange, instructionStep: 1},
+                {bb: "a30", pin: "-25", color: WIRE_COLOR.black, instructionStep: 1},
+            ]},
+        ]
     }
 }
 

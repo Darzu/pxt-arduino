@@ -16,7 +16,9 @@ namespace pxsim.instructions {
 
         let view = new pxsim.boardsvg.Nrf51dkSvg({
             theme: pxsim.mkRandomTheme(),
-            runtime: pxsim.runtime
+            runtime: pxsim.runtime,
+            boardDesc: boardsvg.ARDUINO_ZERO,
+            blank: true
         })
         svg.hydrate(view.element, {
             "width": w,
@@ -27,7 +29,8 @@ namespace pxsim.instructions {
 
         let view2 = new pxsim.boardsvg.Nrf51dkSvg({
             theme: pxsim.mkRandomTheme(),
-            runtime: pxsim.runtime
+            runtime: pxsim.runtime,
+            boardDesc: boardsvg.ARDUINO_ZERO
         })
         svg.hydrate(view2.element, {
             "width": w,

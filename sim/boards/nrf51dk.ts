@@ -9,14 +9,6 @@ namespace pxsim {
     export function mkTheme(accent: string): boardsvg.INrf51dkTheme {
         return {
             accent: accent,
-            edgeConnectorTheme: boardsvg.defaultEdgeConnectorTheme,
-            accelerometerTheme: boardsvg.defaultAccelerometerTheme,
-            radioTheme: boardsvg.defaultRadioTheme,
-            displayTheme: boardsvg.defaultLedMatrixTheme,
-            serialTheme: boardsvg.defaultSerialTheme,
-            thermometerTheme: boardsvg.defaultThermometerTheme,
-            lightSensorTheme: boardsvg.defaultLightSensorTheme,
-            compassTheme: boardsvg.defaultCompassTheme,
         }
     }
     export function mkRandomTheme(): boardsvg.INrf51dkTheme {
@@ -36,12 +28,13 @@ namespace pxsim {
             let options = (msg.options || {}) as RuntimeOptions;
             let theme = mkRandomTheme();
             
-            theme.compassTheme.color = theme.accent;
-            
-            let view = new pxsim.boardsvg.Nrf51dkSvg({
+            let desc = boardsvg.ARDUINO_ZERO;
+            let view = new boardsvg.Nrf51dkSvg({
+                boardDesc: desc,
                 theme: theme,
                 runtime: runtime
             })
+
             document.body.innerHTML = ""; // clear children
             document.body.appendChild(view.element);
 
@@ -55,81 +48,14 @@ namespace pxsim.boardsvg {
 
     export interface INrf51dkTheme {
         accent?: string;
-        edgeConnectorTheme: IEdgeConnectorTheme;
-        accelerometerTheme: IAccelerometerTheme;
-        radioTheme: IRadioTheme;
-        displayTheme: ILedMatrixTheme;
-        serialTheme: ISerialTheme;
-        thermometerTheme: IThermometerTheme;
-        lightSensorTheme: ILightSensorTheme;
-        compassTheme: ICompassTheme;
     }
 
     export interface INrf51dkProps {
         runtime: pxsim.Runtime;
+        boardDesc: BoardDescription;
         theme?: INrf51dkTheme;
         disableTilt?: boolean;
-    }
-
-    export const WIRE_COLOR = {
-        red: "rgb(240,80,80)",
-        black: "#444",
-        green: "#1bbe5f",
-        blue: "#2d90df",
-        yellow: "rgb(245,230,50)",
-        orange: "#dc8628",
-    }
-
-    // board description
-    // arduino zero description
-    export type Component = ("buttonpair" | "display" | "edgeconnector" | "serial" 
-        | "radio" | "thermometer" | "accelerometer" | "compass" | "lightsensor");
-    export type WireDescription = {bb: string, pin:  string, color: string, component?: Component, instructionStep: number};
-    export type ComponentDescription = {type: Component, locations: string[], wires: WireDescription[]} 
-    export interface BoardDescription {
-        photo: "arduino-zero-photo-sml.png",
-        width: number,
-        height: number,
-        pinDist: number,
-        pins: { x: number, y: number, labels: string[] }[],
-        basicWires: WireDescription[], 
-        components: ComponentDescription[],
-    }
-    
-    export const ARDUINO_ZERO: BoardDescription = {
-        photo: "arduino-zero-photo-sml.png",
-        width: 1000,
-        height: 762,
-        pinDist: 35.5,
-        pins: [
-            {x: 276.8, y: 17.8, labels: ["SCL", "SDA","AREF", "GND0", "~13", "~12", "~11", "~10", "~9", "~8"]},
-            {x: 655.5, y: 17.8, labels: ["7", "~6", "~5", "~4", "~3", "2", "TX->1", "RX<-0"]},
-            {x: 411.7, y: 704.6, labels: ["ATN", "IOREF", "RESET", "3.3V", "5V", "GND1", "GND2", "VIN"]},
-            {x: 732.9, y: 704.6, labels: ["A0", "A1", "A2", "A3", "A4", "A5"]},
-        ],
-        basicWires: [
-            {bb: "-1", pin:  "GND1", color: WIRE_COLOR.black, instructionStep: 0},
-        ],
-        components: [
-            {type: "display", locations:["h12"], wires: [
-                {bb: "a12", pin: "~5", color: WIRE_COLOR.blue, instructionStep: 0},
-                {bb: "a13", pin: "~4", color: WIRE_COLOR.blue, instructionStep: 0},
-                {bb: "a14", pin: "~3", color: WIRE_COLOR.blue, instructionStep: 0},
-                {bb: "a15", pin: "2", color: WIRE_COLOR.blue, instructionStep: 0},
-                {bb: "j16", pin: "TX->1", color: WIRE_COLOR.blue, instructionStep: 0},
-                {bb: "a16", pin: "A0", color: WIRE_COLOR.green, instructionStep: 1},
-                {bb: "a17", pin: "A1", color: WIRE_COLOR.green, instructionStep: 1},
-                {bb: "a18", pin: "A2", color: WIRE_COLOR.green, instructionStep: 1},
-                {bb: "a19", pin: "A3", color: WIRE_COLOR.green, instructionStep: 1},
-                {bb: "j12", pin: "A4", color: WIRE_COLOR.green, instructionStep: 1},
-            ]},
-            {type: "buttonpair", locations:["f1", "f28", "d28"], wires: [
-                {bb: "j1", pin: "7", color: WIRE_COLOR.yellow, instructionStep: 0},
-                {bb: "a3", pin: "-2", color: WIRE_COLOR.black, instructionStep: 0},
-                {bb: "j28", pin: "~6", color: WIRE_COLOR.orange, instructionStep: 1},
-                {bb: "a30", pin: "-25", color: WIRE_COLOR.black, instructionStep: 1},
-            ]},
-        ]
+        blank?: boolean; //useful for generating instructions
     }
 
     export const PIN_DIST = 15; //original dist: 15.25
@@ -139,8 +65,8 @@ namespace pxsim.boardsvg {
     const MID_MARGIN = 40;
     const BOT_MARGIN = 20;
 
-    export function getBoardDimensions(b: BoardDescription):
-        {scaleFn: (n: number)=>number, height: number, width: number, xOff: number, yOff: number} {
+    export type BoardDimensions = {scaleFn: (n: number)=>number, height: number, width: number, xOff: number, yOff: number};
+    export function getBoardDimensions(b: BoardDescription): BoardDimensions {
         let scaleFn = (n: number) => n * (PIN_DIST / b.pinDist);
         let width = scaleFn(b.width);
         return {
@@ -240,13 +166,18 @@ namespace pxsim.boardsvg {
         private g: SVGElement;
         public board: pxsim.Nrf51dkBoard;
         private components: Map<IBoardComponent<any>>;
-        private breadboard = new Breadboard();
+        private breadboard: Breadboard;
         private underboard: SVGGElement;
+        private boardDesc: BoardDescription;
+        private boardDim: BoardDimensions;
+        private boardEdges: number[];
 
         //locations
         private nameToLoc: Map<[number, number]> = {};
 
         constructor(public props: INrf51dkProps) {
+            this.boardDesc = props.boardDesc;
+            this.boardDim = getBoardDimensions(this.boardDesc);
             this.board = this.props.runtime.board as pxsim.Nrf51dkBoard;
             this.board.updateView = () => this.updateState();
             this.element = <SVGSVGElement>svg.elt("svg")
@@ -262,18 +193,19 @@ namespace pxsim.boardsvg {
             this.style.textContent += BOARD_SYTLE;
             this.defs = <SVGDefsElement>svg.child(this.element, "defs", {});
             this.g = svg.elt("g");
-            this.underboard = <SVGGElement>svg.child(this.g, "g");
             this.element.appendChild(this.g);
+            this.underboard = <SVGGElement>svg.child(this.g, "g");
+            this.components = {};
 
             this.buildDom();
 
-            //TODO
-            this.attachComponent(this.buttonPairSvg);
-            this.buttonPairSvg.setLocations();
-            svg.addClass(this.buttonPairSvg.element, "sim-bb-buttonpair-cmp")
-            
             this.updateTheme();
             this.updateState();
+
+            if (!props.blank) {
+                this.boardDesc.basicWires.forEach(w => this.addWire(w));
+                this.boardDesc.components.forEach(c => this.addComponentAndWiring(c));
+            }
         }
 
         private loc(name: string): [number, number] {
@@ -284,14 +216,42 @@ namespace pxsim.boardsvg {
             return this.nameToLoc[name];
         }
 
-        public addComponent(type: Component) {
-            let attachComponent = (comp: IBoardComponent<any>) => {
-                this.g.appendChild(comp.element);
-                if (comp.defs)
-                    comp.defs.forEach(d => this.defs.appendChild(d));
-                this.style.textContent += comp.style || "";
+        private getCmpClass = (type: Component) => `sim-${type}-cmp`;
+        private getCmpHideClass = (type: Component) => `sim-hide-${type}-cmp`;
+
+        public addWire(w: WireDescription, cmp?: Component) {
+            let wireEls = this.drawWire(w.bb, w.pin, w.color)
+            if (cmp)
+                wireEls.forEach(e => svg.addClass(e, this.getCmpClass(cmp)));
+        }
+        public addComponent(cmpDesc: ComponentDescription) {
+            const mkCmp = (type: Component): IBoardComponent<any> => {
+                let [cnstr, stateFn] = ComponenetToCnstrAndState[cmpDesc.type];
+                let cmp = cnstr();
+                cmp.init(this.board.bus, stateFn(this.board), this.element);
+                return cmp;
             }
-            //TODO
+            let cmp = mkCmp(cmpDesc.type);
+            this.components[cmpDesc.type] = cmp;
+            this.g.appendChild(cmp.element);
+            if (cmp.defs)
+                cmp.defs.forEach(d => this.defs.appendChild(d));
+            this.style.textContent += cmp.style || "";
+            let locCoords = (cmpDesc.locations || []).map(locStr => this.loc(locStr));
+            cmp.setLocations(...locCoords);
+            let cls = this.getCmpClass(cmpDesc.type);
+            svg.addClass(cmp.element, cls);
+            let hideCls = this.getCmpHideClass(cmpDesc.type);
+            this.style.textContent += `
+                .${hideCls} .${cls} {
+                    display: none;
+                }`
+            cmp.updateTheme();
+            cmp.updateState();
+        }
+        public addComponentAndWiring(cmpDesc: ComponentDescription) {
+            this.addComponent(cmpDesc);
+            cmpDesc.wires.forEach(w => this.addWire(w));
         }
 
         private updateTheme() {
@@ -315,15 +275,16 @@ namespace pxsim.boardsvg {
             else svg.removeClass(this.element, "grayscale");
 
             //show/hide
+            //TODO generalize for all components
             if (this.board.displayCmp.used){
-                svg.removeClass(this.g, "hide-display-cmp")
+                svg.removeClass(this.g, this.getCmpHideClass("display"))
             } else {
-                svg.addClass(this.g, "hide-display-cmp")
+                svg.addClass(this.g, this.getCmpHideClass("display"))
             }
             if (this.board.buttonPairState.used){
-                svg.removeClass(this.g, "hide-buttonpair-cmp")
+                svg.removeClass(this.g, this.getCmpHideClass("buttonpair"))
             } else {
-                svg.addClass(this.g, "hide-buttonpair-cmp")
+                svg.addClass(this.g, this.getCmpHideClass("buttonpair"))
             }
         }
 
@@ -332,13 +293,13 @@ namespace pxsim.boardsvg {
             let glow = svg.child(this.defs, "filter", { id: "filterglow", x: "-5%", y: "-5%", width: "120%", height: "120%" });
             svg.child(glow, "feGaussianBlur", { stdDeviation: "5", result: "glow" });
             let merge = svg.child(glow, "feMerge", {});
-            for (let i = 0; i < 3; ++i) svg.child(merge, "feMergeNode", { in: "glow" })
+            for (let i = 0; i < 3; ++i) 
+                svg.child(merge, "feMergeNode", { in: "glow" })
 
             // main board
-            let boardDim = getBoardDimensions(ARDUINO_ZERO);
             svg.child(this.g, "image", 
-                { class: "sim-board", x: boardDim.xOff, y: boardDim.yOff, width: boardDim.width, height: boardDim.height, 
-                    "href": `/images/${ARDUINO_ZERO.photo}`});
+                { class: "sim-board", x: this.boardDim.xOff, y: this.boardDim.yOff, width: this.boardDim.width, height: this.boardDim.height, 
+                    "href": `/images/${this.boardDesc.photo}`});
             const mkPinGrid = (l: number, t: number, rs: number, cs: number, getNm: (i: number, j: number) => string) => {
                 const size = PIN_DIST*0.66666;
                 let props = { class: "sim-board-pin" }
@@ -349,9 +310,9 @@ namespace pxsim.boardsvg {
                 };
                 return mkGrid(l, t, rs, cs, size, props, pinFn);
             }
-            ARDUINO_ZERO.pins.forEach(pinDisc => {
-                let l = boardDim.xOff + boardDim.scaleFn(pinDisc.x) + PIN_DIST/2.0;
-                let t = boardDim.yOff + boardDim.scaleFn(pinDisc.y) + PIN_DIST/2.0;
+            this.boardDesc.pins.forEach(pinDisc => {
+                let l = this.boardDim.xOff + this.boardDim.scaleFn(pinDisc.x) + PIN_DIST/2.0;
+                let t = this.boardDim.yOff + this.boardDim.scaleFn(pinDisc.y) + PIN_DIST/2.0;
                 let rs = 1;
                 let cs = pinDisc.labels.length;
                 let pins = mkPinGrid(l, t, rs, cs, (i, j) => pinDisc.labels[j]);
@@ -361,147 +322,131 @@ namespace pxsim.boardsvg {
             // breadboard
             const bbHeight = 323; //TODO: relate to PIN_DIST
             const bbX = 0;                        
-            const bbY = TOP_MARGIN + boardDim.height + MID_MARGIN;
+            const bbY = TOP_MARGIN + this.boardDim.height + MID_MARGIN;
 
             const addBBLoc = (name: string, relativeXY: [number, number]): void => {
                 this.nameToLoc[name] = [bbX + relativeXY[0], bbY + relativeXY[1]];
             }
+            this.breadboard = new Breadboard()
             this.breadboard.buildDom(this.g, this.defs, WIDTH, bbHeight, addBBLoc);
+            this.style.textContent += this.breadboard.style;
             this.breadboard.updateLocation(bbX, bbY);
 
-            // display 
-            //TODO
-            displayEls.forEach(e => svg.addClass(e, "sim-bb-display-cmp"))
+            // edges
+            this.boardEdges = [TOP_MARGIN, TOP_MARGIN+this.boardDim.height, bbY, bbY+bbHeight]
+        }
 
-            // wires
-            const mkCurvedWireSeg = (p1: [number, number], p2: [number, number], clr: string): SVGPathElement => {
-                const coordStr = (xy: [number, number]):string => {return `${xy[0]}, ${xy[1]}`};
-                let c1: [number, number] = [p1[0], p2[1]];
-                let c2: [number, number] = [p2[0], p1[1]];
-                let w = <SVGPathElement>svg.mkPath("sim-bb-wire", `M${coordStr(p1)} C${coordStr(c1)} ${coordStr(c2)} ${coordStr(p2)}`);
-                (<any>w).style["stroke"] = clr;
-                return w;
+        // wires
+        private mkCurvedWireSeg = (p1: [number, number], p2: [number, number], clr: string): SVGPathElement => {
+            const coordStr = (xy: [number, number]):string => {return `${xy[0]}, ${xy[1]}`};
+            let c1: [number, number] = [p1[0], p2[1]];
+            let c2: [number, number] = [p2[0], p1[1]];
+            let w = <SVGPathElement>svg.mkPath("sim-bb-wire", `M${coordStr(p1)} C${coordStr(c1)} ${coordStr(c2)} ${coordStr(p2)}`);
+            (<any>w).style["stroke"] = clr;
+            return w;
+        }
+        private mkWireSeg = (p1: [number, number], p2: [number, number], clr: string): SVGPathElement => {
+            const coordStr = (xy: [number, number]):string => {return `${xy[0]}, ${xy[1]}`};
+            let w = <SVGPathElement>svg.mkPath("sim-bb-wire", `M${coordStr(p1)} L${coordStr(p2)}`);
+            (<any>w).style["stroke"] = clr;
+            return w;
+        }
+        private mkWireEnd = (p: [number, number], clr: string): SVGElement => {
+            const endW = PIN_DIST/4;
+            let w = svg.elt("circle");
+            let x = p[0];
+            let y = p[1];
+            let r = WIRE_WIDTH/2 + endW/2;
+            svg.hydrate(w, {cx: x, cy: y, r: r, class: "sim-bb-wire-end"});
+            (<any>w).style["fill"] = clr;
+            (<any>w).style["stroke-width"] = `${endW}px`;
+            return w;
+        }                
+        private nextWireId = 0;
+        private drawWire = (pin1: string, pin2: string, clr: string) => {
+            let result: SVGElement[] = [];
+            let p1 = this.loc(pin1);
+            let p2 = this.loc(pin2);
+            const indexOfMin = (vs: number[]): number => {
+                let minIdx = 0;
+                let min = vs[0];
+                for (let i = 1; i < vs.length; i++) {
+                    if (vs[i] < min) {
+                        min = vs[i];
+                        minIdx = i;
+                    }   
+                }
+                return minIdx;
             }
-            const mkWireSeg = (p1: [number, number], p2: [number, number], clr: string): SVGPathElement => {
-                const coordStr = (xy: [number, number]):string => {return `${xy[0]}, ${xy[1]}`};
-                let w = <SVGPathElement>svg.mkPath("sim-bb-wire", `M${coordStr(p1)} L${coordStr(p2)}`);
-                (<any>w).style["stroke"] = clr;
-                return w;
+            const closestEdgeIdx = (p: [number, number]): number => {
+                let dists = this.boardEdges.map(e => Math.abs(p[1] - e));
+                let edgeIdx =  indexOfMin(dists);
+                return edgeIdx;
             }
-            const mkWireEnd = (p: [number, number], clr: string): SVGElement => {
-                const endW = PIN_DIST/4;
-                let w = svg.elt("circle");
-                let x = p[0];
-                let y = p[1];
-                let r = WIRE_WIDTH/2 + endW/2;
-                svg.hydrate(w, {cx: x, cy: y, r: r, class: "sim-bb-wire-end"});
-                (<any>w).style["fill"] = clr;
-                (<any>w).style["stroke-width"] = `${endW}px`;
-                return w;
-            }                                                
-            const boardEdges = [TOP_MARGIN, TOP_MARGIN+boardDim.height, bbY, bbY+bbHeight];            
-            let nextWireId = 0;
-            const drawWire = (pin1: string, pin2: string, clr: string) => {
-                let result: SVGElement[] = [];
-                let p1 = this.loc(pin1);
-                let p2 = this.loc(pin2);
-                const indexOfMin = (vs: number[]): number => {
-                    let minIdx = 0;
-                    let min = vs[0];
-                    for (let i = 1; i < vs.length; i++) {
-                        if (vs[i] < min) {
-                            min = vs[i];
-                            minIdx = i;
-                        }   
-                    }
-                    return minIdx;
-                }
-                const closestEdgeIdx = (p: [number, number]): number => {
-                    let dists = boardEdges.map(e => Math.abs(p[1] - e));
-                    let edgeIdx =  indexOfMin(dists);
-                    return edgeIdx;
-                }
-                const closestEdge = (p: [number, number]): number => {
-                    return boardEdges[closestEdgeIdx(p)];
-                }
-                const closestPointOffBoard = (p: [number, number]): [number, number] => {
-                    const offset = PIN_DIST/2;
-                    let e = closestEdge(p);
-                    let y: number;
-                    if (e - p[1] < 0)
-                        y = e - offset;
-                    else
-                        y = e + offset;
-                    return [p[0], y];
-                }
-                let wireId = nextWireId++;
-                let end1 = mkWireEnd(p1, clr);
-                let end2 = mkWireEnd(p2, clr);
-                let endG = svg.child(this.g, "g", {class: "sim-bb-wire-ends-g"});
-                result.push(endG);
-                endG.appendChild(end1);
-                endG.appendChild(end2);
-                let edgeIdx1 = closestEdgeIdx(p1);
-                let edgeIdx2 = closestEdgeIdx(p2);
-                if (edgeIdx1 == edgeIdx2) {
-                    let seg = mkWireSeg(p1, p2, clr);
-                    this.g.appendChild(seg);
-                    result.push(seg);
+            const closestEdge = (p: [number, number]): number => {
+                return this.boardEdges[closestEdgeIdx(p)];
+            }
+            const closestPointOffBoard = (p: [number, number]): [number, number] => {
+                const offset = PIN_DIST/2;
+                let e = closestEdge(p);
+                let y: number;
+                if (e - p[1] < 0)
+                    y = e - offset;
+                else
+                    y = e + offset;
+                return [p[0], y];
+            }
+            let wireId = this.nextWireId++;
+            let end1 = this.mkWireEnd(p1, clr);
+            let end2 = this.mkWireEnd(p2, clr);
+            let endG = svg.child(this.g, "g", {class: "sim-bb-wire-ends-g"});
+            result.push(endG);
+            endG.appendChild(end1);
+            endG.appendChild(end2);
+            let edgeIdx1 = closestEdgeIdx(p1);
+            let edgeIdx2 = closestEdgeIdx(p2);
+            if (edgeIdx1 == edgeIdx2) {
+                let seg = this.mkWireSeg(p1, p2, clr);
+                this.g.appendChild(seg);
+                result.push(seg);
+            } else {
+                let offP1 = closestPointOffBoard(p1);
+                let offP2 = closestPointOffBoard(p2);
+                let offSeg1 = this.mkWireSeg(p1, offP1, clr);
+                let offSeg2 = this.mkWireSeg(p2, offP2, clr);
+                let midSeg: SVGElement;
+                let midSegHover: SVGElement;
+                let isBetweenMiddleTwoEdges = (edgeIdx1 == 1 || edgeIdx1 == 2) && (edgeIdx2 == 1 || edgeIdx2 == 2);
+                if (isBetweenMiddleTwoEdges) {
+                    midSeg = this.mkCurvedWireSeg(offP1, offP2, clr);
+                    midSegHover =this. mkCurvedWireSeg(offP1, offP2, clr);
                 } else {
-                    let offP1 = closestPointOffBoard(p1);
-                    let offP2 = closestPointOffBoard(p2);
-                    let offSeg1 = mkWireSeg(p1, offP1, clr);
-                    let offSeg2 = mkWireSeg(p2, offP2, clr);
-                    let midSeg: SVGElement;
-                    let midSegHover: SVGElement;
-                    let isBetweenMiddleTwoEdges = (edgeIdx1 == 1 || edgeIdx1 == 2) && (edgeIdx2 == 1 || edgeIdx2 == 2);
-                    if (isBetweenMiddleTwoEdges) {
-                        midSeg = mkCurvedWireSeg(offP1, offP2, clr);
-                        midSegHover = mkCurvedWireSeg(offP1, offP2, clr);
-                    } else {
-                        midSeg = mkWireSeg(offP1, offP2, clr);
-                        midSegHover = mkWireSeg(offP1, offP2, clr);
-                    } 
-                    svg.addClass(midSegHover, "sim-bb-wire-hover");
-                    this.g.appendChild(offSeg1);
-                    result.push(offSeg1);
-                    this.g.appendChild(offSeg2);
-                    result.push(offSeg2);
-                    this.underboard.appendChild(midSeg);
-                    result.push(midSeg);
-                    this.g.appendChild(midSegHover);
-                    result.push(midSegHover);
-                    //set hover mechanism
-                    let wireIdClass = `sim-bb-wire-id${wireId}`;
-                    const setId = (e: SVGElement) => svg.addClass(e, wireIdClass);
-                    setId(endG);
-                    setId(midSegHover);
-                    this.style.textContent += `
-                        .${wireIdClass}:hover ~ .${wireIdClass}.sim-bb-wire-hover { 
-                            visibility: visible; 
-                        }
-                        .sim-bb-wire-ends-g:hover .sim-bb-wire-end { 
-                            stroke: red; 
-                        }`
-                }
-                return result;
+                    midSeg = this.mkWireSeg(offP1, offP2, clr);
+                    midSegHover = this.mkWireSeg(offP1, offP2, clr);
+                } 
+                svg.addClass(midSegHover, "sim-bb-wire-hover");
+                this.g.appendChild(offSeg1);
+                result.push(offSeg1);
+                this.g.appendChild(offSeg2);
+                result.push(offSeg2);
+                this.underboard.appendChild(midSeg);
+                result.push(midSeg);
+                this.g.appendChild(midSegHover);
+                result.push(midSegHover);
+                //set hover mechanism
+                let wireIdClass = `sim-bb-wire-id${wireId}`;
+                const setId = (e: SVGElement) => svg.addClass(e, wireIdClass);
+                setId(endG);
+                setId(midSegHover);
+                this.style.textContent += `
+                    .${wireIdClass}:hover ~ .${wireIdClass}.sim-bb-wire-hover { 
+                        visibility: visible; 
+                    }
+                    .sim-bb-wire-ends-g:hover .sim-bb-wire-end { 
+                        stroke: red; 
+                    }`
             }
-
-            // draw wires
-            ARDUINO_ZERO.basicWires.forEach(w => {
-                let els = drawWire(w.bb, w.pin, w.color)
-                if (w.component)
-                    els.forEach(e => svg.addClass(e, `sim-bb-${w.component}-cmp`));
-            })
-
-            //show/hide components
-            this.style.textContent += `
-                .hide-display-cmp .sim-bb-display-cmp {
-                    display: none;
-                }
-                .hide-buttonpair-cmp .sim-bb-buttonpair-cmp {
-                    display: none;
-                }`
+            return result;
         }
     }
 }
