@@ -3,22 +3,11 @@
 /// <reference path="../libs/microbit/dal.d.ts"/>
 
 namespace pxsim {
-    export enum BoardTypes {
-        microbit,
-        nrf51dk
-    }
-    //TODO(DZ): allow board selection
-    export const boardType = BoardTypes.nrf51dk; 
 
     pxsim.initCurrentRuntime = () => {
         U.assert(!runtime.board);
-        if (boardType == BoardTypes.microbit) {
-            //runtime.board = new MicrobitBoard();
-            console.error("Microbit board not yet supported")
-        } else if (boardType == BoardTypes.nrf51dk) {
-            let b = new Nrf51dkBoard();
-            runtime.board = b;
-        }
+        let b = new DalBoard();
+        runtime.board = b;
     }
 
     export function board() {
@@ -363,66 +352,6 @@ namespace pxsim {
             let k = id + ":" + evid;
             let queue = this.queues[k];
             if (queue) queue.push(value);
-        }
-    }
-
-    export class DalBoard extends BaseBoard {
-        id: string;
-
-        // the bus
-        bus: EventBus;
-        
-        // components
-        //TODO(DZ): allow different component selections
-        displayCmp: LedMatrixCmp;
-        edgeConnectorState: EdgeConnectorCmp;
-        serialCmp: SerialCmp;
-        accelerometerCmp: AccelerometerCmp;
-        compassCmp: CompassCmp;
-        thermometerCmp: ThermometerCmp;
-        lightSensorCmp: LightSensorCmp;
-        buttonPairState: ButtonPairCmp;
-        radioCmp: RadioCmp;
-
-        constructor() {
-            super()
-            this.id = "b" + Math_.random(2147483647);
-            this.bus = new EventBus(runtime);
-            
-            // components
-            this.displayCmp = new LedMatrixCmp(runtime);
-            this.buttonPairState = new ButtonPairCmp();
-            this.edgeConnectorState = new EdgeConnectorCmp();
-            this.radioCmp = new RadioCmp(runtime);
-            this.accelerometerCmp = new AccelerometerCmp(runtime);
-            this.serialCmp = new SerialCmp();
-            this.thermometerCmp = new ThermometerCmp();
-            this.lightSensorCmp = new LightSensorCmp();
-            this.compassCmp = new CompassCmp();
-        }
-
-        receiveMessage(msg: SimulatorMessage) {
-            if (!runtime || runtime.dead) return;
-
-            switch (msg.type || "") {
-                case "eventbus":
-                    let ev = <SimulatorEventBusMessage>msg;
-                    this.bus.queue(ev.id, ev.eventid, ev.value);
-                    break;
-                case "serial":
-                    let data = (<SimulatorSerialMessage>msg).data || "";
-                    this.serialCmp.recieveData(data);
-                    break;
-                case "radiopacket":
-                    let packet = <SimulatorRadioPacketMessage>msg;
-                    this.radioCmp.recievePacket(packet);
-                    break;
-            }
-        }
-
-        kill() {
-            super.kill();
-            AudioContextManager.stop();
         }
     }
 }

@@ -6,22 +6,75 @@
 namespace pxsim {
     const accents = ["#3ADCFE", "#FFD43A", "#3AFFB3", "#FF3A54"];
 
-    export function mkTheme(accent: string): boardsvg.INrf51dkTheme {
+    export function mkTheme(accent: string): boardsvg.IBoardTheme {
         return {
             accent: accent,
         }
     }
-    export function mkRandomTheme(): boardsvg.INrf51dkTheme {
+    export function mkRandomTheme(): boardsvg.IBoardTheme {
         let accent = accents[Math.floor(Math.random() * accents.length)];
         return mkTheme(accent);
     }
 }
 
 namespace pxsim {
-    export class Nrf51dkBoard extends DalBoard {
+    export class DalBoard extends BaseBoard {
+        id: string;
+
+        // the bus
+        bus: EventBus;
+        
+        // components
+        //TODO(DZ): allow different component selections
+        displayCmp: LedMatrixCmp;
+        edgeConnectorState: EdgeConnectorCmp;
+        serialCmp: SerialCmp;
+        accelerometerCmp: AccelerometerCmp;
+        compassCmp: CompassCmp;
+        thermometerCmp: ThermometerCmp;
+        lightSensorCmp: LightSensorCmp;
+        buttonPairState: ButtonPairCmp;
+        radioCmp: RadioCmp;
 
         constructor() {
             super()
+            this.id = "b" + Math_.random(2147483647);
+            this.bus = new EventBus(runtime);
+            
+            // components
+            this.displayCmp = new LedMatrixCmp(runtime);
+            this.buttonPairState = new ButtonPairCmp();
+            this.edgeConnectorState = new EdgeConnectorCmp();
+            this.radioCmp = new RadioCmp(runtime);
+            this.accelerometerCmp = new AccelerometerCmp(runtime);
+            this.serialCmp = new SerialCmp();
+            this.thermometerCmp = new ThermometerCmp();
+            this.lightSensorCmp = new LightSensorCmp();
+            this.compassCmp = new CompassCmp();
+        }
+
+        receiveMessage(msg: SimulatorMessage) {
+            if (!runtime || runtime.dead) return;
+
+            switch (msg.type || "") {
+                case "eventbus":
+                    let ev = <SimulatorEventBusMessage>msg;
+                    this.bus.queue(ev.id, ev.eventid, ev.value);
+                    break;
+                case "serial":
+                    let data = (<SimulatorSerialMessage>msg).data || "";
+                    this.serialCmp.recieveData(data);
+                    break;
+                case "radiopacket":
+                    let packet = <SimulatorRadioPacketMessage>msg;
+                    this.radioCmp.recievePacket(packet);
+                    break;
+            }
+        }
+
+        kill() {
+            super.kill();
+            AudioContextManager.stop();
         }
 
         initAsync(msg: SimulatorRunMessage): Promise<void> {
@@ -29,7 +82,7 @@ namespace pxsim {
             let theme = mkRandomTheme();
             
             let desc = boardsvg.ARDUINO_ZERO;
-            let view = new boardsvg.Nrf51dkSvg({
+            let view = new boardsvg.DalBoardSvg({
                 boardDesc: desc,
                 theme: theme,
                 runtime: runtime
@@ -46,14 +99,14 @@ namespace pxsim {
 namespace pxsim.boardsvg {
     const svg = pxsim.svg;
 
-    export interface INrf51dkTheme {
+    export interface IBoardTheme {
         accent?: string;
     }
 
-    export interface INrf51dkProps {
+    export interface IBoardSvgProps {
         runtime: pxsim.Runtime;
         boardDesc: BoardDescription;
-        theme?: INrf51dkTheme;
+        theme?: IBoardTheme;
         disableTilt?: boolean;
         blank?: boolean; //useful for generating instructions
     }
@@ -159,12 +212,12 @@ namespace pxsim.boardsvg {
             stroke-dasharray: ${PIN_DIST/2.0},${PIN_DIST/1.0};
         }`;
 
-    export class Nrf51dkSvg {
+    export class DalBoardSvg {
         public element: SVGSVGElement;
         private style: SVGStyleElement;
         private defs: SVGDefsElement;
         private g: SVGElement;
-        public board: pxsim.Nrf51dkBoard;
+        public board: pxsim.DalBoard;
         private components: Map<IBoardComponent<any>>;
         private breadboard: Breadboard;
         private underboard: SVGGElement;
@@ -175,10 +228,10 @@ namespace pxsim.boardsvg {
         //locations
         private nameToLoc: Map<[number, number]> = {};
 
-        constructor(public props: INrf51dkProps) {
+        constructor(public props: IBoardSvgProps) {
             this.boardDesc = props.boardDesc;
             this.boardDim = getBoardDimensions(this.boardDesc);
-            this.board = this.props.runtime.board as pxsim.Nrf51dkBoard;
+            this.board = this.props.runtime.board as pxsim.DalBoard;
             this.board.updateView = () => this.updateState();
             this.element = <SVGSVGElement>svg.elt("svg")
             svg.hydrate(this.element, {

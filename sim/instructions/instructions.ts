@@ -14,7 +14,7 @@ namespace pxsim.instructions {
         const h = 400;
         const m = 30;
 
-        let view = new pxsim.boardsvg.Nrf51dkSvg({
+        let view = new pxsim.boardsvg.DalBoardSvg({
             theme: pxsim.mkRandomTheme(),
             runtime: pxsim.runtime,
             boardDesc: boardsvg.ARDUINO_ZERO,
@@ -27,7 +27,7 @@ namespace pxsim.instructions {
         });
         document.body.appendChild(view.element);
 
-        let view2 = new pxsim.boardsvg.Nrf51dkSvg({
+        let view2 = new pxsim.boardsvg.DalBoardSvg({
             theme: pxsim.mkRandomTheme(),
             runtime: pxsim.runtime,
             boardDesc: boardsvg.ARDUINO_ZERO
