@@ -131,8 +131,30 @@ namespace pxsim.boardsvg {
         }
     }
 
-    const WIRE_WIDTH = PIN_DIST/2.5;
-    const BOARD_SYTLE = `
+    export const WIRE_WIDTH = PIN_DIST/2.5;
+    export const WIRE_STYLE = `
+        .sim-bb-wire {
+            fill:none;
+            stroke-linecap: round;
+            stroke-width:${WIRE_WIDTH}px;
+            pointer-events: none;
+        }
+        .sim-bb-wire-end {
+            stroke:#333;
+            fill:#333;
+        }
+        .sim-board-pin {
+            fill:#999;
+            stroke:#000;
+            stroke-width:${PIN_DIST/3.0}px;
+        }
+        .sim-bb-wire-hover {
+            stroke-width: ${WIRE_WIDTH}px;
+            visibility: hidden;
+            stroke-dasharray: ${PIN_DIST/2.0},${PIN_DIST/1.0};
+        }
+        `
+    export const BOARD_SYTLE = `
         .noselect {
             -webkit-touch-callout: none; /* iOS Safari */
             -webkit-user-select: none;   /* Chrome/Safari/Opera */
@@ -191,26 +213,8 @@ namespace pxsim.boardsvg {
             from { stroke: yellow; }
             to   { stroke: default; }
         }
-
-        .sim-bb-wire {
-            fill:none;
-            stroke-linecap: round;
-            stroke-width:${WIRE_WIDTH}px;
-            pointer-events: none;
-        }
-        .sim-bb-wire-end {
-            stroke:#333;
-        }
-        .sim-board-pin {
-            fill:#999;
-            stroke:#000;
-            stroke-width:${PIN_DIST/3.0}px;
-        }
-        .sim-bb-wire-hover {
-            stroke-width: ${WIRE_WIDTH}px;
-            visibility: hidden;
-            stroke-dasharray: ${PIN_DIST/2.0},${PIN_DIST/1.0};
-        }`;
+        ${WIRE_STYLE}
+        `;
 
     export class DalBoardSvg {
         public element: SVGSVGElement;
