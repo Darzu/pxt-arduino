@@ -20,8 +20,6 @@ namespace pxsim.boardsvg {
         }
         return grid;
     }
-    
-    export const bbLocToCoordStr = (loc: string) => `${loc[0]}, ${loc[1] + (loc[2] || "") + (loc[3] || "")}`;
 
     export class Breadboard {
         private bb: SVGGElement;
@@ -124,7 +122,7 @@ namespace pxsim.boardsvg {
                     this.nameToPin[name] = p;
                     this.nameToLoc[name] = [x, y];
                     addLoc(name, [x,y]);
-                    let title = bbLocToCoordStr(name)
+                    let title = `${name[0]}, ${name[1] + (name[2] || "") + (name[3] || "")}`;
                     svg.hydrate(p, {title: title});
                 }
                 return mkGrid(l, t, rs, cs, size, props, pinFn);

@@ -7,6 +7,10 @@ namespace pxsim.instructions {
     const WIRE_TXT_Y_OFF = 70;
     const WIRE_TXT_X_OFF = 3;
 
+    function bbLocToCoordStr(loc: string) {
+        return `(${loc[0]},${loc[1] + (loc[2] || "") + (loc[3] || "")})`;
+    }
+
     function addClass(el: HTMLElement, cls: string) {
         //TODO move to library
         if (el.classList) el.classList.add(cls);
@@ -74,7 +78,7 @@ namespace pxsim.instructions {
             let [x1, y1] = p1;
             let [x2, y2] = p2;
             let nm1 = desc.pin;
-            let nm2 = boardsvg.bbLocToCoordStr(desc.bb);
+            let nm2 = bbLocToCoordStr(desc.bb);
             let t1 = boardsvg.mkTxt(x1 + WIRE_TXT_X_OFF, y1 - WIRE_TXT_Y_OFF, LBL_SIZE, 0, nm1, "wire-lbl");
             g.appendChild(t1);
             let t2 = boardsvg.mkTxt(x2 + WIRE_TXT_X_OFF, y2 + WIRE_TXT_Y_OFF, LBL_SIZE, 0, nm2, "wire-lbl");
@@ -251,7 +255,7 @@ namespace pxsim.instructions {
             //parts
             let partsSvg = <SVGSVGElement>document.createElementNS("http://www.w3.org/2000/svg", "svg")
             let [PARTS_WIDTH, PARTS_HEIGHT] =  step > 0 
-                ? [PANEL_WIDTH - NUM_BOX_SIZE - PANEL_PADDING*2, 70]
+                ? [PANEL_WIDTH - NUM_BOX_SIZE - PANEL_PADDING, 70]
                 : [PANEL_WIDTH - PANEL_PADDING*2, PANEL_HEIGHT - NUM_BOX_SIZE - PANEL_PADDING*2]
             let [PARTS_LEFT_MARGIN, PARTS_TOP_MARGIN]= step > 0
                 ? [NUM_BOX_SIZE + PANEL_PADDING, PANEL_PADDING]
@@ -270,7 +274,7 @@ namespace pxsim.instructions {
 
             //wires
             const WIRE_LEFT_MARGIN = 80;
-            const WIRE_RIGHT_MARGIN = 120;
+            const WIRE_RIGHT_MARGIN = 130;
             const WIRE_TOP_MARGIN = 150;
 
             let reqWire = (desc: boardsvg.WireDescription, doLbl: boolean) => {
@@ -301,7 +305,7 @@ namespace pxsim.instructions {
                 let b = boardsvg.mkBtnSvg([x/BTN_SCALE, y/BTN_SCALE]);
                 svg.hydrate(b, {transform: `scale(${BTN_SCALE})`})
                 g.appendChild(b)
-                let txt = loc ? boardsvg.bbLocToCoordStr(loc) : "";
+                let txt = loc ? bbLocToCoordStr(loc) : "";
                 let t = boardsvg.mkTxt(x+BTN_TXT_X_OFF, y + BTN_TXT_Y_OFF, LBL_SIZE, 0, txt, "wire-lbl");
                 g.appendChild(t);
                 return g;
@@ -313,7 +317,7 @@ namespace pxsim.instructions {
                 let b = res.g;
                 svg.hydrate(b, {transform: `scale(${DISPLAY_SCALE})`})
                 g.appendChild(b)
-                let txt = loc ? boardsvg.bbLocToCoordStr(loc) : "";
+                let txt = loc ? bbLocToCoordStr(loc) : "";
                 let t = boardsvg.mkTxt(x+DISPLAY_TXT_X_OFF, y + DISPLAY_TXT_Y_OFF, LBL_SIZE, 0, txt, "display-lbl");
                 g.appendChild(t);
                 return g;
