@@ -12,8 +12,11 @@ namespace pxsim.instructions {
     }
     const mkWireSeg = (p1: [number, number], p2: [number, number], clr: string): SVGPathElement => {
         const coordStr = (xy: [number, number]):string => {return `${xy[0]}, ${xy[1]}`};
-        let c1: [number, number] = [p1[0], p2[1]];
-        let c2: [number, number] = [p2[0], p1[1]];
+        let [x1, y1] = p1;
+        let [x2, y2] = p2
+        let yLen = (y2 - y1);
+        let c1: [number, number] = [x1, y1 + yLen*.8];
+        let c2: [number, number] = [x2, y2 - yLen*.8];
         let w = <SVGPathElement>svg.mkPath("sim-bb-wire", `M${coordStr(p1)} C${coordStr(c1)} ${coordStr(c2)} ${coordStr(p2)}`);
         (<any>w).style["stroke"] = clr;
         return w;
@@ -26,7 +29,7 @@ namespace pxsim.instructions {
         let g = svg.elt('g')
 
         let el = svg.elt("rect");
-        let h1 = k*6;
+        let h1 = k*10;
         let w1 = k*2;
         svg.hydrate(el, {x: cx - w1/2, y: cy - (h1/2), width: w1, height: h1, rx: 0.5, ry: 0.5, class: "sim-bb-wire-end"});
         (<any>el).style["stroke-width"] = `${endW}px`;
@@ -46,8 +49,9 @@ namespace pxsim.instructions {
         const LENGTH = 100;
         let g = <SVGGElement>svg.elt('g');
         let [cx, cy] = p;
-        let p1: boardsvg.Coord = [cx, cy - LENGTH/2];
-        let p2: boardsvg.Coord = [cx, cy + LENGTH/2];
+        let offset = 10;
+        let p1: boardsvg.Coord = [cx - offset, cy - LENGTH/2];
+        let p2: boardsvg.Coord = [cx + offset, cy + LENGTH/2];
         let e1 = mkWireEnd(p1, true, "green");
         let s = mkWireSeg(p1, p2, "green");
         let e2 = mkWireEnd(p2, false, "green");
