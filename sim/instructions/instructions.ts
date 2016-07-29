@@ -11,41 +11,46 @@ namespace pxsim.instructions {
         else if (!el.className.indexOf(cls)) el.className += ' ' + cls;
     }
     export function drawInstructions() {
-        pxsim.runtime = new Runtime("");
+        const CODE = "";
+        pxsim.runtime = new Runtime(CODE);
         pxsim.runtime.board = null;
         pxsim.initCurrentRuntime();
 
         let style = document.createElement("style");
         document.head.appendChild(style);
 
-        const FULL_PAGE_WIDTH = 96.0 * 8.5;
-        const FULL_PAGE_HEIGHT = 96.0 * 11.0;
-        const PAGE_MARGIN = 96.0 * 0.45;
+        type Orientation = "landscape" | "portrait";
+        const ORIENTATION: Orientation = "portrait";
+        const PPI = 96.0;
+        const [FULL_PAGE_WIDTH, FULL_PAGE_HEIGHT] 
+            = (ORIENTATION == "portrait" ? [PPI * 8.5, PPI * 11.0] : [PPI * 11.0, PPI * 8.5]);
+        const PAGE_MARGIN = PPI * 0.45;
         const PAGE_WIDTH = FULL_PAGE_WIDTH - PAGE_MARGIN * 2;
         const PAGE_HEIGHT = FULL_PAGE_HEIGHT - PAGE_MARGIN * 2;
-        const PANEL_ROWS = 2;
-        const PANEL_COLS = 2;
+        const BORDER_COLOR = "grey";
+        const BORDER_RADIUS = 5;
+        const BORDER_WIDTH = 2;
+        const [PANEL_ROWS, PANEL_COLS] = [2, 2];
         const PANEL_MARGIN = 20;
         const PANEL_PADDING = 10;
-        const PANEL_BORDER = 2;
-        const PANEL_WIDTH = PAGE_WIDTH / PANEL_COLS - (PANEL_MARGIN + PANEL_PADDING + PANEL_BORDER) * PANEL_COLS;
-        const PANEL_HEIGHT = PAGE_HEIGHT / PANEL_ROWS - (PANEL_MARGIN + PANEL_PADDING + PANEL_BORDER) * PANEL_ROWS;
+        const PANEL_WIDTH = PAGE_WIDTH / PANEL_COLS - (PANEL_MARGIN + PANEL_PADDING + BORDER_WIDTH) * PANEL_COLS;
+        const PANEL_HEIGHT = PAGE_HEIGHT / PANEL_ROWS - (PANEL_MARGIN + PANEL_PADDING + BORDER_WIDTH) * PANEL_ROWS;
         const BOARD_WIDTH = 200;
         const BOARD_LEFT = (PANEL_WIDTH - BOARD_WIDTH) / 2.0 + PANEL_PADDING;
         const BOARD_BOT = PANEL_PADDING;
         const NUM_BOX_SIZE = 60;
         const NUM_FONT = 40;
         const NUM_MARGIN = 5;
-        const BORDER_COLOR = "grey";
 
         style.textContent += `
             .instr-panel {
                 margin: ${PANEL_MARGIN}px;
                 padding: ${PANEL_PADDING}px;
-                border-width: ${PANEL_BORDER}px;
+                border-width: ${BORDER_WIDTH}px;
                 border-color: ${BORDER_COLOR};
-                display: inline-block;
                 border-style: solid;
+                border-radius: ${BORDER_RADIUS}px;
+                display: inline-block;
                 width: ${PANEL_WIDTH}px;
                 height: ${PANEL_HEIGHT}px;
                 position: relative;
@@ -59,13 +64,14 @@ namespace pxsim.instructions {
             }
             .panel-num-outer {
                 position: absolute;
-                left: ${-PANEL_BORDER}px;
-                top: ${-PANEL_BORDER}px;
+                left: ${-BORDER_WIDTH}px;
+                top: ${-BORDER_WIDTH}px;
                 width: ${NUM_BOX_SIZE}px;
                 height: ${NUM_BOX_SIZE}px;
-                border-width: ${PANEL_BORDER}px;
+                border-width: ${BORDER_WIDTH}px;
                 border-style: solid;
                 border-color: ${BORDER_COLOR};
+                border-radius: ${BORDER_RADIUS}px 0 0 0;
             }
             .panel-num {
                 margin: ${NUM_MARGIN}px 0;
