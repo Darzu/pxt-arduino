@@ -423,14 +423,15 @@ namespace pxsim.instructions {
                 cmps.forEach(c => reqCmp(c, true));    
             }
 
-            // Adafruit link
+            // products link
             if (step == 0) {
-                const LINK = "https://www.adafruit.com/wishlist/408673";
-                let link = document.createElement("a");
-                addClass(link, "buy-link")
-                link.text = LINK;
-                link.href = LINK;
-                panel.appendChild(link)
+                //TODO: need vendor agnostic solution
+                // const LINK = "https://www.adafruit.com/wishlist/408673";
+                // let link = document.createElement("a");
+                // addClass(link, "buy-link")
+                // link.text = LINK;
+                // link.href = LINK;
+                // panel.appendChild(link)
             }
                 
             return panel;
