@@ -3,7 +3,9 @@
 /// <reference path="../../libs/microbit/dal.d.ts"/>
 
 namespace pxsim.instructions {
-    const LBL_SIZE = 30;
+    const LBL_SIZE = 50;
+    const WIRE_TXT_Y_OFF = 70;
+    const WIRE_TXT_X_OFF = 3;
 
     function addClass(el: HTMLElement, cls: string) {
         //TODO move to library
@@ -68,14 +70,13 @@ namespace pxsim.instructions {
         g.appendChild(s);
         g.appendChild(e1);
         g.appendChild(e2);
-        let tOff = 70;
         let [x1, y1] = p1;
         let [x2, y2] = p2;
         let nm1 = desc.pin;
         let nm2 = boardsvg.bbLocToCoordStr(desc.bb);
-        let t1 = boardsvg.mkTxt(x1, y1 - tOff, LBL_SIZE, 0, nm1, "wire-lbl");
+        let t1 = boardsvg.mkTxt(x1 + WIRE_TXT_X_OFF, y1 - WIRE_TXT_Y_OFF, LBL_SIZE, 0, nm1, "wire-lbl");
         g.appendChild(t1);
-        let t2 = boardsvg.mkTxt(x2, y2 + tOff, LBL_SIZE, 0, nm2, "wire-lbl");
+        let t2 = boardsvg.mkTxt(x2 + WIRE_TXT_X_OFF, y2 + WIRE_TXT_Y_OFF, LBL_SIZE, 0, nm2, "wire-lbl");
         g.appendChild(t2);
         return g;
     }
@@ -112,6 +113,7 @@ namespace pxsim.instructions {
         const NUM_MARGIN = 5;
 
         style.textContent += `
+            ${boardsvg.WIRE_STYLE}
             .instr-panel {
                 margin: ${PANEL_MARGIN}px;
                 padding: ${PANEL_PADDING}px;
@@ -159,7 +161,6 @@ namespace pxsim.instructions {
                     ""
                 }
             }
-            ${boardsvg.WIRE_STYLE}
             `
 
         let desc = boardsvg.ARDUINO_ZERO;
@@ -247,18 +248,24 @@ namespace pxsim.instructions {
             });
             panel.appendChild(partsSvg);
 
-            let px = 70;
+            let px = 0;
+            const WIRE_LEFT_MARGIN = 80;
+            const WIRE_RIGHT_MARGIN = 120;
+            const WIRE_TOP_MARGIN = 150;
 
             //wires
-            const wYOff = 150;
-            const wXSpace = 150;
             let reqWire = (desc: boardsvg.WireDescription) => {
-                let w = mkWire([px, wYOff], desc);
+                px += WIRE_LEFT_MARGIN;
+                let w = mkWire([px, WIRE_TOP_MARGIN], desc);
                 partsSvg.appendChild(w);
-                px += wXSpace;
+                px += WIRE_RIGHT_MARGIN;
             }
             let wires = (stepToWires[step] || []);
             wires.forEach(w => reqWire(w));
+
+            const CMP_LEFT_MARGIN = 40;
+            const CMP_RIGHT_MARGIN = 180;
+            const CMP_TOP_MARGIN = 100;
 
             //components
             let mkBtn = (p: boardsvg.Coord, loc: string) => {
@@ -277,9 +284,10 @@ namespace pxsim.instructions {
             let reqCmp = (desc: boardsvg.ComponentDescription) => {
                 if (desc.type == "buttonpair") {
                     let reqBtn = (btnIdx: number) => {
-                        let b = mkBtn([px-30, 100], desc.locations[btnIdx]);
+                        px += CMP_LEFT_MARGIN;
+                        let b = mkBtn([px, CMP_TOP_MARGIN], desc.locations[btnIdx]);
                         partsSvg.appendChild(b)
-                        px += 200;
+                        px += CMP_RIGHT_MARGIN;
                     }
                     reqBtn(0)
                     reqBtn(1)
@@ -304,7 +312,5 @@ namespace pxsim.instructions {
             let p = mkPanel(s);
             panels.appendChild(p);
         }
-
-        document.body.appendChild(document.createElement("h1"))
     }
 }
