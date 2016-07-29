@@ -66,15 +66,15 @@ namespace pxsim.instructions {
         g.appendChild(s);
         g.appendChild(e1);
         g.appendChild(e2);
-        let tOff = 40;
+        let tOff = 70;
         let tSize = 30;
         let [x1, y1] = p1;
         let [x2, y2] = p2;
         let nm1 = desc.pin;
         let nm2 = boardsvg.bbLocToCoordStr(desc.bb);
-        let t1 = mkTxt([x1 + tOff, y1 + tSize/2], nm1, tSize);
+        let t1 = boardsvg.mkTxt(x1, y1 - tOff, tSize, 0, nm1, "wire-lbl");
         g.appendChild(t1);
-        let t2 = mkTxt([x2 + tOff, y2 + tSize/2], nm2, tSize);
+        let t2 = boardsvg.mkTxt(x2, y2 + tOff, tSize, 0, nm2, "wire-lbl");
         g.appendChild(t2);
         return g;
     }
@@ -145,6 +145,18 @@ namespace pxsim.instructions {
                 margin: ${NUM_MARGIN}px 0;
                 text-align: center;
                 font-size: ${NUM_FONT}px;
+            }
+            .parts-svg {
+                ${
+                    // `
+                    // border-width: 1px;
+                    // border-color: #9e9e9e;
+                    // border-style: solid;
+                    // border-radius: 5px;
+                    // background-color: #eeeeee;
+                    // `
+                    ""
+                }
             }
             ${boardsvg.WIRE_STYLE}
             `
@@ -224,19 +236,20 @@ namespace pxsim.instructions {
             let partsSvg = <SVGSVGElement>document.createElementNS("http://www.w3.org/2000/svg", "svg")
             const PARTS_WIDTH = PANEL_WIDTH - NUM_BOX_SIZE - PANEL_PADDING*2;
             const PARTS_HEIGHT = 70;
-            const PARTS_SCALE = 4;
+            const PARTS_SCALE = 4.5;
             const PARTS_VIEW_WIDTH = PARTS_WIDTH*PARTS_SCALE;
             const PARTS_VIEW_HEIGHT = PARTS_HEIGHT*PARTS_SCALE;
             svg.hydrate(partsSvg, {
                 "viewBox": `0 0 ${PARTS_VIEW_WIDTH} ${PARTS_VIEW_HEIGHT}`,
+                'class': "parts-svg",
                 "style": `width: ${PARTS_WIDTH}px; height: ${PARTS_HEIGHT}px; margin-left: ${NUM_BOX_SIZE + PANEL_PADDING}px`
             });
             panel.appendChild(partsSvg);
 
             //wires
-            let wx = 20;
-            let wy = 100;
-            let xSpace = 200;
+            let wx = 70;
+            let wy = 150;
+            let xSpace = 150;
             let reqWire = (desc: boardsvg.WireDescription) => {
                 let w = mkWire([wx, wy], desc);
                 partsSvg.appendChild(w);

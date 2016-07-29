@@ -263,7 +263,7 @@ namespace pxsim.boardsvg {
         purple: "#a772a1",
         blue: "#01a6e8",
         green: "#3cce73",
-        yellow: "#efea5e",
+        yellow: "#ece600",
         orange: "#fdb262",
         red: "#f44f43",
         brown: "#c89764",
