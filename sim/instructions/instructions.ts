@@ -20,28 +20,57 @@ namespace pxsim.instructions {
 
         const FULL_PAGE_WIDTH = 96.0 * 8.5;
         const FULL_PAGE_HEIGHT = 96.0 * 11.0;
-        const PAGE_MARGIN = 96.0 * 0.65;
+        const PAGE_MARGIN = 96.0 * 0.45;
         const PAGE_WIDTH = FULL_PAGE_WIDTH - PAGE_MARGIN * 2;
         const PAGE_HEIGHT = FULL_PAGE_HEIGHT - PAGE_MARGIN * 2;
         const PANEL_ROWS = 2;
         const PANEL_COLS = 2;
         const PANEL_MARGIN = 20;
-        const PANEL_WIDTH = PAGE_WIDTH / PANEL_COLS - PANEL_MARGIN * PANEL_COLS;
-        const PANEL_HEIGHT = PAGE_HEIGHT / PANEL_ROWS - PANEL_MARGIN * PANEL_ROWS;
-
+        const PANEL_PADDING = 10;
+        const PANEL_BORDER = 2;
+        const PANEL_WIDTH = PAGE_WIDTH / PANEL_COLS - (PANEL_MARGIN + PANEL_PADDING + PANEL_BORDER) * PANEL_COLS;
+        const PANEL_HEIGHT = PAGE_HEIGHT / PANEL_ROWS - (PANEL_MARGIN + PANEL_PADDING + PANEL_BORDER) * PANEL_ROWS;
         const BOARD_WIDTH = 200;
-        const BOARD_HEIGHT = 400;
+        const BOARD_LEFT = (PANEL_WIDTH - BOARD_WIDTH) / 2.0 + PANEL_PADDING;
+        const BOARD_BOT = PANEL_PADDING;
+        const NUM_BOX_SIZE = 60;
+        const NUM_FONT = 40;
+        const NUM_MARGIN = 5;
+        const BORDER_COLOR = "grey";
 
         style.textContent += `
             .instr-panel {
                 margin: ${PANEL_MARGIN}px;
-                padding: 10px;
-                border-width: 2px;
-                border-color: grey;
+                padding: ${PANEL_PADDING}px;
+                border-width: ${PANEL_BORDER}px;
+                border-color: ${BORDER_COLOR};
                 display: inline-block;
                 border-style: solid;
                 width: ${PANEL_WIDTH}px;
                 height: ${PANEL_HEIGHT}px;
+                position: relative;
+            }
+            .board-svg {
+                margin: 0 auto;
+                display: block;
+                position: absolute;
+                bottom: ${BOARD_BOT}px;
+                left: ${BOARD_LEFT}px;
+            }
+            .panel-num-outer {
+                position: absolute;
+                left: ${-PANEL_BORDER}px;
+                top: ${-PANEL_BORDER}px;
+                width: ${NUM_BOX_SIZE}px;
+                height: ${NUM_BOX_SIZE}px;
+                border-width: ${PANEL_BORDER}px;
+                border-style: solid;
+                border-color: ${BORDER_COLOR};
+            }
+            .panel-num {
+                margin: ${NUM_MARGIN}px 0;
+                text-align: center;
+                font-size: ${NUM_FONT}px;
             }
             `
 
@@ -78,7 +107,7 @@ namespace pxsim.instructions {
             })
             svg.hydrate(board.element, {
                 "width": BOARD_WIDTH,
-                "height": BOARD_HEIGHT
+                "class": "board-svg"
             });
 
             //TODO handle in a general way
@@ -98,10 +127,18 @@ namespace pxsim.instructions {
             }
             return board;
         }
-        const mkPanel = (board: boardsvg.DalBoardSvg) => {
+        const mkPanel = (board: boardsvg.DalBoardSvg, step: number) => {
             let div = document.createElement("div");
             addClass(div, "instr-panel");
             div.appendChild(board.element);
+            //number
+            let numDiv = document.createElement("div");
+            addClass(numDiv, "panel-num-outer");
+            div.appendChild(numDiv)
+            let num = document.createElement("div");
+            addClass(num, "panel-num");
+            num.textContent = step+"";
+            numDiv.appendChild(num)
             return div;
         }
         
@@ -114,7 +151,7 @@ namespace pxsim.instructions {
 
         for (let s = 0; s <= lastStep; s++){
             let b1 = mkBoard(s);
-            let p = mkPanel(b1);
+            let p = mkPanel(b1, s+1);
             panels.appendChild(p);
         }
 
