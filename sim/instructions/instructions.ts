@@ -10,8 +10,14 @@ namespace pxsim.instructions {
         //TODO: make github issue (same issue exists svg.addClass)
         else if (!el.className.indexOf(cls)) el.className += ' ' + cls;
     }
+    function mkTxt(p: [number, number], txt: string, size: number) {
+        let el = svg.elt("text")
+        let [x,y] = p;
+        svg.hydrate(el, { x: x, y: y, style: `font-size:${size}px;` });
+        el.textContent = txt;
+        return el;
+    }
     const mkWireSeg = (p1: [number, number], p2: [number, number], clr: string): SVGPathElement => {
-        clr = boardsvg.mapWireColor(clr);
         const coordStr = (xy: [number, number]):string => {return `${xy[0]}, ${xy[1]}`};
         let [x1, y1] = p1;
         let [x2, y2] = p2
@@ -23,7 +29,6 @@ namespace pxsim.instructions {
         return w;
     }
     const mkWireEnd = (p: [number, number], top: boolean, clr: string): SVGElement => {
-        clr = boardsvg.mapWireColor(clr);
         const endW = boardsvg.PIN_DIST/4.0;
         let k = boardsvg.WIRE_WIDTH*.6;
         let [cx, cy] = p; 
@@ -47,19 +52,30 @@ namespace pxsim.instructions {
         g.appendChild(el);
         return g;
     }
-    const mkWire = (p: [number, number], clr: string): SVGGElement => {
+    const mkWire = (p: [number, number], desc: boardsvg.WireDescription): SVGGElement => {
         const LENGTH = 100;
         let g = <SVGGElement>svg.elt('g');
         let [cx, cy] = p;
-        let offset = 10;
+        let offset = 0;
         let p1: boardsvg.Coord = [cx - offset, cy - LENGTH/2];
         let p2: boardsvg.Coord = [cx + offset, cy + LENGTH/2];
-        let e1 = mkWireEnd(p1, true, "green");
-        let s = mkWireSeg(p1, p2, "green");
-        let e2 = mkWireEnd(p2, false, "green");
+        let clr = boardsvg.mapWireColor(desc.color);
+        let e1 = mkWireEnd(p1, true, clr);
+        let s = mkWireSeg(p1, p2, clr);
+        let e2 = mkWireEnd(p2, false, clr);
         g.appendChild(s);
         g.appendChild(e1);
         g.appendChild(e2);
+        let tOff = 40;
+        let tSize = 30;
+        let [x1, y1] = p1;
+        let [x2, y2] = p2;
+        let nm1 = desc.pin;
+        let nm2 = boardsvg.bbLocToCoordStr(desc.bb);
+        let t1 = mkTxt([x1 + tOff, y1 + tSize/2], nm1, tSize);
+        g.appendChild(t1);
+        let t2 = mkTxt([x2 + tOff, y2 + tSize/2], nm2, tSize);
+        g.appendChild(t2);
         return g;
     }
     export function drawInstructions() {
@@ -87,7 +103,7 @@ namespace pxsim.instructions {
         const PANEL_PADDING = 10;
         const PANEL_WIDTH = PAGE_WIDTH / PANEL_COLS - (PANEL_MARGIN + PANEL_PADDING + BORDER_WIDTH) * PANEL_COLS;
         const PANEL_HEIGHT = PAGE_HEIGHT / PANEL_ROWS - (PANEL_MARGIN + PANEL_PADDING + BORDER_WIDTH) * PANEL_ROWS;
-        const BOARD_WIDTH = 200;
+        const BOARD_WIDTH = 240;
         const BOARD_LEFT = (PANEL_WIDTH - BOARD_WIDTH) / 2.0 + PANEL_PADDING;
         const BOARD_BOT = PANEL_PADDING;
         const NUM_BOX_SIZE = 60;
@@ -186,9 +202,13 @@ namespace pxsim.instructions {
             }
             return board;
         }
-        const mkPanel = (board: boardsvg.DalBoardSvg, step: number) => {
+        const mkPanel = (step: number) => {
+            //panel
             let panel = document.createElement("div");
             addClass(panel, "instr-panel");
+
+            //board
+            let board = mkBoard(step)
             panel.appendChild(board.element);
             
             //number
@@ -197,23 +217,32 @@ namespace pxsim.instructions {
             panel.appendChild(numDiv)
             let num = document.createElement("div");
             addClass(num, "panel-num");
-            num.textContent = step+"";
+            num.textContent = (step+1)+"";
             numDiv.appendChild(num)
 
             //parts
-            let wireSvg = <SVGSVGElement>document.createElementNS("http://www.w3.org/2000/svg", "svg")
-            const width = 300;
-            const height = 300;
-            svg.hydrate(wireSvg, {
-                "viewBox": `0 0 ${width} ${height}`,
+            let partsSvg = <SVGSVGElement>document.createElementNS("http://www.w3.org/2000/svg", "svg")
+            const PARTS_WIDTH = PANEL_WIDTH - NUM_BOX_SIZE - PANEL_PADDING*2;
+            const PARTS_HEIGHT = 70;
+            const PARTS_SCALE = 4;
+            const PARTS_VIEW_WIDTH = PARTS_WIDTH*PARTS_SCALE;
+            const PARTS_VIEW_HEIGHT = PARTS_HEIGHT*PARTS_SCALE;
+            svg.hydrate(partsSvg, {
+                "viewBox": `0 0 ${PARTS_VIEW_WIDTH} ${PARTS_VIEW_HEIGHT}`,
+                "style": `width: ${PARTS_WIDTH}px; height: ${PARTS_HEIGHT}px; margin-left: ${NUM_BOX_SIZE + PANEL_PADDING}px`
             });
-            svg.hydrate(wireSvg, {
-                "style": `width: 100px; height: 100px; margin-left: 100px`
-            });
-            panel.appendChild(wireSvg);
-            let p: boardsvg.Coord = [100, 150];
-            let w = mkWire(p, "green");
-            wireSvg.appendChild(w);
+            panel.appendChild(partsSvg);
+
+            //wires
+            let wx = 20;
+            let wy = 100;
+            let xSpace = 200;
+            let reqWire = (desc: boardsvg.WireDescription) => {
+                let w = mkWire([wx, wy], desc);
+                partsSvg.appendChild(w);
+                wx += xSpace;
+            }
+            (stepToWires[step] || []).forEach(w => reqWire(w))
 
             return panel;
         }
@@ -226,8 +255,7 @@ namespace pxsim.instructions {
         // <hr>
 
         for (let s = 0; s <= lastStep; s++){
-            let b1 = mkBoard(s);
-            let p = mkPanel(b1, s+1);
+            let p = mkPanel(s);
             panels.appendChild(p);
         }
 

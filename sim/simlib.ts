@@ -257,11 +257,11 @@ namespace pxsim.boardsvg {
     }
 
     export const WIRE_COLOR: Map<string> = {
-        black: "#211f1d",
+        black: "#514f4d",
         white: "#fcfdfc",
         grey: "#acabab",
         purple: "#a772a1",
-        blue: "#01a6f8",
+        blue: "#01a6e8",
         green: "#3cce73",
         yellow: "#efea5e",
         orange: "#fdb262",
