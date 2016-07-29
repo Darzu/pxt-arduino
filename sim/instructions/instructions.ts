@@ -266,6 +266,8 @@ namespace pxsim.instructions {
             const CMP_LEFT_MARGIN = 40;
             const CMP_RIGHT_MARGIN = 180;
             const CMP_TOP_MARGIN = 100;
+            const CMP_TXT_X_OFF = 50;
+            const CMP_TXT_Y_OFF = -40;
 
             //components
             let mkBtn = (p: boardsvg.Coord, loc: string) => {
@@ -275,9 +277,7 @@ namespace pxsim.instructions {
                 let b = boardsvg.mkBtnSvg([x/BTN_SCALE, y/BTN_SCALE]);
                 svg.hydrate(b, {transform: `scale(${BTN_SCALE})`})
                 g.appendChild(b)
-                const tYOff = -40;
-                const tXOff = 40;
-                let t = boardsvg.mkTxt(x+tXOff, y + tYOff, LBL_SIZE, 0, boardsvg.bbLocToCoordStr(loc), "wire-lbl");
+                let t = boardsvg.mkTxt(x+CMP_TXT_X_OFF, y + CMP_TXT_Y_OFF, LBL_SIZE, 0, boardsvg.bbLocToCoordStr(loc), "wire-lbl");
                 g.appendChild(t);
                 return g;
             }
