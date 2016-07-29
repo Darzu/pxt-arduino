@@ -56,7 +56,7 @@ namespace pxsim.instructions {
         g.appendChild(el);
         return g;
     }
-    const mkWire = (p: [number, number], desc: boardsvg.WireDescription): SVGGElement => {
+    const mkWire = (p: [number, number], desc: boardsvg.WireDescription, doLbl: boolean): SVGGElement => {
         const LENGTH = 100;
         let g = <SVGGElement>svg.elt('g');
         let [cx, cy] = p;
@@ -70,14 +70,16 @@ namespace pxsim.instructions {
         g.appendChild(s);
         g.appendChild(e1);
         g.appendChild(e2);
-        let [x1, y1] = p1;
-        let [x2, y2] = p2;
-        let nm1 = desc.pin;
-        let nm2 = boardsvg.bbLocToCoordStr(desc.bb);
-        let t1 = boardsvg.mkTxt(x1 + WIRE_TXT_X_OFF, y1 - WIRE_TXT_Y_OFF, LBL_SIZE, 0, nm1, "wire-lbl");
-        g.appendChild(t1);
-        let t2 = boardsvg.mkTxt(x2 + WIRE_TXT_X_OFF, y2 + WIRE_TXT_Y_OFF, LBL_SIZE, 0, nm2, "wire-lbl");
-        g.appendChild(t2);
+        if (doLbl) {
+            let [x1, y1] = p1;
+            let [x2, y2] = p2;
+            let nm1 = desc.pin;
+            let nm2 = boardsvg.bbLocToCoordStr(desc.bb);
+            let t1 = boardsvg.mkTxt(x1 + WIRE_TXT_X_OFF, y1 - WIRE_TXT_Y_OFF, LBL_SIZE, 0, nm1, "wire-lbl");
+            g.appendChild(t1);
+            let t2 = boardsvg.mkTxt(x2 + WIRE_TXT_X_OFF, y2 + WIRE_TXT_Y_OFF, LBL_SIZE, 0, nm2, "wire-lbl");
+            g.appendChild(t2);
+        }
         return g;
     }
     export function drawInstructions() {
@@ -152,6 +154,7 @@ namespace pxsim.instructions {
                 font-size: ${NUM_FONT}px;
             }
             .parts-svg {
+                position: absolute;
                 ${
                     // `
                     // border-width: 1px;
@@ -162,6 +165,13 @@ namespace pxsim.instructions {
                     // `
                     ""
                 }
+            }
+            .buy-link {
+                font-size: 12px;
+                position: absolute;
+                bottom: ${PANEL_PADDING}px;
+                width: ${PANEL_WIDTH}px;
+                text-align: center;
             }
             `
 
@@ -224,8 +234,10 @@ namespace pxsim.instructions {
             addClass(panel, "instr-panel");
 
             //board
-            let board = mkBoard(step)
-            panel.appendChild(board.element);
+            if (step > 0) {
+                let board = mkBoard(step)
+                panel.appendChild(board.element);
+            }
             
             //number
             let numDiv = document.createElement("div");
@@ -238,33 +250,37 @@ namespace pxsim.instructions {
 
             //parts
             let partsSvg = <SVGSVGElement>document.createElementNS("http://www.w3.org/2000/svg", "svg")
-            const PARTS_WIDTH = PANEL_WIDTH - NUM_BOX_SIZE - PANEL_PADDING*2;
-            const PARTS_HEIGHT = 70;
+            let [PARTS_WIDTH, PARTS_HEIGHT] =  step > 0 
+                ? [PANEL_WIDTH - NUM_BOX_SIZE - PANEL_PADDING*2, 70]
+                : [PANEL_WIDTH - PANEL_PADDING*2, PANEL_HEIGHT - NUM_BOX_SIZE - PANEL_PADDING*2]
+            let [PARTS_LEFT_MARGIN, PARTS_TOP_MARGIN]= step > 0
+                ? [NUM_BOX_SIZE + PANEL_PADDING, PANEL_PADDING]
+                : [PANEL_PADDING, NUM_BOX_SIZE + PANEL_PADDING]
             const PARTS_SCALE = 4.5;
             const PARTS_VIEW_WIDTH = PARTS_WIDTH*PARTS_SCALE;
             const PARTS_VIEW_HEIGHT = PARTS_HEIGHT*PARTS_SCALE;
             svg.hydrate(partsSvg, {
                 "viewBox": `0 0 ${PARTS_VIEW_WIDTH} ${PARTS_VIEW_HEIGHT}`,
                 'class': "parts-svg",
-                "style": `width: ${PARTS_WIDTH}px; height: ${PARTS_HEIGHT}px; margin-left: ${NUM_BOX_SIZE + PANEL_PADDING}px`
+                "style": `width: ${PARTS_WIDTH}px; height: ${PARTS_HEIGHT}px; left: ${PARTS_LEFT_MARGIN}px; top: ${PARTS_TOP_MARGIN}px`
             });
             panel.appendChild(partsSvg);
 
             let px = 0;
+
+            //wires
             const WIRE_LEFT_MARGIN = 80;
             const WIRE_RIGHT_MARGIN = 120;
             const WIRE_TOP_MARGIN = 150;
 
-            //wires
-            let reqWire = (desc: boardsvg.WireDescription) => {
+            let reqWire = (desc: boardsvg.WireDescription, doLbl: boolean) => {
                 px += WIRE_LEFT_MARGIN;
-                let w = mkWire([px, WIRE_TOP_MARGIN], desc);
+                let w = mkWire([px, WIRE_TOP_MARGIN], desc, doLbl);
                 partsSvg.appendChild(w);
                 px += WIRE_RIGHT_MARGIN;
             }
-            let wires = (stepToWires[step] || []);
-            wires.forEach(w => reqWire(w));
 
+            //components
             const BTN_SCALE = 3.0;
             const BTN_LEFT_MARGIN = 40;
             const BTN_RIGHT_MARGIN = 180;
@@ -279,14 +295,14 @@ namespace pxsim.instructions {
             const DISPLAY_TXT_X_OFF = 100;
             const DISPLAY_TXT_Y_OFF = -50;
 
-            //components
             let mkBtn = (p: boardsvg.Coord, loc: string) => {
                 let g = svg.elt("g")
                 let [x,y] = p
                 let b = boardsvg.mkBtnSvg([x/BTN_SCALE, y/BTN_SCALE]);
                 svg.hydrate(b, {transform: `scale(${BTN_SCALE})`})
                 g.appendChild(b)
-                let t = boardsvg.mkTxt(x+BTN_TXT_X_OFF, y + BTN_TXT_Y_OFF, LBL_SIZE, 0, boardsvg.bbLocToCoordStr(loc), "wire-lbl");
+                let txt = loc ? boardsvg.bbLocToCoordStr(loc) : "";
+                let t = boardsvg.mkTxt(x+BTN_TXT_X_OFF, y + BTN_TXT_Y_OFF, LBL_SIZE, 0, txt, "wire-lbl");
                 g.appendChild(t);
                 return g;
             }
@@ -297,16 +313,17 @@ namespace pxsim.instructions {
                 let b = res.g;
                 svg.hydrate(b, {transform: `scale(${DISPLAY_SCALE})`})
                 g.appendChild(b)
-                let t = boardsvg.mkTxt(x+DISPLAY_TXT_X_OFF, y + DISPLAY_TXT_Y_OFF, LBL_SIZE, 0, boardsvg.bbLocToCoordStr(loc), "display-lbl");
+                let txt = loc ? boardsvg.bbLocToCoordStr(loc) : "";
+                let t = boardsvg.mkTxt(x+DISPLAY_TXT_X_OFF, y + DISPLAY_TXT_Y_OFF, LBL_SIZE, 0, txt, "display-lbl");
                 g.appendChild(t);
                 return g;
             }
             
-            let reqCmp = (desc: boardsvg.ComponentDescription) => {
+            let reqCmp = (desc: boardsvg.ComponentDescription, doLbl: boolean) => {
                 if (desc.type == "buttonpair") {
                     const reqBtn = (btnIdx: number) => {
                         px += BTN_LEFT_MARGIN;
-                        let b = mkBtn([px, BTN_TOP_MARGIN], desc.locations[btnIdx]);
+                        let b = mkBtn([px, BTN_TOP_MARGIN], doLbl ? desc.locations[btnIdx] : "");
                         partsSvg.appendChild(b)
                         px += BTN_RIGHT_MARGIN;
                     }
@@ -315,7 +332,7 @@ namespace pxsim.instructions {
                 } else if (desc.type == "display") {
                     const reqDisplay = () => {
                         px += DISPLAY_LEFT_MARGIN;
-                        let b = mkDisplay([px, DISPLAY_TOP_MARGIN], desc.locations[0]);
+                        let b = mkDisplay([px, DISPLAY_TOP_MARGIN], doLbl ? desc.locations[0] : "");
                         partsSvg.appendChild(b)
                         px += DISPLAY_RIGHT_MARGIN;
                     }
@@ -324,9 +341,99 @@ namespace pxsim.instructions {
                     //TODO
                 }
             }
-            let cmps = (stepToCmps[step] || []);
-            cmps.forEach(c => reqCmp(c));
 
+            // add requirements
+            const BTN_BOT_MARGIN = 120;
+            const DISPLAY_BOT_MARGIN = 170;
+            const WIRE_BOT_MARGIN = 80;
+            if (step == 0) {
+                let py = 0;
+                // board & breadboard
+                //TODO
+                // let board = new pxsim.boardsvg.DalBoardSvg({
+                //     theme: pxsim.mkRandomTheme(),
+                //     runtime: pxsim.runtime,
+                //     boardDesc: desc,
+                //     blank: true
+                // })
+                // svg.hydrate(board.element, {
+                //     "width": 300
+                // });
+                // partsSvg.appendChild(board.element);
+                
+                // components
+                allComponents.forEach(desc => {
+                    if (desc.type == "buttonpair") {
+                        const reqBtn = (btnIdx: number) => {
+                            py += BTN_TOP_MARGIN;
+                            let xy: boardsvg.Coord = [75, py];
+                            let b = mkBtn(xy, "");
+                            partsSvg.appendChild(b)
+                            let t = mkTxt([200, py + 100], "x2", 100);
+                            partsSvg.appendChild(t)
+                            py += BTN_BOT_MARGIN;
+                        }
+                        reqBtn(0)
+                    } else if (desc.type == "display") {
+                        const reqDisplay = () => {
+                            py += DISPLAY_TOP_MARGIN;
+                            let xy: boardsvg.Coord = [40, py];
+                            let b = mkDisplay(xy, "");
+                            partsSvg.appendChild(b)
+                            let t = mkTxt([275, py + 125], "x1", 100);
+                            partsSvg.appendChild(t)
+                            py += DISPLAY_BOT_MARGIN;
+                        }
+                        reqDisplay();
+                    } else {
+                        //TODO
+                    }
+                });  
+
+                // wires
+                let reqWire = (desc: boardsvg.WireDescription, num: number) => {
+                    py += WIRE_TOP_MARGIN;
+                    let xy: boardsvg.Coord = [110, py]
+                    let w = mkWire(xy, desc, false);
+                    partsSvg.appendChild(w);
+                    let t = mkTxt([140, py + 30], "x"+num, 100);
+                    partsSvg.appendChild(t)
+                    py += WIRE_BOT_MARGIN;
+                }
+                let colorToWire: Map<boardsvg.WireDescription[]> = {}
+                let allWireColors: string[] = [];
+                allWires.forEach(w => {
+                    if (!colorToWire[w.color]) {
+                        colorToWire[w.color] = [];
+                        allWireColors.push(w.color);
+                    }
+                    colorToWire[w.color].push(w);
+                })
+                let i = 0;
+                allWireColors.forEach(c => {
+                    if (i > 3)
+                        return;
+                    let descs = colorToWire[c];
+                    reqWire(descs[0], descs.length)
+                    i++;
+                })
+            } else {
+                let wires = (stepToWires[step] || []);
+                wires.forEach(w => reqWire(w, true));
+                let cmps = (stepToCmps[step] || []);
+                cmps.forEach(c => reqCmp(c, true));    
+            }
+
+            // Adafruit link
+            if (step == 0) {
+                const LINK = "https://www.adafruit.com/wishlist/408673";
+                let link = document.createElement("a");
+                addClass(link, "buy-link")
+                link.text = LINK;
+                link.href = LINK;
+                panel.appendChild(link)
+            }
+                
             return panel;
         }
         
