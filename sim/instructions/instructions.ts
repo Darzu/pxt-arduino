@@ -94,6 +94,10 @@ namespace pxsim.instructions {
         let panels = document.createElement("div");
         document.body.appendChild(panels);
 
+        //TODO:
+        // <a href="https://www.adafruit.com/wishlist/408673">parts list</a>
+        // <hr>
+
         for (let s = 0; s <= lastStep; s++){
             let b1 = mkBoard(s);
             let p = mkPanel(b1);
