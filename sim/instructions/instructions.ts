@@ -60,7 +60,7 @@ namespace pxsim.instructions {
         const LENGTH = 100;
         let g = <SVGGElement>svg.elt('g');
         let [cx, cy] = p;
-        let offset = 0;
+        let offset = 15;
         let p1: boardsvg.Coord = [cx - offset, cy - LENGTH/2];
         let p2: boardsvg.Coord = [cx + offset, cy + LENGTH/2];
         let clr = boardsvg.mapWireColor(desc.color);
