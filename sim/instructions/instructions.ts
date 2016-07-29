@@ -343,7 +343,7 @@ namespace pxsim.instructions {
             }
 
             // add requirements
-            const BTN_BOT_MARGIN = 120;
+            const BTN_BOT_MARGIN = 130;
             const DISPLAY_BOT_MARGIN = 170;
             const WIRE_BOT_MARGIN = 80;
             if (step == 0) {
@@ -391,14 +391,17 @@ namespace pxsim.instructions {
                 });  
 
                 // wires
+                let px = 50;
                 let reqWire = (desc: boardsvg.WireDescription, num: number) => {
-                    py += WIRE_TOP_MARGIN;
-                    let xy: boardsvg.Coord = [110, py]
+                    // py += WIRE_TOP_MARGIN;
+                    let y = py + WIRE_TOP_MARGIN;
+                    let xy: boardsvg.Coord = [px, y]
                     let w = mkWire(xy, desc, false);
                     partsSvg.appendChild(w);
-                    let t = mkTxt([140, py + 30], "x"+num, 100);
+                    let t = mkTxt([px+30, y + 20], "x"+num, 60);
                     partsSvg.appendChild(t)
-                    py += WIRE_BOT_MARGIN;
+                    // py += WIRE_BOT_MARGIN;
+                    px += 150;
                 }
                 let colorToWire: Map<boardsvg.WireDescription[]> = {}
                 let allWireColors: string[] = [];
@@ -409,13 +412,9 @@ namespace pxsim.instructions {
                     }
                     colorToWire[w.color].push(w);
                 })
-                let i = 0;
                 allWireColors.forEach(c => {
-                    if (i > 3)
-                        return;
                     let descs = colorToWire[c];
                     reqWire(descs[0], descs.length)
-                    i++;
                 })
             } else {
                 let wires = (stepToWires[step] || []);
