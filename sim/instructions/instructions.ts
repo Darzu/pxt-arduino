@@ -3,6 +3,8 @@
 /// <reference path="../../libs/microbit/dal.d.ts"/>
 
 namespace pxsim.instructions {
+    const LBL_SIZE = 30;
+
     function addClass(el: HTMLElement, cls: string) {
         //TODO move to library
         if (el.classList) el.classList.add(cls);
@@ -67,14 +69,13 @@ namespace pxsim.instructions {
         g.appendChild(e1);
         g.appendChild(e2);
         let tOff = 70;
-        let tSize = 30;
         let [x1, y1] = p1;
         let [x2, y2] = p2;
         let nm1 = desc.pin;
         let nm2 = boardsvg.bbLocToCoordStr(desc.bb);
-        let t1 = boardsvg.mkTxt(x1, y1 - tOff, tSize, 0, nm1, "wire-lbl");
+        let t1 = boardsvg.mkTxt(x1, y1 - tOff, LBL_SIZE, 0, nm1, "wire-lbl");
         g.appendChild(t1);
-        let t2 = boardsvg.mkTxt(x2, y2 + tOff, tSize, 0, nm2, "wire-lbl");
+        let t2 = boardsvg.mkTxt(x2, y2 + tOff, LBL_SIZE, 0, nm2, "wire-lbl");
         g.appendChild(t2);
         return g;
     }
@@ -246,16 +247,48 @@ namespace pxsim.instructions {
             });
             panel.appendChild(partsSvg);
 
+            let px = 70;
+
             //wires
-            let wx = 70;
-            let wy = 150;
-            let xSpace = 150;
+            const wYOff = 150;
+            const wXSpace = 150;
             let reqWire = (desc: boardsvg.WireDescription) => {
-                let w = mkWire([wx, wy], desc);
+                let w = mkWire([px, wYOff], desc);
                 partsSvg.appendChild(w);
-                wx += xSpace;
+                px += wXSpace;
             }
-            (stepToWires[step] || []).forEach(w => reqWire(w))
+            let wires = (stepToWires[step] || []);
+            wires.forEach(w => reqWire(w));
+
+            //components
+            let mkBtn = (p: boardsvg.Coord, loc: string) => {
+                let g = svg.elt("g")
+                const BTN_SCALE = 3.0;
+                let [x,y] = p
+                let b = boardsvg.mkBtnSvg([x/BTN_SCALE, y/BTN_SCALE]);
+                svg.hydrate(b, {transform: `scale(${BTN_SCALE})`})
+                g.appendChild(b)
+                const tYOff = -40;
+                const tXOff = 40;
+                let t = boardsvg.mkTxt(x+tXOff, y + tYOff, LBL_SIZE, 0, boardsvg.bbLocToCoordStr(loc), "wire-lbl");
+                g.appendChild(t);
+                return g;
+            }
+            let reqCmp = (desc: boardsvg.ComponentDescription) => {
+                if (desc.type == "buttonpair") {
+                    let reqBtn = (btnIdx: number) => {
+                        let b = mkBtn([px-30, 100], desc.locations[btnIdx]);
+                        partsSvg.appendChild(b)
+                        px += 200;
+                    }
+                    reqBtn(0)
+                    reqBtn(1)
+                } else {
+                    //TODO
+                }
+            }
+            let cmps = (stepToCmps[step] || []);
+            cmps.forEach(c => reqCmp(c));
 
             return panel;
         }

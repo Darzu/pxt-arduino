@@ -33,6 +33,51 @@ namespace pxsim.input {
 }
 
 namespace pxsim.boardsvg {
+    export function mkBtnSvg(xy: Coord): SVGGElement {
+        let [innerCls, outerCls] = ["sim-button", "sim-button-outer"];
+        const tabSize = PIN_DIST/2.5;
+        const pegR = PIN_DIST/5;
+        const btnR = PIN_DIST*.8;
+        const pegMargin = PIN_DIST/8;
+        const plateR = PIN_DIST/12;
+
+        const pegOffset = pegMargin + pegR;
+        let [x,y] = xy;
+        const left = x - tabSize/2;
+        const top = y - tabSize/2; 
+        const plateH = 3*PIN_DIST-tabSize;
+        const plateW = 2*PIN_DIST+tabSize;
+        const plateL = left;
+        const plateT = top + tabSize;
+        const btnCX = plateL + plateW/2;
+        const btnCY = plateT + plateH/2;
+        
+        let btng = <SVGGElement>svg.elt("g");
+        //tabs
+        const mkTab = (x: number, y: number) => {
+            svg.child(btng, "rect", { class: "sim-button-tab", x: x, y: y, width: tabSize, height: tabSize})
+        }
+        mkTab(left, top);
+        mkTab(left + 2*PIN_DIST, top);
+        mkTab(left, top + 3*PIN_DIST);
+        mkTab(left + 2*PIN_DIST, top + 3*PIN_DIST);
+
+        //plate
+        svg.child(btng, "rect", { class: outerCls, x: plateL, y: plateT, rx: plateR, ry: plateR, width: plateW, height: plateH });
+
+        //pegs
+        const mkPeg = (x: number, y: number) => {
+            svg.child(btng, "circle", { class: "sim-button-nut", cx: x, cy: y, r: pegR });
+        }
+        mkPeg(plateL + pegOffset, plateT + pegOffset)
+        mkPeg(plateL + plateW - pegOffset, plateT + pegOffset)
+        mkPeg(plateL + pegOffset, plateT + plateH - pegOffset)
+        mkPeg(plateL + plateW - pegOffset, plateT + plateH - pegOffset)
+
+        //inner btn
+        let innerBtn = svg.child(btng, "circle", { class: innerCls, cx: btnCX, cy: btnCY, r: btnR });
+        return btng;
+    }
     export class ButtonPairSvg implements IBoardComponent<ButtonPairCmp> {
         public element: SVGElement;
         public defs: SVGElement[];
@@ -112,52 +157,8 @@ namespace pxsim.boardsvg {
         public updateTheme() {}
 
         private mkBtns() {
-            const mkBtn = (innerCls: string, outerCls: string) => {
-                const tabSize = PIN_DIST/2.5;
-                const pegR = PIN_DIST/5;
-                const btnR = PIN_DIST*.8;
-                const pegMargin = PIN_DIST/8;
-                const plateR = PIN_DIST/12;
-
-                const pegOffset = pegMargin + pegR;
-                const left = 0 - tabSize/2;
-                const top = 0 - tabSize/2; 
-                const plateH = 3*PIN_DIST-tabSize;
-                const plateW = 2*PIN_DIST+tabSize;
-                const plateL = left;
-                const plateT = top + tabSize;
-                const btnCX = plateL + plateW/2;
-                const btnCY = plateT + plateH/2;
-                
-                let btng = <SVGGElement>svg.elt("g");
-                //tabs
-                const mkTab = (x: number, y: number) => {
-                    svg.child(btng, "rect", { class: "sim-button-tab", x: x, y: y, width: tabSize, height: tabSize})
-                }
-                mkTab(left, top);
-                mkTab(left + 2*PIN_DIST, top);
-                mkTab(left, top + 3*PIN_DIST);
-                mkTab(left + 2*PIN_DIST, top + 3*PIN_DIST);
-
-                //plate
-                svg.child(btng, "rect", { class: outerCls, x: plateL, y: plateT, rx: plateR, ry: plateR, width: plateW, height: plateH });
-
-                //pegs
-                const mkPeg = (x: number, y: number) => {
-                    svg.child(btng, "circle", { class: "sim-button-nut", cx: x, cy: y, r: pegR });
-                }
-                mkPeg(plateL + pegOffset, plateT + pegOffset)
-                mkPeg(plateL + plateW - pegOffset, plateT + pegOffset)
-                mkPeg(plateL + pegOffset, plateT + plateH - pegOffset)
-                mkPeg(plateL + plateW - pegOffset, plateT + plateH - pegOffset)
-
-                //inner btn
-                let innerBtn = svg.child(btng, "circle", { class: innerCls, cx: btnCX, cy: btnCY, r: btnR });
-                return btng;
-            }
-
-            this.aBtn = mkBtn("sim-button", "sim-button-outer");
-            this.bBtn = mkBtn("sim-button", "sim-button-outer");
+            this.aBtn = mkBtnSvg([0,0]);
+            this.bBtn = mkBtnSvg([0,0]);
 
             const mkVirtualBtn = () => {
                 const numPins = 2;
