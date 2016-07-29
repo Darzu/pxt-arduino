@@ -18,16 +18,30 @@ namespace pxsim.instructions {
         let style = document.createElement("style");
         document.head.appendChild(style);
 
+        const FULL_PAGE_WIDTH = 96.0 * 8.5;
+        const FULL_PAGE_HEIGHT = 96.0 * 11.0;
+        const PAGE_MARGIN = 96.0 * 0.65;
+        const PAGE_WIDTH = FULL_PAGE_WIDTH - PAGE_MARGIN * 2;
+        const PAGE_HEIGHT = FULL_PAGE_HEIGHT - PAGE_MARGIN * 2;
+        const PANEL_ROWS = 2;
+        const PANEL_COLS = 2;
+        const PANEL_MARGIN = 20;
+        const PANEL_WIDTH = PAGE_WIDTH / PANEL_COLS - PANEL_MARGIN * PANEL_COLS;
+        const PANEL_HEIGHT = PAGE_HEIGHT / PANEL_ROWS - PANEL_MARGIN * PANEL_ROWS;
+
         const BOARD_WIDTH = 200;
         const BOARD_HEIGHT = 400;
+
         style.textContent += `
             .instr-panel {
-                margin: 30px;
+                margin: ${PANEL_MARGIN}px;
                 padding: 10px;
                 border-width: 2px;
                 border-color: grey;
                 display: inline-block;
                 border-style: solid;
+                width: ${PANEL_WIDTH}px;
+                height: ${PANEL_HEIGHT}px;
             }
             `
 
