@@ -177,6 +177,11 @@ namespace pxsim.instructions {
                 width: ${PANEL_WIDTH}px;
                 text-align: center;
             }
+            .wire-div {
+                display: inline-block;
+                margin: 20px;
+                margin-top: 100px;
+            }
             `
 
         let desc = boardsvg.ARDUINO_ZERO;
@@ -268,7 +273,8 @@ namespace pxsim.instructions {
                 'class': "parts-svg",
                 "style": `width: ${PARTS_WIDTH}px; height: ${PARTS_HEIGHT}px; left: ${PARTS_LEFT_MARGIN}px; top: ${PARTS_TOP_MARGIN}px`
             });
-            panel.appendChild(partsSvg);
+            if (step > 0)
+                panel.appendChild(partsSvg);
 
             let px = 0;
 
@@ -351,6 +357,43 @@ namespace pxsim.instructions {
             const DISPLAY_BOT_MARGIN = 170;
             const WIRE_BOT_MARGIN = 80;
             if (step == 0) {
+                //TODO: components in DOM
+                const mkWireDiv = (desc: boardsvg.WireDescription, doLbl: boolean = true, quantity?: number) => {
+                    //TODO don't hardcode so much
+                    let c = <SVGSVGElement>document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                    const SCALE = 4.0;
+                    const bareWH: boardsvg.Coord = [12, 48];
+                    const lblWH: boardsvg.Coord = [45, 75];
+                    const quantWH: boardsvg.Coord = [41, 48];
+                    const [W, H] = doLbl ?  lblWH : (quantity ? quantWH : bareWH);
+                    const bareXY: boardsvg.Coord = [25, 95];
+                    const lblXY: boardsvg.Coord = [80, 150];
+                    const quantXY: boardsvg.Coord = bareXY;
+                    let p: boardsvg.Coord = doLbl ?  lblXY : (quantity ? quantXY : bareXY);
+                    let [x,y] = p;
+                    let g = mkWire(p, desc, doLbl);
+                    svg.hydrate(c, {
+                        "viewBox": `0 0 ${W*SCALE} ${H*SCALE}`,
+                        'class': "wire-svg",
+                        "style": `width: ${W}px; height: ${H}px;`
+                    });
+                    c.appendChild(g);
+                    if (quantity) {
+                        let t = mkTxt([x+30, y + 20], "x"+quantity, 60);
+                        g.appendChild(t)
+                    }
+                    let div = document.createElement("div");
+                    addClass(div, "wire-div");
+                    div.appendChild(c);
+                    return div;
+                }
+                let wire1 = mkWireDiv(allWires[0]);
+                panel.appendChild(wire1);
+                let wire2 = mkWireDiv(allWires[9], false, 99);
+                panel.appendChild(wire2);
+
+
+
                 let py = 0;
                 // board & breadboard
                 //TODO
