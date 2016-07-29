@@ -113,7 +113,9 @@ namespace pxsim.instructions {
         const NUM_MARGIN = 5;
 
         style.textContent += `
-            ${boardsvg.WIRE_STYLE}
+            ${boardsvg.BOARD_SYTLE}
+            ${boardsvg.BUTTON_PAIR_STYLE}
+            ${boardsvg.LED_MATRIX_STYLE}
             .instr-panel {
                 margin: ${PANEL_MARGIN}px;
                 padding: ${PANEL_PADDING}px;
@@ -263,34 +265,61 @@ namespace pxsim.instructions {
             let wires = (stepToWires[step] || []);
             wires.forEach(w => reqWire(w));
 
-            const CMP_LEFT_MARGIN = 40;
-            const CMP_RIGHT_MARGIN = 180;
-            const CMP_TOP_MARGIN = 100;
-            const CMP_TXT_X_OFF = 50;
-            const CMP_TXT_Y_OFF = -40;
+            const BTN_SCALE = 3.0;
+            const BTN_LEFT_MARGIN = 40;
+            const BTN_RIGHT_MARGIN = 180;
+            const BTN_TOP_MARGIN = 100;
+            const BTN_TXT_X_OFF = 50;
+            const BTN_TXT_Y_OFF = -40;
+
+            const DISPLAY_SCALE = 1.8;
+            const DISPLAY_LEFT_MARGIN = 40;
+            const DISPLAY_RIGHT_MARGIN = 180;
+            const DISPLAY_TOP_MARGIN = 90;
+            const DISPLAY_TXT_X_OFF = 100;
+            const DISPLAY_TXT_Y_OFF = -50;
 
             //components
             let mkBtn = (p: boardsvg.Coord, loc: string) => {
                 let g = svg.elt("g")
-                const BTN_SCALE = 3.0;
                 let [x,y] = p
                 let b = boardsvg.mkBtnSvg([x/BTN_SCALE, y/BTN_SCALE]);
                 svg.hydrate(b, {transform: `scale(${BTN_SCALE})`})
                 g.appendChild(b)
-                let t = boardsvg.mkTxt(x+CMP_TXT_X_OFF, y + CMP_TXT_Y_OFF, LBL_SIZE, 0, boardsvg.bbLocToCoordStr(loc), "wire-lbl");
+                let t = boardsvg.mkTxt(x+BTN_TXT_X_OFF, y + BTN_TXT_Y_OFF, LBL_SIZE, 0, boardsvg.bbLocToCoordStr(loc), "wire-lbl");
                 g.appendChild(t);
                 return g;
             }
+            let mkDisplay = (p: boardsvg.Coord, loc: string) => {
+                let g = svg.elt("g")
+                let [x,y] = p
+                let res = boardsvg.mkLedMatrixSvg([x/DISPLAY_SCALE, y/DISPLAY_SCALE], 8, 8);
+                let b = res.g;
+                svg.hydrate(b, {transform: `scale(${DISPLAY_SCALE})`})
+                g.appendChild(b)
+                let t = boardsvg.mkTxt(x+DISPLAY_TXT_X_OFF, y + DISPLAY_TXT_Y_OFF, LBL_SIZE, 0, boardsvg.bbLocToCoordStr(loc), "display-lbl");
+                g.appendChild(t);
+                return g;
+            }
+            
             let reqCmp = (desc: boardsvg.ComponentDescription) => {
                 if (desc.type == "buttonpair") {
-                    let reqBtn = (btnIdx: number) => {
-                        px += CMP_LEFT_MARGIN;
-                        let b = mkBtn([px, CMP_TOP_MARGIN], desc.locations[btnIdx]);
+                    const reqBtn = (btnIdx: number) => {
+                        px += BTN_LEFT_MARGIN;
+                        let b = mkBtn([px, BTN_TOP_MARGIN], desc.locations[btnIdx]);
                         partsSvg.appendChild(b)
-                        px += CMP_RIGHT_MARGIN;
+                        px += BTN_RIGHT_MARGIN;
                     }
                     reqBtn(0)
                     reqBtn(1)
+                } else if (desc.type == "display") {
+                    const reqDisplay = () => {
+                        px += DISPLAY_LEFT_MARGIN;
+                        let b = mkDisplay([px, DISPLAY_TOP_MARGIN], desc.locations[0]);
+                        partsSvg.appendChild(b)
+                        px += DISPLAY_RIGHT_MARGIN;
+                    }
+                    reqDisplay();
                 } else {
                     //TODO
                 }

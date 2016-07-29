@@ -78,10 +78,7 @@ namespace pxsim.boardsvg {
         let innerBtn = svg.child(btng, "circle", { class: innerCls, cx: btnCX, cy: btnCY, r: btnR });
         return btng;
     }
-    export class ButtonPairSvg implements IBoardComponent<ButtonPairCmp> {
-        public element: SVGElement;
-        public defs: SVGElement[];
-        public style = `
+    export const BUTTON_PAIR_STYLE = `
             .sim-button {
                 pointer-events: none;   
                 fill: #000; 
@@ -123,6 +120,10 @@ namespace pxsim.boardsvg {
                 pointer-events:none;
             }
             `;
+    export class ButtonPairSvg implements IBoardComponent<ButtonPairCmp> {
+        public element: SVGElement;
+        public defs: SVGElement[];
+        public style = BUTTON_PAIR_STYLE;
         private state: ButtonPairCmp;
         private bus: EventBus;
         private aBtn: SVGGElement;

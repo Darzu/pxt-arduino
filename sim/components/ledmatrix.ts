@@ -180,6 +180,45 @@ namespace pxsim {
 }
 
 namespace pxsim.boardsvg {
+    export function mkLedMatrixSvg(xy: Coord, rows: number, cols: number):
+            {g: SVGGElement, leds: SVGElement[], ledsOuter: SVGElement[], background: SVGElement} {
+        let result: {g: SVGGElement, leds: SVGElement[], ledsOuter: SVGElement[], background: SVGElement}
+             = {g: null, leds: [], ledsOuter: [], background: null};
+        result.g = <SVGGElement>svg.elt("g");
+        let width = cols*PIN_DIST;
+        let height = rows*PIN_DIST;
+        let ledRad = Math.round(PIN_DIST * .35);
+        let spacing = PIN_DIST;
+        let padding = (spacing - 2*ledRad) / 2.0;
+        let [x,y] = xy;
+        let left = x - (ledRad + padding);
+        let top = y - (ledRad + padding);
+        result.background = svg.child(result.g, "rect", {class: "sim-display", x:left, y:top, width: width, height: height})
+
+        // ledsOuter
+        result.leds = [];
+        result.ledsOuter = [];
+        let hoverRad = ledRad * 1.2;
+        for (let i = 0; i < rows; ++i) {
+            let y = top + ledRad + i*spacing + padding;
+            for (let j = 0; j < cols; ++j) {
+                let x = left + ledRad + j*spacing + padding;
+                result.ledsOuter.push(svg.child(result.g, "circle", { class: "sim-led-back", cx: x, cy: y, r: ledRad }));
+                result.leds.push(svg.child(result.g, "circle", { class: "sim-led", cx: x, cy: y, r: hoverRad, title: `(${j},${i})` }));
+            }
+        }
+
+        //default theme
+        svg.fill(result.background, defaultLedMatrixTheme.background);
+        svg.fills(result.leds, defaultLedMatrixTheme.ledOn);
+        svg.fills(result.ledsOuter, defaultLedMatrixTheme.ledOff);
+        
+        //turn off LEDs
+        result.leds.forEach(l => (<SVGStylable><any>l).style.opacity = 0 + "");
+
+        return result;
+    } 
+
     export interface ILedMatrixTheme {
         background?: string;
         ledOn?: string;
@@ -190,6 +229,17 @@ namespace pxsim.boardsvg {
         ledOn: "#ff5f5f",
         ledOff: "#DDD",
     };
+
+    export const LED_MATRIX_STYLE = `
+            .sim-led-back:hover {
+                stroke:#a0a0a0;
+                stroke-width:3px;
+            }
+            .sim-led:hover {
+                stroke:#ff7f7f;
+                stroke-width:3px;
+            }
+            `
 
     export class LedMatrixSvg implements IBoardComponent<LedMatrixCmp> {
         private background: SVGElement;
@@ -204,16 +254,7 @@ namespace pxsim.boardsvg {
         private DRAW_SIZE = 8;
         private ACTIVE_SIZE = 5; 
 
-        public style = `
-            .sim-led-back:hover {
-                stroke:#a0a0a0;
-                stroke-width:3px;
-            }
-            .sim-led:hover {
-                stroke:#ff7f7f;
-                stroke-width:3px;
-            }
-            `;
+        public style = LED_MATRIX_STYLE;
 
         public init(bus: EventBus, state: LedMatrixCmp) {
             this.bus = bus;
@@ -250,33 +291,12 @@ namespace pxsim.boardsvg {
         }
 
         public buildDom() {
-            let g = svg.elt("g");
-            
-            const ROWS = this.DRAW_SIZE;
-            const COLS = this.DRAW_SIZE;
-            let width = COLS*PIN_DIST;
-            let height = ROWS*PIN_DIST;
-            let ledRad = Math.round(PIN_DIST * .35);
-            let spacing = PIN_DIST;
-            let padding = (spacing - 2*ledRad) / 2.0;
-            let left = -(ledRad + padding);
-            let top = -(ledRad + padding);
-            this.background = svg.child(g, "rect", {class: "sim-display", x:left, y:top, width: width, height: height})
-
-            // ledsOuter
-            this.leds = [];
-            this.ledsOuter = [];
-            let hoverRad = ledRad * 1.2;
-            for (let i = 0; i < ROWS; ++i) {
-                let y = top + ledRad + i*spacing + padding;
-                for (let j = 0; j < COLS; ++j) {
-                    let x = left + ledRad + j*spacing + padding;
-                    this.ledsOuter.push(svg.child(g, "circle", { class: "sim-led-back", cx: x, cy: y, r: ledRad }));
-                    this.leds.push(svg.child(g, "circle", { class: "sim-led", cx: x, cy: y, r: hoverRad, title: `(${j},${i})` }));
-                }
-            }
-
-            return g;
+            let res = mkLedMatrixSvg([0,0], this.DRAW_SIZE,this.DRAW_SIZE);
+            let display = res.g;
+            this.background = res.background;
+            this.leds = res.leds;
+            this.ledsOuter = res.ledsOuter;
+            return display;
         }
     }
 }
