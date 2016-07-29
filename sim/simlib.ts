@@ -256,13 +256,20 @@ namespace pxsim.boardsvg {
         return g
     }
 
-    export const WIRE_COLOR = {
-        red: "rgb(240,80,80)",
-        black: "#444",
-        green: "#1bbe5f",
-        blue: "#2d90df",
-        yellow: "rgb(245,230,50)",
-        orange: "#dc8628",
+    export const WIRE_COLOR: Map<string> = {
+        black: "#211f1d",
+        white: "#fcfdfc",
+        grey: "#acabab",
+        purple: "#a772a1",
+        blue: "#01a6f8",
+        green: "#3cce73",
+        yellow: "#efea5e",
+        orange: "#fdb262",
+        red: "#f44f43",
+        brown: "#c89764",
+    }
+    export function mapWireColor(clr: string) {
+        return WIRE_COLOR[clr] || clr;
     }
 
     // board description
@@ -306,26 +313,26 @@ namespace pxsim.boardsvg {
             {x: 732.9, y: 704.6, labels: ["A0", "A1", "A2", "A3", "A4", "A5"]},
         ],
         basicWires: [
-            {bb: "-1", pin:  "GND1", color: WIRE_COLOR.black, instructionStep: 1},
+            {bb: "-1", pin:  "GND1", color: "black", instructionStep: 1},
         ],
         components: [
             {type: "display", locations:["h12"], instructionStep: 2, wires: [
-                {bb: "a12", pin: "~5", color: WIRE_COLOR.blue, instructionStep: 3},
-                {bb: "a13", pin: "~4", color: WIRE_COLOR.blue, instructionStep: 3},
-                {bb: "a14", pin: "~3", color: WIRE_COLOR.blue, instructionStep: 3},
-                {bb: "a15", pin: "2", color: WIRE_COLOR.blue, instructionStep: 3},
-                {bb: "j16", pin: "TX->1", color: WIRE_COLOR.blue, instructionStep: 3},
-                {bb: "a16", pin: "A0", color: WIRE_COLOR.green, instructionStep: 4},
-                {bb: "a17", pin: "A1", color: WIRE_COLOR.green, instructionStep: 4},
-                {bb: "a18", pin: "A2", color: WIRE_COLOR.green, instructionStep: 4},
-                {bb: "a19", pin: "A3", color: WIRE_COLOR.green, instructionStep: 4},
-                {bb: "j12", pin: "A4", color: WIRE_COLOR.green, instructionStep: 4},
+                {bb: "a12", pin: "~5", color: "blue", instructionStep: 3},
+                {bb: "a13", pin: "~4", color: "blue", instructionStep: 3},
+                {bb: "a14", pin: "~3", color: "blue", instructionStep: 3},
+                {bb: "a15", pin: "2", color: "blue", instructionStep: 3},
+                {bb: "j16", pin: "TX->1", color: "blue", instructionStep: 3},
+                {bb: "a16", pin: "A0", color: "green", instructionStep: 4},
+                {bb: "a17", pin: "A1", color: "green", instructionStep: 4},
+                {bb: "a18", pin: "A2", color: "green", instructionStep: 4},
+                {bb: "a19", pin: "A3", color: "green", instructionStep: 4},
+                {bb: "j12", pin: "A4", color: "green", instructionStep: 4},
             ]},
             {type: "buttonpair", locations:["f1", "f28", "d28"], instructionStep: 5, wires: [
-                {bb: "j1", pin: "7", color: WIRE_COLOR.yellow, instructionStep: 6},
-                {bb: "a3", pin: "-2", color: WIRE_COLOR.black, instructionStep: 6},
-                {bb: "j28", pin: "~6", color: WIRE_COLOR.orange, instructionStep: 7},
-                {bb: "a30", pin: "-25", color: WIRE_COLOR.black, instructionStep: 7},
+                {bb: "j1", pin: "7", color: "yellow", instructionStep: 6},
+                {bb: "a3", pin: "-2", color: "black", instructionStep: 6},
+                {bb: "j28", pin: "~6", color: "orange", instructionStep: 7},
+                {bb: "a30", pin: "-25", color: "black", instructionStep: 7},
             ]},
         ]
     }

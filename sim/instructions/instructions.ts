@@ -11,6 +11,7 @@ namespace pxsim.instructions {
         else if (!el.className.indexOf(cls)) el.className += ' ' + cls;
     }
     const mkWireSeg = (p1: [number, number], p2: [number, number], clr: string): SVGPathElement => {
+        clr = boardsvg.mapWireColor(clr);
         const coordStr = (xy: [number, number]):string => {return `${xy[0]}, ${xy[1]}`};
         let [x1, y1] = p1;
         let [x2, y2] = p2
@@ -22,6 +23,7 @@ namespace pxsim.instructions {
         return w;
     }
     const mkWireEnd = (p: [number, number], top: boolean, clr: string): SVGElement => {
+        clr = boardsvg.mapWireColor(clr);
         const endW = boardsvg.PIN_DIST/4.0;
         let k = boardsvg.WIRE_WIDTH*.6;
         let [cx, cy] = p; 
