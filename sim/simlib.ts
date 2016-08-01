@@ -243,9 +243,10 @@ namespace pxsim.boardsvg {
         updateTheme (): void,
     }
 
-    export function mkTxt(cx: number, cy: number, size: number, r: number, txt: string, cls: string): SVGElement {
-        const txtXOffFactor = -0.33333;//Found by trial and error
-        const txtYOffFactor = 0.3;
+    export function mkTxt(cx: number, cy: number, size: number, r: number, txt: string, cls: string, txtXOffFactor?: number, txtYOffFactor?: number): SVGElement {
+        //HACK: these constants (txtXOffFactor, txtYOffFactor) tweak the way this algorithm knows how to center the text
+        txtXOffFactor = txtXOffFactor || -0.33333;
+        txtYOffFactor = txtYOffFactor || 0.3;
         const xOff = txtXOffFactor*size*txt.length;
         const yOff = txtYOffFactor*size;
         let g = svg.elt("g");
@@ -300,7 +301,16 @@ namespace pxsim.boardsvg {
         basicWires: WireDescription[], 
         components: ComponentDescription[],
     }
-    
+    export type SVGAndSize<T extends SVGElement> = {e: T, t: number, l: number, w: number, h: number};
+    export function mkComponent(type: Component, xy: Coord): SVGAndSize<SVGElement> {
+        if (type == "buttonpair") {
+            return mkBtnSvg(xy);
+        } else if (type == "display") {
+            return mkLedMatrixSvg(xy, 5, 5);
+        } else {
+            throw `unsupported compoment type: ${type}`;
+        }
+    }
     export const ARDUINO_ZERO: BoardDescription = {
         photo: "arduino-zero-photo-sml.png",
         width: 1000,

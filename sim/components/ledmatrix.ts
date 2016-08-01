@@ -181,10 +181,10 @@ namespace pxsim {
 
 namespace pxsim.boardsvg {
     export function mkLedMatrixSvg(xy: Coord, rows: number, cols: number):
-            {g: SVGGElement, leds: SVGElement[], ledsOuter: SVGElement[], background: SVGElement} {
-        let result: {g: SVGGElement, leds: SVGElement[], ledsOuter: SVGElement[], background: SVGElement}
-             = {g: null, leds: [], ledsOuter: [], background: null};
-        result.g = <SVGGElement>svg.elt("g");
+            {e: SVGGElement, t: number, l: number, w: number, h: number, leds: SVGElement[], ledsOuter: SVGElement[], background: SVGElement} {
+        let result: {e: SVGGElement, t: number, l: number, w: number, h: number, leds: SVGElement[], ledsOuter: SVGElement[], background: SVGElement}
+             = {e: null, t: 0, l: 0, w: 0, h: 0, leds: [], ledsOuter: [], background: null};
+        result.e = <SVGGElement>svg.elt("g");
         let width = cols*PIN_DIST;
         let height = rows*PIN_DIST;
         let ledRad = Math.round(PIN_DIST * .35);
@@ -193,7 +193,9 @@ namespace pxsim.boardsvg {
         let [x,y] = xy;
         let left = x - (ledRad + padding);
         let top = y - (ledRad + padding);
-        result.background = svg.child(result.g, "rect", {class: "sim-display", x:left, y:top, width: width, height: height})
+        result.l = left;
+        result.t = top;
+        result.background = svg.child(result.e, "rect", {class: "sim-display", x:left, y:top, width: width, height: height})
 
         // ledsOuter
         result.leds = [];
@@ -203,8 +205,8 @@ namespace pxsim.boardsvg {
             let y = top + ledRad + i*spacing + padding;
             for (let j = 0; j < cols; ++j) {
                 let x = left + ledRad + j*spacing + padding;
-                result.ledsOuter.push(svg.child(result.g, "circle", { class: "sim-led-back", cx: x, cy: y, r: ledRad }));
-                result.leds.push(svg.child(result.g, "circle", { class: "sim-led", cx: x, cy: y, r: hoverRad, title: `(${j},${i})` }));
+                result.ledsOuter.push(svg.child(result.e, "circle", { class: "sim-led-back", cx: x, cy: y, r: ledRad }));
+                result.leds.push(svg.child(result.e, "circle", { class: "sim-led", cx: x, cy: y, r: hoverRad, title: `(${j},${i})` }));
             }
         }
 
@@ -292,7 +294,7 @@ namespace pxsim.boardsvg {
 
         public buildDom() {
             let res = mkLedMatrixSvg([0,0], this.DRAW_SIZE,this.DRAW_SIZE);
-            let display = res.g;
+            let display = res.e;
             this.background = res.background;
             this.leds = res.leds;
             this.ledsOuter = res.ledsOuter;

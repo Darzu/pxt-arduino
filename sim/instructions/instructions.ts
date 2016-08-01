@@ -3,122 +3,33 @@
 /// <reference path="../../libs/microbit/dal.d.ts"/>
 
 namespace pxsim.instructions {
-    const LBL_SIZE = 50;
-    const WIRE_TXT_Y_OFF = 70;
-    const WIRE_TXT_X_OFF = 3;
-
-    function bbLocToCoordStr(loc: string) {
-        return `(${loc[0]},${loc[1] + (loc[2] || "") + (loc[3] || "")})`;
-    }
-
-    function addClass(el: HTMLElement, cls: string) {
-        //TODO move to library
-        if (el.classList) el.classList.add(cls);
-        //BUG: won't work if element has class that is prefix of new class
-        //TODO: make github issue (same issue exists svg.addClass)
-        else if (!el.className.indexOf(cls)) el.className += ' ' + cls;
-    }
-    function mkTxt(p: [number, number], txt: string, size: number) {
-        let el = svg.elt("text")
-        let [x,y] = p;
-        svg.hydrate(el, { x: x, y: y, style: `font-size:${size}px;` });
-        el.textContent = txt;
-        return el;
-    }
-    const mkWireSeg = (p1: [number, number], p2: [number, number], clr: string): SVGPathElement => {
-        const coordStr = (xy: [number, number]):string => {return `${xy[0]}, ${xy[1]}`};
-        let [x1, y1] = p1;
-        let [x2, y2] = p2
-        let yLen = (y2 - y1);
-        let c1: [number, number] = [x1, y1 + yLen*.8];
-        let c2: [number, number] = [x2, y2 - yLen*.8];
-        let w = <SVGPathElement>svg.mkPath("sim-bb-wire", `M${coordStr(p1)} C${coordStr(c1)} ${coordStr(c2)} ${coordStr(p2)}`);
-        (<any>w).style["stroke"] = clr;
-        return w;
-    }
-    const mkWireEnd = (p: [number, number], top: boolean, clr: string): SVGElement => {
-        const endW = boardsvg.PIN_DIST/4.0;
-        let k = boardsvg.WIRE_WIDTH*.6;
-        let [cx, cy] = p; 
-        let o = top ? -1 : 1;
-        let g = svg.elt('g')
-
-        let el = svg.elt("rect");
-        let h1 = k*10;
-        let w1 = k*2;
-        svg.hydrate(el, {x: cx - w1/2, y: cy - (h1/2), width: w1, height: h1, rx: 0.5, ry: 0.5, class: "sim-bb-wire-end"});
-        (<any>el).style["stroke-width"] = `${endW}px`;
-
-        let el2 = svg.elt("rect");
-        let h2 = k*6;
-        let w2 = k;
-        let cy2 = cy + o * (h1/2 + h2/2);
-        svg.hydrate(el2, {x: cx - w2/2, y: cy2 - (h2/2), width: w2, height: h2});
-        (<any>el2).style["fill"] = `#bbb`;
-
-        g.appendChild(el2);
-        g.appendChild(el);
-        return g;
-    }
-    const mkWire = (p: [number, number], desc: boardsvg.WireDescription, doLbl: boolean): SVGGElement => {
-        const LENGTH = 100;
-        let g = <SVGGElement>svg.elt('g');
-        let [cx, cy] = p;
-        let offset = 15;
-        let p1: boardsvg.Coord = [cx - offset, cy - LENGTH/2];
-        let p2: boardsvg.Coord = [cx + offset, cy + LENGTH/2];
-        let clr = boardsvg.mapWireColor(desc.color);
-        let e1 = mkWireEnd(p1, true, clr);
-        let s = mkWireSeg(p1, p2, clr);
-        let e2 = mkWireEnd(p2, false, clr);
-        g.appendChild(s);
-        g.appendChild(e1);
-        g.appendChild(e2);
-        if (doLbl) {
-            let [x1, y1] = p1;
-            let [x2, y2] = p2;
-            let nm1 = desc.pin;
-            let nm2 = bbLocToCoordStr(desc.bb);
-            let t1 = boardsvg.mkTxt(x1 + WIRE_TXT_X_OFF, y1 - WIRE_TXT_Y_OFF, LBL_SIZE, 0, nm1, "wire-lbl");
-            g.appendChild(t1);
-            let t2 = boardsvg.mkTxt(x2 + WIRE_TXT_X_OFF, y2 + WIRE_TXT_Y_OFF, LBL_SIZE, 0, nm2, "wire-lbl");
-            g.appendChild(t2);
-        }
-        return g;
-    }
-    export function drawInstructions() {
-        const CODE = "";
-        pxsim.runtime = new Runtime(CODE);
-        pxsim.runtime.board = null;
-        pxsim.initCurrentRuntime();
-
-        let style = document.createElement("style");
-        document.head.appendChild(style);
-
-        type Orientation = "landscape" | "portrait";
-        const ORIENTATION: Orientation = "portrait";
-        const PPI = 96.0;
-        const [FULL_PAGE_WIDTH, FULL_PAGE_HEIGHT] 
-            = (ORIENTATION == "portrait" ? [PPI * 8.5, PPI * 11.0] : [PPI * 11.0, PPI * 8.5]);
-        const PAGE_MARGIN = PPI * 0.45;
-        const PAGE_WIDTH = FULL_PAGE_WIDTH - PAGE_MARGIN * 2;
-        const PAGE_HEIGHT = FULL_PAGE_HEIGHT - PAGE_MARGIN * 2;
-        const BORDER_COLOR = "grey";
-        const BORDER_RADIUS = 5;
-        const BORDER_WIDTH = 2;
-        const [PANEL_ROWS, PANEL_COLS] = [2, 2];
-        const PANEL_MARGIN = 20;
-        const PANEL_PADDING = 10;
-        const PANEL_WIDTH = PAGE_WIDTH / PANEL_COLS - (PANEL_MARGIN + PANEL_PADDING + BORDER_WIDTH) * PANEL_COLS;
-        const PANEL_HEIGHT = PAGE_HEIGHT / PANEL_ROWS - (PANEL_MARGIN + PANEL_PADDING + BORDER_WIDTH) * PANEL_ROWS;
-        const BOARD_WIDTH = 240;
-        const BOARD_LEFT = (PANEL_WIDTH - BOARD_WIDTH) / 2.0 + PANEL_PADDING;
-        const BOARD_BOT = PANEL_PADDING;
-        const NUM_BOX_SIZE = 60;
-        const NUM_FONT = 40;
-        const NUM_MARGIN = 5;
-
-        style.textContent += `
+    const LOC_LBL_SIZE = 50;
+    const QUANT_LBL_SIZE = 70;
+    const WIRE_CURVE_OFF = 15;
+    const WIRE_LENGTH = 100;
+    type Orientation = "landscape" | "portrait";
+    const ORIENTATION: Orientation = "portrait";
+    const PPI = 96.0;
+    const [FULL_PAGE_WIDTH, FULL_PAGE_HEIGHT] 
+        = (ORIENTATION == "portrait" ? [PPI * 8.5, PPI * 11.0] : [PPI * 11.0, PPI * 8.5]);
+    const PAGE_MARGIN = PPI * 0.45;
+    const PAGE_WIDTH = FULL_PAGE_WIDTH - PAGE_MARGIN * 2;
+    const PAGE_HEIGHT = FULL_PAGE_HEIGHT - PAGE_MARGIN * 2;
+    const BORDER_COLOR = "grey";
+    const BORDER_RADIUS = 5;
+    const BORDER_WIDTH = 2;
+    const [PANEL_ROWS, PANEL_COLS] = [2, 2];
+    const PANEL_MARGIN = 20;
+    const PANEL_PADDING = 10;
+    const PANEL_WIDTH = PAGE_WIDTH / PANEL_COLS - (PANEL_MARGIN + PANEL_PADDING + BORDER_WIDTH) * PANEL_COLS;
+    const PANEL_HEIGHT = PAGE_HEIGHT / PANEL_ROWS - (PANEL_MARGIN + PANEL_PADDING + BORDER_WIDTH) * PANEL_ROWS;
+    const BOARD_WIDTH = 240;
+    const BOARD_LEFT = (PANEL_WIDTH - BOARD_WIDTH) / 2.0 + PANEL_PADDING;
+    const BOARD_BOT = PANEL_PADDING;
+    const NUM_BOX_SIZE = 60;
+    const NUM_FONT = 40;
+    const NUM_MARGIN = 5;
+    const STYLE = `
             ${boardsvg.BOARD_SYTLE}
             ${boardsvg.BUTTON_PAIR_STYLE}
             ${boardsvg.LED_MATRIX_STYLE}
@@ -157,35 +68,218 @@ namespace pxsim.instructions {
                 text-align: center;
                 font-size: ${NUM_FONT}px;
             }
-            .parts-svg {
-                position: absolute;
-                ${
-                    // `
-                    // border-width: 1px;
-                    // border-color: #9e9e9e;
-                    // border-style: solid;
-                    // border-radius: 5px;
-                    // background-color: #eeeeee;
-                    // `
-                    ""
-                }
-            }
-            .buy-link {
-                font-size: 12px;
-                position: absolute;
-                bottom: ${PANEL_PADDING}px;
-                width: ${PANEL_WIDTH}px;
-                text-align: center;
-            }
-            .wire-div {
+            .cmp-div {
                 display: inline-block;
-                margin: 20px;
                 margin-top: 100px;
+                border-color: green;
+                border-width: 1px;
+                border-style: solid;
             }
-            `
+            `;
 
-        let desc = boardsvg.ARDUINO_ZERO;
+    function bbLocToCoordStr(loc: string) {
+        return `(${loc[0]},${loc[1] + (loc[2] || "") + (loc[3] || "")})`;
+    }
+    function addClass(el: HTMLElement, cls: string) {
+        //TODO move to library
+        if (el.classList) el.classList.add(cls);
+        //BUG: won't work if element has class that is prefix of new class
+        //TODO: make github issue (same issue exists svg.addClass)
+        else if (!el.className.indexOf(cls)) el.className += ' ' + cls;
+    }
+    function mkTxt(p: [number, number], txt: string, size: number) {
+        let el = svg.elt("text")
+        let [x,y] = p;
+        svg.hydrate(el, { x: x, y: y, style: `font-size:${size}px;` });
+        el.textContent = txt;
+        return el;
+    }
+    function mkWireSeg(p1: [number, number], p2: [number, number], clr: string): boardsvg.SVGAndSize<SVGPathElement> {
+        const coordStr = (xy: [number, number]):string => {return `${xy[0]}, ${xy[1]}`};
+        let [x1, y1] = p1;
+        let [x2, y2] = p2
+        let yLen = (y2 - y1);
+        let c1: [number, number] = [x1, y1 + yLen*.8];
+        let c2: [number, number] = [x2, y2 - yLen*.8];
+        let e = <SVGPathElement>svg.mkPath("sim-bb-wire", `M${coordStr(p1)} C${coordStr(c1)} ${coordStr(c2)} ${coordStr(p2)}`);
+        (<any>e).style["stroke"] = clr;
+        return {e: e, l: Math.min(x1, x2), t: Math.min(y1, y2), w: Math.abs(x1-x2), h: Math.abs(y1-y2)};
+    }
+    function mkWireEnd(p: [number, number], top: boolean, clr: string): boardsvg.SVGAndSize<SVGElement> {
+        const endW = boardsvg.PIN_DIST/4.0;
+        let k = boardsvg.WIRE_WIDTH*.6;
+        let [cx, cy] = p; 
+        let o = top ? -1 : 1;
+        let g = svg.elt('g')
+
+        let el = svg.elt("rect");
+        let h1 = k*10;
+        let w1 = k*2;
+        let x1 = cx - w1/2;
+        let y1 = cy - (h1/2);
+        svg.hydrate(el, {x: x1, y: y1, width: w1, height: h1, rx: 0.5, ry: 0.5, class: "sim-bb-wire-end"});
+        (<any>el).style["stroke-width"] = `${endW}px`;
+
+        let el2 = svg.elt("rect");
+        let h2 = k*6;
+        let w2 = k;
+        let cy2 = cy + o * (h1/2 + h2/2);
+        let x2 = cx - w2/2;
+        let y2 = cy2 - (h2/2);
+        svg.hydrate(el2, {x: x2, y: y2, width: w2, height: h2});
+        (<any>el2).style["fill"] = `#bbb`;
+
+        g.appendChild(el2);
+        g.appendChild(el);
+        return {e: g, l: x1, t: Math.min(y1, y2), w: w1, h: h1 + h2};
+    }
+    function mkWire(cp: [number, number], clr: string): boardsvg.SVGAndSize<SVGGElement> {
+        let g = <SVGGElement>svg.elt('g');
+        let [cx, cy] = cp;
+        let offset = WIRE_CURVE_OFF;
+        let p1: boardsvg.Coord = [cx - offset, cy - WIRE_LENGTH/2];
+        let p2: boardsvg.Coord = [cx + offset, cy + WIRE_LENGTH/2];
+        clr = boardsvg.mapWireColor(clr);
+        let e1 = mkWireEnd(p1, true, clr);
+        let s = mkWireSeg(p1, p2, clr);
+        let e2 = mkWireEnd(p2, false, clr);
+        g.appendChild(s.e);
+        g.appendChild(e1.e);
+        g.appendChild(e2.e);
+        let l = Math.min(e1.l, e2.l);
+        let r = Math.max(e1.l + e1.w, e2.l + e2.w);
+        let t = Math.min(e1.t, e2.t);
+        let b = Math.max(e1.t + e1.h, e2.t + e2.h);
+        return {e: g, l: l, t: t, w: r - l, h: b - t};
+    }
+    type mkCmpDivOpts = {
+        top?: string,
+        topSize?: number,
+        right?: string,
+        rightSize?: number,
+        bot?: string,
+        botSize?: number,
+        wireClr?: string,
+        maxWidth?: number,
+        maxHeight?: number
+    };
+    function mkCmpDiv(type: boardsvg.Component | "wire", opts?: mkCmpDivOpts): HTMLElement {
+        let svgEl = <SVGSVGElement>document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        let dims = {l: 0, t: 0, w: 0, h: 0};
+
+        //component or wire
+        let el: boardsvg.SVGAndSize<SVGElement>;
+        if (type == "wire") {
+            el = mkWire([0,0], opts.wireClr || "red");
+        } else {
+            el = boardsvg.mkComponent(<boardsvg.Component>type, [0,0]);
+        }
+        svgEl.appendChild(el.e);
+        dims.t = el.t;
+        dims.h = el.h;
+        dims.w = el.w;
+        dims.l = el.l;
+
+        let updateL = (newL: number) => {
+            if (newL < dims.l) {
+                let extraW = dims.l - newL;
+                dims.l = newL;
+                dims.w += extraW;
+            }
+        }
+        let updateR = (newR: number) => {
+            let oldR = dims.l + dims.w;
+            if (oldR < newR) {
+                let extraW = newR - oldR;
+                dims.w += extraW;
+            }
+        }
+        let updateT = (newT: number) => {
+            if (newT < dims.t) {
+                let extraH = dims.t - newT;
+                dims.t = newT;
+                dims.h += extraH;
+            }
+        }
+        let updateB = (newB: number) => {
+            let oldB = dims.t + dims.h;
+            if (oldB < newB) {
+                let extraH = newB - oldB;
+                dims.h += extraH;
+            }
+        }
+
+        //labels
+        const LBL_VERT_PAD = 20;
+        const LBL_RIGHT_PAD = 20;
+        let [xOff, yOff] = [-0.3, 0.3]; //HACK: these constants tweak the way "mkTxt" knows how to center the text
+        const txtAspectRatio = [1.4, 1.0];
+        if (opts && opts.top) {
+            let size = opts.topSize;
+            let txtW = size / txtAspectRatio[0];
+            let txtH = size / txtAspectRatio[1];
+            let [cx, y] = [el.l + el.w/2, el.t - LBL_VERT_PAD - txtH/2];
+            let lbl = boardsvg.mkTxt(cx, y, size, 0, opts.top, "cmp-lbl", xOff, yOff);
+            svgEl.appendChild(lbl);
+
+            let len = txtW*opts.top.length;
+            updateT(y - txtH/2);
+            updateL(cx - len/2);
+            updateR(cx + len/2);
+        }
+        if (opts && opts.bot) {
+            let size = opts.botSize;
+            let txtW = size / txtAspectRatio[0];
+            let txtH = size / txtAspectRatio[1];
+            let [cx, y] = [el.l + el.w/2, el.t + el.h + LBL_VERT_PAD + txtH/2];
+            let lbl = boardsvg.mkTxt(cx, y, size, 0, opts.bot, "cmp-lbl", xOff, yOff);
+            svgEl.appendChild(lbl);
+
+            let len = txtW*opts.bot.length;
+            updateB(y + txtH/2);
+            updateL(cx - len/2);
+            updateR(cx + len/2);
+        }
+        if (opts && opts.right) {
+            let size = opts.rightSize;
+            let txtW = size / txtAspectRatio[0];
+            let txtH = size / txtAspectRatio[1];
+            let len = txtW*opts.right.length;
+            let [cx, cy] = [el.l + el.w + LBL_RIGHT_PAD + len/2, el.t + el.h/2];
+            let lbl = boardsvg.mkTxt(cx, cy, size, 0, opts.right, "cmp-lbl", xOff, yOff);
+            svgEl.appendChild(lbl);
+
+            updateR(cx + len/2);
+        }
+        //TODO: other labels
+        // if (quantity) {
+        //     let t = mkTxt([x+30, y + 20], "x"+quantity, 60);
+        //     g.appendChild(t)
+        // }
         
+        let svgAtts = {
+            "viewBox": `${dims.l} ${dims.t} ${dims.w} ${dims.h}`,
+            "preserveAspectRatio": "xMidYMid",
+        };
+        if (opts.maxHeight)
+            (<any>svgAtts).height = opts.maxHeight;
+        if (opts.maxWidth) 
+            (<any>svgAtts).width = opts.maxWidth;
+        svg.hydrate(svgEl, svgAtts);
+        let div = document.createElement("div");
+        div.appendChild(svgEl);
+        return div;
+    }
+
+    type BoardProps = {
+        board: boardsvg.BoardDescription,
+        stepToWires: boardsvg.WireDescription[][], 
+        stepToCmps: boardsvg.ComponentDescription[][]
+        allWires: boardsvg.WireDescription[],
+        allCmps: boardsvg.ComponentDescription[],
+        lastStep: number,
+    };
+    function mkBoardProps(desc: boardsvg.BoardDescription) {
         let wireGroups = desc.components.map(c => c.wires)
         wireGroups.push(desc.basicWires || []);
         let allWires = wireGroups.reduce((pre, cur) => pre.concat(cur));
@@ -207,292 +301,118 @@ namespace pxsim.instructions {
              stepToCmps[step].push(c);
         })
         let lastStep = Math.max(stepToWires.length - 1, stepToCmps.length - 1);
+        return {board: desc, stepToWires: stepToWires, stepToCmps: stepToCmps, 
+            allWires: allWires, allCmps: allComponents, lastStep: lastStep};
+    }
+    function mkBoard(props: BoardProps, step: number) {
+        let board = new pxsim.boardsvg.DalBoardSvg({
+            theme: pxsim.mkRandomTheme(),
+            runtime: pxsim.runtime,
+            boardDesc: props.board,
+            blank: true
+        })
+        svg.hydrate(board.element, {
+            "width": BOARD_WIDTH,
+            "class": "board-svg"
+        });
 
-        const mkBoard = (step: number) => {
-            let board = new pxsim.boardsvg.DalBoardSvg({
-                theme: pxsim.mkRandomTheme(),
-                runtime: pxsim.runtime,
-                boardDesc: desc,
-                blank: true
+        //TODO handle in a general way
+        board.board.buttonPairState.used = true;
+        board.board.displayCmp.used = true;
+
+        //draw steps
+        for (let i = 0; i <= step; i++) {
+            let wires = props.stepToWires[i];
+            if (wires) {
+                wires.forEach(w => board.addWire(w));
+            }
+            let cmps = props.stepToCmps[i];
+            if (cmps) {
+                cmps.forEach(c => board.addComponent(c));
+            }
+        }
+        return board;
+    }
+    function mkPanel() {
+        //panel
+        let panel = document.createElement("div");
+        addClass(panel, "instr-panel");
+        
+        return panel;
+    }
+    function mkPartsPanel(props: BoardProps) {
+        let panel = mkPanel();
+        
+        return panel;
+    }
+    function mkStepPanel(step: number, props: BoardProps) {
+        let panel = mkPanel();
+        
+        //board
+        let board = mkBoard(props, step)
+        panel.appendChild(board.element);
+        
+        //number
+        let numDiv = document.createElement("div");
+        addClass(numDiv, "panel-num-outer");
+        panel.appendChild(numDiv)
+        let num = document.createElement("div");
+        addClass(num, "panel-num");
+        num.textContent = (step+1)+"";
+        numDiv.appendChild(num)
+
+        // add requirements
+        let wires = (props.stepToWires[step] || []);
+        wires.forEach(w => {
+            let cmp = mkCmpDiv("wire", {
+                top: w.pin,
+                topSize: LOC_LBL_SIZE, 
+                bot: bbLocToCoordStr(w.bb),
+                botSize: LOC_LBL_SIZE,
+                wireClr: w.color,
+                maxWidth: 100
             })
-            svg.hydrate(board.element, {
-                "width": BOARD_WIDTH,
-                "class": "board-svg"
-            });
+            addClass(cmp, "cmp-div");
+            panel.appendChild(cmp);
+        });
+        let cmps = (props.stepToCmps[step] || []);
+        cmps.forEach(c => {
+            let cmp = mkCmpDiv(c.type, {
+                top: c.locations[0], 
+                topSize: LOC_LBL_SIZE, 
+            })
+            addClass(cmp, "cmp-div");
+            panel.appendChild(cmp);
+        });
 
-            //TODO handle in a general way
-            board.board.buttonPairState.used = true;
-            board.board.displayCmp.used = true;
+        return panel;  
+    }
+    
+    export function drawInstructions() {
+        const CODE = "";
+        pxsim.runtime = new Runtime(CODE);
+        pxsim.runtime.board = null;
+        pxsim.initCurrentRuntime();
 
-            //draw steps
-            for (let i = 0; i <= step; i++) {
-                let wires = stepToWires[i];
-                if (wires) {
-                    wires.forEach(w => board.addWire(w));
-                }
-                let cmps = stepToCmps[i];
-                if (cmps) {
-                    cmps.forEach(c => board.addComponent(c));
-                }
-            }
-            return board;
-        }
-        const mkPanel = (step: number) => {
-            //panel
-            let panel = document.createElement("div");
-            addClass(panel, "instr-panel");
+        let style = document.createElement("style");
+        document.head.appendChild(style);
 
-            //board
-            if (step > 0) {
-                let board = mkBoard(step)
-                panel.appendChild(board.element);
-            }
-            
-            //number
-            let numDiv = document.createElement("div");
-            addClass(numDiv, "panel-num-outer");
-            panel.appendChild(numDiv)
-            let num = document.createElement("div");
-            addClass(num, "panel-num");
-            num.textContent = (step+1)+"";
-            numDiv.appendChild(num)
+        style.textContent += STYLE;
 
-            //parts
-            let partsSvg = <SVGSVGElement>document.createElementNS("http://www.w3.org/2000/svg", "svg")
-            let [PARTS_WIDTH, PARTS_HEIGHT] =  step > 0 
-                ? [PANEL_WIDTH - NUM_BOX_SIZE - PANEL_PADDING, 70]
-                : [PANEL_WIDTH - PANEL_PADDING*2, PANEL_HEIGHT - NUM_BOX_SIZE - PANEL_PADDING*2]
-            let [PARTS_LEFT_MARGIN, PARTS_TOP_MARGIN]= step > 0
-                ? [NUM_BOX_SIZE + PANEL_PADDING, PANEL_PADDING]
-                : [PANEL_PADDING, NUM_BOX_SIZE + PANEL_PADDING]
-            const PARTS_SCALE = 4.5;
-            const PARTS_VIEW_WIDTH = PARTS_WIDTH*PARTS_SCALE;
-            const PARTS_VIEW_HEIGHT = PARTS_HEIGHT*PARTS_SCALE;
-            svg.hydrate(partsSvg, {
-                "viewBox": `0 0 ${PARTS_VIEW_WIDTH} ${PARTS_VIEW_HEIGHT}`,
-                'class': "parts-svg",
-                "style": `width: ${PARTS_WIDTH}px; height: ${PARTS_HEIGHT}px; left: ${PARTS_LEFT_MARGIN}px; top: ${PARTS_TOP_MARGIN}px`
-            });
-            if (step > 0)
-                panel.appendChild(partsSvg);
-
-            let px = 0;
-
-            //wires
-            const WIRE_LEFT_MARGIN = 80;
-            const WIRE_RIGHT_MARGIN = 130;
-            const WIRE_TOP_MARGIN = 150;
-
-            let reqWire = (desc: boardsvg.WireDescription, doLbl: boolean) => {
-                px += WIRE_LEFT_MARGIN;
-                let w = mkWire([px, WIRE_TOP_MARGIN], desc, doLbl);
-                partsSvg.appendChild(w);
-                px += WIRE_RIGHT_MARGIN;
-            }
-
-            //components
-            const BTN_SCALE = 3.0;
-            const BTN_LEFT_MARGIN = 40;
-            const BTN_RIGHT_MARGIN = 180;
-            const BTN_TOP_MARGIN = 100;
-            const BTN_TXT_X_OFF = 50;
-            const BTN_TXT_Y_OFF = -40;
-
-            const DISPLAY_SCALE = 1.8;
-            const DISPLAY_LEFT_MARGIN = 40;
-            const DISPLAY_RIGHT_MARGIN = 180;
-            const DISPLAY_TOP_MARGIN = 90;
-            const DISPLAY_TXT_X_OFF = 100;
-            const DISPLAY_TXT_Y_OFF = -50;
-
-            let mkBtn = (p: boardsvg.Coord, loc: string) => {
-                let g = svg.elt("g")
-                let [x,y] = p
-                let b = boardsvg.mkBtnSvg([x/BTN_SCALE, y/BTN_SCALE]);
-                svg.hydrate(b, {transform: `scale(${BTN_SCALE})`})
-                g.appendChild(b)
-                let txt = loc ? bbLocToCoordStr(loc) : "";
-                let t = boardsvg.mkTxt(x+BTN_TXT_X_OFF, y + BTN_TXT_Y_OFF, LBL_SIZE, 0, txt, "wire-lbl");
-                g.appendChild(t);
-                return g;
-            }
-            let mkDisplay = (p: boardsvg.Coord, loc: string) => {
-                let g = svg.elt("g")
-                let [x,y] = p
-                let res = boardsvg.mkLedMatrixSvg([x/DISPLAY_SCALE, y/DISPLAY_SCALE], 8, 8);
-                let b = res.g;
-                svg.hydrate(b, {transform: `scale(${DISPLAY_SCALE})`})
-                g.appendChild(b)
-                let txt = loc ? bbLocToCoordStr(loc) : "";
-                let t = boardsvg.mkTxt(x+DISPLAY_TXT_X_OFF, y + DISPLAY_TXT_Y_OFF, LBL_SIZE, 0, txt, "display-lbl");
-                g.appendChild(t);
-                return g;
-            }
-            
-            let reqCmp = (desc: boardsvg.ComponentDescription, doLbl: boolean) => {
-                if (desc.type == "buttonpair") {
-                    const reqBtn = (btnIdx: number) => {
-                        px += BTN_LEFT_MARGIN;
-                        let b = mkBtn([px, BTN_TOP_MARGIN], doLbl ? desc.locations[btnIdx] : "");
-                        partsSvg.appendChild(b)
-                        px += BTN_RIGHT_MARGIN;
-                    }
-                    reqBtn(0)
-                    reqBtn(1)
-                } else if (desc.type == "display") {
-                    const reqDisplay = () => {
-                        px += DISPLAY_LEFT_MARGIN;
-                        let b = mkDisplay([px, DISPLAY_TOP_MARGIN], doLbl ? desc.locations[0] : "");
-                        partsSvg.appendChild(b)
-                        px += DISPLAY_RIGHT_MARGIN;
-                    }
-                    reqDisplay();
-                } else {
-                    //TODO
-                }
-            }
-
-            // add requirements
-            const BTN_BOT_MARGIN = 130;
-            const DISPLAY_BOT_MARGIN = 170;
-            const WIRE_BOT_MARGIN = 80;
-            if (step == 0) {
-                //TODO: components in DOM
-                const mkWireDiv = (desc: boardsvg.WireDescription, doLbl: boolean = true, quantity?: number) => {
-                    //TODO don't hardcode so much
-                    let c = <SVGSVGElement>document.createElementNS("http://www.w3.org/2000/svg", "svg");
-                    const SCALE = 4.0;
-                    const bareWH: boardsvg.Coord = [12, 48];
-                    const lblWH: boardsvg.Coord = [45, 75];
-                    const quantWH: boardsvg.Coord = [41, 48];
-                    const [W, H] = doLbl ?  lblWH : (quantity ? quantWH : bareWH);
-                    const bareXY: boardsvg.Coord = [25, 95];
-                    const lblXY: boardsvg.Coord = [80, 150];
-                    const quantXY: boardsvg.Coord = bareXY;
-                    let p: boardsvg.Coord = doLbl ?  lblXY : (quantity ? quantXY : bareXY);
-                    let [x,y] = p;
-                    let g = mkWire(p, desc, doLbl);
-                    svg.hydrate(c, {
-                        "viewBox": `0 0 ${W*SCALE} ${H*SCALE}`,
-                        'class': "wire-svg",
-                        "style": `width: ${W}px; height: ${H}px;`
-                    });
-                    c.appendChild(g);
-                    if (quantity) {
-                        let t = mkTxt([x+30, y + 20], "x"+quantity, 60);
-                        g.appendChild(t)
-                    }
-                    let div = document.createElement("div");
-                    addClass(div, "wire-div");
-                    div.appendChild(c);
-                    return div;
-                }
-                let wire1 = mkWireDiv(allWires[0]);
-                panel.appendChild(wire1);
-                let wire2 = mkWireDiv(allWires[9], false, 99);
-                panel.appendChild(wire2);
-
-
-
-                let py = 0;
-                // board & breadboard
-                //TODO
-                // let board = new pxsim.boardsvg.DalBoardSvg({
-                //     theme: pxsim.mkRandomTheme(),
-                //     runtime: pxsim.runtime,
-                //     boardDesc: desc,
-                //     blank: true
-                // })
-                // svg.hydrate(board.element, {
-                //     "width": 300
-                // });
-                // partsSvg.appendChild(board.element);
-                
-                // components
-                allComponents.forEach(desc => {
-                    if (desc.type == "buttonpair") {
-                        const reqBtn = (btnIdx: number) => {
-                            py += BTN_TOP_MARGIN;
-                            let xy: boardsvg.Coord = [75, py];
-                            let b = mkBtn(xy, "");
-                            partsSvg.appendChild(b)
-                            let t = mkTxt([200, py + 100], "x2", 100);
-                            partsSvg.appendChild(t)
-                            py += BTN_BOT_MARGIN;
-                        }
-                        reqBtn(0)
-                    } else if (desc.type == "display") {
-                        const reqDisplay = () => {
-                            py += DISPLAY_TOP_MARGIN;
-                            let xy: boardsvg.Coord = [40, py];
-                            let b = mkDisplay(xy, "");
-                            partsSvg.appendChild(b)
-                            let t = mkTxt([275, py + 125], "x1", 100);
-                            partsSvg.appendChild(t)
-                            py += DISPLAY_BOT_MARGIN;
-                        }
-                        reqDisplay();
-                    } else {
-                        //TODO
-                    }
-                });  
-
-                // wires
-                let px = 50;
-                let reqWire = (desc: boardsvg.WireDescription, num: number) => {
-                    // py += WIRE_TOP_MARGIN;
-                    let y = py + WIRE_TOP_MARGIN;
-                    let xy: boardsvg.Coord = [px, y]
-                    let w = mkWire(xy, desc, false);
-                    partsSvg.appendChild(w);
-                    let t = mkTxt([px+30, y + 20], "x"+num, 60);
-                    partsSvg.appendChild(t)
-                    // py += WIRE_BOT_MARGIN;
-                    px += 150;
-                }
-                let colorToWire: Map<boardsvg.WireDescription[]> = {}
-                let allWireColors: string[] = [];
-                allWires.forEach(w => {
-                    if (!colorToWire[w.color]) {
-                        colorToWire[w.color] = [];
-                        allWireColors.push(w.color);
-                    }
-                    colorToWire[w.color].push(w);
-                })
-                allWireColors.forEach(c => {
-                    let descs = colorToWire[c];
-                    reqWire(descs[0], descs.length)
-                })
-            } else {
-                let wires = (stepToWires[step] || []);
-                wires.forEach(w => reqWire(w, true));
-                let cmps = (stepToCmps[step] || []);
-                cmps.forEach(c => reqCmp(c, true));    
-            }
-
-            // products link
-            if (step == 0) {
-                //TODO: need vendor agnostic solution
-                // const LINK = "https://www.adafruit.com/wishlist/408673";
-                // let link = document.createElement("a");
-                // addClass(link, "buy-link")
-                // link.text = LINK;
-                // link.href = LINK;
-                // panel.appendChild(link)
-            }
-                
-            return panel;
-        }
+        let desc = boardsvg.ARDUINO_ZERO;
+        
+        let props = mkBoardProps(desc);
         
         let panels = document.createElement("div");
         document.body.appendChild(panels);
 
-        //TODO:
-        // <a href="https://www.adafruit.com/wishlist/408673">parts list</a>
-        // <hr>
+        //all required parts
+        let partsPanel = mkPartsPanel(props);
+        panels.appendChild(partsPanel);
 
-        for (let s = 0; s <= lastStep; s++){
-            let p = mkPanel(s);
+        //steps
+        for (let s = 0; s <= props.lastStep; s++){
+            let p = mkStepPanel(s, props);
             panels.appendChild(p);
         }
     }

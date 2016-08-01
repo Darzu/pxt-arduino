@@ -33,7 +33,7 @@ namespace pxsim.input {
 }
 
 namespace pxsim.boardsvg {
-    export function mkBtnSvg(xy: Coord): SVGGElement {
+    export function mkBtnSvg(xy: Coord): SVGAndSize<SVGGElement> {
         let [innerCls, outerCls] = ["sim-button", "sim-button-outer"];
         const tabSize = PIN_DIST/2.5;
         const pegR = PIN_DIST/5;
@@ -76,7 +76,9 @@ namespace pxsim.boardsvg {
 
         //inner btn
         let innerBtn = svg.child(btng, "circle", { class: innerCls, cx: btnCX, cy: btnCY, r: btnR });
-        return btng;
+
+        //return
+        return { e: btng, t: top, l: left, w: plateW, h: plateH + 2*tabSize };
     }
     export const BUTTON_PAIR_STYLE = `
             .sim-button {
@@ -158,8 +160,8 @@ namespace pxsim.boardsvg {
         public updateTheme() {}
 
         private mkBtns() {
-            this.aBtn = mkBtnSvg([0,0]);
-            this.bBtn = mkBtnSvg([0,0]);
+            this.aBtn = mkBtnSvg([0,0]).e;
+            this.bBtn = mkBtnSvg([0,0]).e;
 
             const mkVirtualBtn = () => {
                 const numPins = 2;
