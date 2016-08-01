@@ -323,7 +323,7 @@ namespace pxsim.boardsvg {
             {x: 732.9, y: 704.6, labels: ["A0", "A1", "A2", "A3", "A4", "A5"]},
         ],
         basicWires: [
-            {bb: "-1", pin:  "GND1", color: "black", instructionStep: 1},
+            {bb: "-1", pin: "GND0", color: "black", instructionStep: 1},
         ],
         components: [
             {type: "display", locations:["h12"], instructionStep: 2, wires: [
