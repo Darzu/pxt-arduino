@@ -306,7 +306,7 @@ namespace pxsim.boardsvg {
         if (type == "buttonpair") {
             return mkBtnSvg(xy);
         } else if (type == "display") {
-            return mkLedMatrixSvg(xy, 5, 5);
+            return mkLedMatrixSvg(xy, 8, 8);
         } else {
             throw `unsupported compoment type: ${type}`;
         }

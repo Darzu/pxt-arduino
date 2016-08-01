@@ -195,6 +195,8 @@ namespace pxsim.boardsvg {
         let top = y - (ledRad + padding);
         result.l = left;
         result.t = top;
+        result.w = width;
+        result.h = height;
         result.background = svg.child(result.e, "rect", {class: "sim-display", x:left, y:top, width: width, height: height})
 
         // ledsOuter

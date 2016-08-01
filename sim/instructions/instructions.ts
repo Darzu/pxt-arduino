@@ -3,8 +3,12 @@
 /// <reference path="../../libs/microbit/dal.d.ts"/>
 
 namespace pxsim.instructions {
-    const LOC_LBL_SIZE = 12;
+    const LOC_LBL_SIZE = 10;
     const QUANT_LBL_SIZE = 30;
+    const LBL_VERT_PAD = 3;
+    const LBL_RIGHT_PAD = 5;
+    const REQ_WIRE_HEIGHT = 45;
+    const REQ_CMP_HEIGHT = 55;
     const WIRE_CURVE_OFF = 15;
     const WIRE_LENGTH = 100;
     type Orientation = "landscape" | "portrait";
@@ -20,7 +24,7 @@ namespace pxsim.instructions {
     const BORDER_WIDTH = 2;
     const [PANEL_ROWS, PANEL_COLS] = [2, 2];
     const PANEL_MARGIN = 20;
-    const PANEL_PADDING = 10;
+    const PANEL_PADDING = 8;
     const PANEL_WIDTH = PAGE_WIDTH / PANEL_COLS - (PANEL_MARGIN + PANEL_PADDING + BORDER_WIDTH) * PANEL_COLS;
     const PANEL_HEIGHT = PAGE_HEIGHT / PANEL_ROWS - (PANEL_MARGIN + PANEL_PADDING + BORDER_WIDTH) * PANEL_ROWS;
     const BOARD_WIDTH = 240;
@@ -70,10 +74,9 @@ namespace pxsim.instructions {
             }
             .cmp-div {
                 display: inline-block;
-                margin-top: 100px;
-                border-color: green;
-                border-width: 1px;
-                border-style: solid;
+            }
+            .reqs-div {
+                margin-left: ${PANEL_PADDING + NUM_BOX_SIZE}px;
             }
             `;
 
@@ -164,6 +167,8 @@ namespace pxsim.instructions {
         cmpHeight?: number
     };
     function mkCmpDiv(type: boardsvg.Component | "wire", opts?: mkCmpDivOpts): HTMLElement {
+        //TODO: Refactor this function; it is too complicated. There is a lot of error-prone math being done
+        // to scale and place all elements which could be simplified with more forethought.
         let svgEl = <SVGSVGElement>document.createElementNS("http://www.w3.org/2000/svg", "svg");
         let dims = {l: 0, t: 0, w: 0, h: 0};
 
@@ -227,8 +232,6 @@ namespace pxsim.instructions {
         }
 
         //labels
-        const LBL_VERT_PAD = 5;
-        const LBL_RIGHT_PAD = 5;
         let [xOff, yOff] = [-0.3, 0.3]; //HACK: these constants tweak the way "mkTxt" knows how to center the text
         const txtAspectRatio = [1.4, 1.0];
         if (opts && opts.top) {
@@ -268,11 +271,6 @@ namespace pxsim.instructions {
 
             updateR(cx + len/2);
         }
-        //TODO: other labels
-        // if (quantity) {
-        //     let t = mkTxt([x+30, y + 20], "x"+quantity, 60);
-        //     g.appendChild(t)
-        // }
         
         let svgAtts = {
             "viewBox": `${dims.l} ${dims.t} ${dims.w} ${dims.h}`,
@@ -285,7 +283,6 @@ namespace pxsim.instructions {
         div.appendChild(svgEl);
         return div;
     }
-
     type BoardProps = {
         board: boardsvg.BoardDescription,
         stepToWires: boardsvg.WireDescription[][], 
@@ -365,18 +362,21 @@ namespace pxsim.instructions {
         
         //board
         let board = mkBoard(props, step)
-        //panel.appendChild(board.element);
+        panel.appendChild(board.element);
         
         //number
         let numDiv = document.createElement("div");
         addClass(numDiv, "panel-num-outer");
-        //panel.appendChild(numDiv)
+        panel.appendChild(numDiv)
         let num = document.createElement("div");
         addClass(num, "panel-num");
         num.textContent = (step+1)+"";
         numDiv.appendChild(num)
 
         // add requirements
+        let reqsDiv = document.createElement("div");
+        addClass(reqsDiv, "reqs-div")
+        panel.appendChild(reqsDiv);
         let wires = (props.stepToWires[step] || []);
         wires.forEach(w => {
             let cmp = mkCmpDiv("wire", {
@@ -385,19 +385,20 @@ namespace pxsim.instructions {
                 bot: bbLocToCoordStr(w.bb),
                 botSize: LOC_LBL_SIZE,
                 wireClr: w.color,
-                cmpHeight: 50
+                cmpHeight: REQ_WIRE_HEIGHT
             })
             addClass(cmp, "cmp-div");
-            panel.appendChild(cmp);
+            reqsDiv.appendChild(cmp);
         });
         let cmps = (props.stepToCmps[step] || []);
         cmps.forEach(c => {
             let cmp = mkCmpDiv(c.type, {
-                top: c.locations[0], 
+                top: bbLocToCoordStr(c.locations[0]), 
                 topSize: LOC_LBL_SIZE, 
+                cmpHeight: REQ_CMP_HEIGHT
             })
             addClass(cmp, "cmp-div");
-            panel.appendChild(cmp);
+            reqsDiv.appendChild(cmp);
         });
 
         return panel;  
