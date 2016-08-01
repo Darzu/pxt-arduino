@@ -3,8 +3,8 @@
 /// <reference path="../../libs/microbit/dal.d.ts"/>
 
 namespace pxsim.instructions {
-    const LOC_LBL_SIZE = 50;
-    const QUANT_LBL_SIZE = 70;
+    const LOC_LBL_SIZE = 12;
+    const QUANT_LBL_SIZE = 30;
     const WIRE_CURVE_OFF = 15;
     const WIRE_LENGTH = 100;
     type Orientation = "landscape" | "portrait";
@@ -131,7 +131,7 @@ namespace pxsim.instructions {
 
         g.appendChild(el2);
         g.appendChild(el);
-        return {e: g, l: x1, t: Math.min(y1, y2), w: w1, h: h1 + h2};
+        return {e: g, l: x1 - endW, t: Math.min(y1, y2), w: w1 + endW*2, h: h1 + h2};
     }
     function mkWire(cp: [number, number], clr: string): boardsvg.SVGAndSize<SVGGElement> {
         let g = <SVGGElement>svg.elt('g');
@@ -160,25 +160,42 @@ namespace pxsim.instructions {
         bot?: string,
         botSize?: number,
         wireClr?: string,
-        maxWidth?: number,
-        maxHeight?: number
+        cmpWidth?: number,
+        cmpHeight?: number
     };
     function mkCmpDiv(type: boardsvg.Component | "wire", opts?: mkCmpDivOpts): HTMLElement {
         let svgEl = <SVGSVGElement>document.createElementNS("http://www.w3.org/2000/svg", "svg");
         let dims = {l: 0, t: 0, w: 0, h: 0};
 
         //component or wire
+        let cmpSvgEl = <SVGSVGElement>document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svgEl.appendChild(cmpSvgEl);
         let el: boardsvg.SVGAndSize<SVGElement>;
         if (type == "wire") {
             el = mkWire([0,0], opts.wireClr || "red");
         } else {
             el = boardsvg.mkComponent(<boardsvg.Component>type, [0,0]);
         }
-        svgEl.appendChild(el.e);
-        dims.t = el.t;
-        dims.h = el.h;
+        cmpSvgEl.appendChild(el.e);
+        let cmpSvgAtts = {
+            "viewBox": `${el.l} ${el.t} ${el.w} ${el.h}`,
+            "preserveAspectRatio": "xMidYMid",
+        };
         dims.w = el.w;
-        dims.l = el.l;
+        dims.h = el.h;
+        let scale = (scaler: number) => {
+            dims.h *= scaler;
+            dims.w *= scaler;
+            (<any>cmpSvgAtts).width = dims.w;
+            (<any>cmpSvgAtts).height = dims.h;
+        }
+        if (opts.cmpWidth) {
+            scale(opts.cmpWidth / dims.w);
+        } else if (opts.cmpHeight) {
+            scale(opts.cmpHeight / dims.h)
+        }
+        svg.hydrate(cmpSvgEl, cmpSvgAtts);
+        let elDims = {l: dims.l, t: dims.t, w: dims.w, h: dims.h};
 
         let updateL = (newL: number) => {
             if (newL < dims.l) {
@@ -210,15 +227,15 @@ namespace pxsim.instructions {
         }
 
         //labels
-        const LBL_VERT_PAD = 20;
-        const LBL_RIGHT_PAD = 20;
+        const LBL_VERT_PAD = 5;
+        const LBL_RIGHT_PAD = 5;
         let [xOff, yOff] = [-0.3, 0.3]; //HACK: these constants tweak the way "mkTxt" knows how to center the text
         const txtAspectRatio = [1.4, 1.0];
         if (opts && opts.top) {
             let size = opts.topSize;
             let txtW = size / txtAspectRatio[0];
             let txtH = size / txtAspectRatio[1];
-            let [cx, y] = [el.l + el.w/2, el.t - LBL_VERT_PAD - txtH/2];
+            let [cx, y] = [elDims.l + elDims.w/2, elDims.t - LBL_VERT_PAD - txtH/2];
             let lbl = boardsvg.mkTxt(cx, y, size, 0, opts.top, "cmp-lbl", xOff, yOff);
             svgEl.appendChild(lbl);
 
@@ -231,7 +248,7 @@ namespace pxsim.instructions {
             let size = opts.botSize;
             let txtW = size / txtAspectRatio[0];
             let txtH = size / txtAspectRatio[1];
-            let [cx, y] = [el.l + el.w/2, el.t + el.h + LBL_VERT_PAD + txtH/2];
+            let [cx, y] = [elDims.l + elDims.w/2, elDims.t + elDims.h + LBL_VERT_PAD + txtH/2];
             let lbl = boardsvg.mkTxt(cx, y, size, 0, opts.bot, "cmp-lbl", xOff, yOff);
             svgEl.appendChild(lbl);
 
@@ -245,7 +262,7 @@ namespace pxsim.instructions {
             let txtW = size / txtAspectRatio[0];
             let txtH = size / txtAspectRatio[1];
             let len = txtW*opts.right.length;
-            let [cx, cy] = [el.l + el.w + LBL_RIGHT_PAD + len/2, el.t + el.h/2];
+            let [cx, cy] = [elDims.l + elDims.w + LBL_RIGHT_PAD + len/2, elDims.t + elDims.h/2];
             let lbl = boardsvg.mkTxt(cx, cy, size, 0, opts.right, "cmp-lbl", xOff, yOff);
             svgEl.appendChild(lbl);
 
@@ -259,12 +276,10 @@ namespace pxsim.instructions {
         
         let svgAtts = {
             "viewBox": `${dims.l} ${dims.t} ${dims.w} ${dims.h}`,
+            "width": dims.w,
+            "height": dims.h,
             "preserveAspectRatio": "xMidYMid",
         };
-        if (opts.maxHeight)
-            (<any>svgAtts).height = opts.maxHeight;
-        if (opts.maxWidth) 
-            (<any>svgAtts).width = opts.maxWidth;
         svg.hydrate(svgEl, svgAtts);
         let div = document.createElement("div");
         div.appendChild(svgEl);
@@ -350,12 +365,12 @@ namespace pxsim.instructions {
         
         //board
         let board = mkBoard(props, step)
-        panel.appendChild(board.element);
+        //panel.appendChild(board.element);
         
         //number
         let numDiv = document.createElement("div");
         addClass(numDiv, "panel-num-outer");
-        panel.appendChild(numDiv)
+        //panel.appendChild(numDiv)
         let num = document.createElement("div");
         addClass(num, "panel-num");
         num.textContent = (step+1)+"";
@@ -370,7 +385,7 @@ namespace pxsim.instructions {
                 bot: bbLocToCoordStr(w.bb),
                 botSize: LOC_LBL_SIZE,
                 wireClr: w.color,
-                maxWidth: 100
+                cmpHeight: 50
             })
             addClass(cmp, "cmp-div");
             panel.appendChild(cmp);
