@@ -176,21 +176,30 @@ namespace pxsim.instructions {
         cmpHeight?: number,
         cmpScale?: number
     };
-    function mkCmpDiv(type: boardsvg.Component | "wire", opts?: mkCmpDivOpts): HTMLElement {
+    function mkBoardImgSvg(desc: boardsvg.BoardDescription): boardsvg.SVGAndSize<SVGElement> {
+        let img = svg.elt( "image");
+        let [l, t] = [0,0];
+        let w = desc.width;
+        let h = desc.height;
+        svg.hydrate(img, { 
+            class: "sim-board", 
+            x: l, 
+            y: t, 
+            width: desc.width, 
+            height: desc.height, 
+            "href": `/images/${desc.photo}`});
+
+        return {e: img, w: w, h: h, l: l, t};
+    }
+    function wrapSvg(el: boardsvg.SVGAndSize<SVGElement>, opts: mkCmpDivOpts): HTMLElement { 
         //TODO: Refactor this function; it is too complicated. There is a lot of error-prone math being done
         // to scale and place all elements which could be simplified with more forethought.
         let svgEl = <SVGSVGElement>document.createElementNS("http://www.w3.org/2000/svg", "svg");
         let dims = {l: 0, t: 0, w: 0, h: 0};
 
-        //component or wire
         let cmpSvgEl = <SVGSVGElement>document.createElementNS("http://www.w3.org/2000/svg", "svg");
         svgEl.appendChild(cmpSvgEl);
-        let el: boardsvg.SVGAndSize<SVGElement>;
-        if (type == "wire") {
-            el = mkWire([0,0], opts.wireClr || "red");
-        } else {
-            el = boardsvg.mkComponent(<boardsvg.Component>type, [0,0]);
-        }
+        
         cmpSvgEl.appendChild(el.e);
         let cmpSvgAtts = {
             "viewBox": `${el.l} ${el.t} ${el.w} ${el.h}`,
@@ -281,7 +290,9 @@ namespace pxsim.instructions {
             let lbl = boardsvg.mkTxt(cx, cy, size, 0, opts.right, "cmp-lbl", xOff, yOff);
             svgEl.appendChild(lbl);
 
+            updateT(cy - txtH/2);
             updateR(cx + len/2);
+            updateB(cy + txtH/2);
         }
         
         let svgAtts = {
@@ -294,6 +305,15 @@ namespace pxsim.instructions {
         let div = document.createElement("div");
         div.appendChild(svgEl);
         return div;
+    }
+    function mkCmpDiv(type: boardsvg.Component | "wire", opts: mkCmpDivOpts): HTMLElement {
+        let el: boardsvg.SVGAndSize<SVGElement>;
+        if (type == "wire") {
+            el = mkWire([0,0], opts.wireClr || "red");
+        } else {
+            el = boardsvg.mkComponent(<boardsvg.Component>type, [0,0]);
+        }
+        return wrapSvg(el, opts);
     }
     type BoardProps = {
         board: boardsvg.BoardDescription,
@@ -384,9 +404,16 @@ namespace pxsim.instructions {
     function mkPartsPanel(props: BoardProps) {
         let panel = mkPanel();
 
-        const CMP_SCALE = 0.6;
+        const BOARD_SCALE = 0.15;
+        const CMP_SCALE = 0.5;
         const WIRE_SCALE = 0.3;
+
+        // board and breadboard
+        let boardImg = mkBoardImgSvg(props.board);
+        let board = wrapSvg(boardImg, {right: `x1`, rightSize: QUANT_LBL_SIZE, cmpScale: BOARD_SCALE});
+        panel.appendChild(board);
     
+        // components
         let cmps = props.allCmps;
         cmps.forEach(c => {
             let quant = 1;
@@ -402,6 +429,7 @@ namespace pxsim.instructions {
             panel.appendChild(cmp);
         });
 
+        // wires
         props.allWireColors.forEach(clr => {
             let quant = props.colorToWires[clr].length;
             let cmp = mkCmpDiv("wire", {
