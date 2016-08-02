@@ -48,6 +48,7 @@ namespace pxsim.instructions {
                 width: ${PANEL_WIDTH}px;
                 height: ${PANEL_HEIGHT}px;
                 position: relative;
+                overflow: hidden;
             }
             .board-svg {
                 margin: 0 auto;
@@ -290,6 +291,8 @@ namespace pxsim.instructions {
         allWires: boardsvg.WireDescription[],
         allCmps: boardsvg.ComponentDescription[],
         lastStep: number,
+        colorToWires: Map<boardsvg.WireDescription[]>,
+        allWireColors: string[],
     };
     function mkBoardProps(desc: boardsvg.BoardDescription) {
         let wireGroups = desc.components.map(c => c.wires)
@@ -313,8 +316,17 @@ namespace pxsim.instructions {
              stepToCmps[step].push(c);
         })
         let lastStep = Math.max(stepToWires.length - 1, stepToCmps.length - 1);
+        let colorToWires: Map<boardsvg.WireDescription[]> = {}
+        let allWireColors: string[] = [];
+        allWires.forEach(w => {
+            if (!colorToWires[w.color]) {
+                colorToWires[w.color] = [];
+                allWireColors.push(w.color);
+            }
+            colorToWires[w.color].push(w);
+        });
         return {board: desc, stepToWires: stepToWires, stepToCmps: stepToCmps, 
-            allWires: allWires, allCmps: allComponents, lastStep: lastStep};
+            allWires: allWires, allCmps: allComponents, lastStep: lastStep, colorToWires: colorToWires, allWireColors: allWireColors};
     }
     function mkBoard(props: BoardProps, step: number) {
         let board = new pxsim.boardsvg.DalBoardSvg({
@@ -354,7 +366,36 @@ namespace pxsim.instructions {
     }
     function mkPartsPanel(props: BoardProps) {
         let panel = mkPanel();
-        
+
+        const PART_HEIGHT = 100;
+    
+        let cmps = props.allCmps;
+        cmps.forEach(c => {
+            let quant = 1;
+            if (c.type == "buttonpair") { //TODO don't specialcase this
+                quant = 2;
+            }
+            let cmp = mkCmpDiv(c.type, {
+                right: `x${quant}`,
+                rightSize: QUANT_LBL_SIZE,
+                cmpHeight: REQ_CMP_HEIGHT,
+            });
+            addClass(cmp, "cmp-div");
+            panel.appendChild(cmp);
+        });
+
+        props.allWireColors.forEach(clr => {
+            let quant = props.colorToWires[clr].length;
+            let cmp = mkCmpDiv("wire", {
+                right: `x${quant}`,
+                rightSize: QUANT_LBL_SIZE,
+                wireClr: clr,
+                cmpHeight: REQ_WIRE_HEIGHT
+            })
+            addClass(cmp, "cmp-div");
+            panel.appendChild(cmp);
+        })
+
         return panel;
     }
     function mkStepPanel(step: number, props: BoardProps) {
@@ -403,7 +444,6 @@ namespace pxsim.instructions {
 
         return panel;  
     }
-    
     export function drawInstructions() {
         const CODE = "";
         pxsim.runtime = new Runtime(CODE);
