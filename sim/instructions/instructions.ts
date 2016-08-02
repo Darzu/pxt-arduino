@@ -394,6 +394,10 @@ namespace pxsim.instructions {
                     fill: #FFF;
                     stroke: #888;
                     stroke-width: 1px;
+                }
+                .sim-bb-outline .sim-bb-red,
+                .sim-bb-outline .sim-bb-blue {
+                    fill: #888;
                 }`;
         }
 
