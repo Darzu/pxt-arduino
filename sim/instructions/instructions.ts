@@ -337,9 +337,10 @@ namespace pxsim.instructions {
             colorToWires[w.color].push(w);
         });
         return {board: desc, stepToWires: stepToWires, stepToCmps: stepToCmps, 
-            allWires: allWires, allCmps: allComponents, lastStep: lastStep, colorToWires: colorToWires, allWireColors: allWireColors};
+            allWires: allWires, allCmps: allComponents, lastStep: lastStep, 
+            colorToWires: colorToWires, allWireColors: allWireColors};
     }
-    function mkBoard(props: BoardProps, step: number) {
+    function mkBoard(props: BoardProps, step: number, width: number) {
         let board = new pxsim.boardsvg.DalBoardSvg({
             theme: pxsim.mkRandomTheme(),
             runtime: pxsim.runtime,
@@ -347,23 +348,28 @@ namespace pxsim.instructions {
             blank: true
         })
         svg.hydrate(board.element, {
-            "width": BOARD_WIDTH,
+            "width": width,
             "class": "board-svg"
         });
 
         //TODO handle in a general way
         board.board.buttonPairState.used = true;
         board.board.displayCmp.used = true;
+        board.updateState();
 
         //draw steps
         for (let i = 0; i <= step; i++) {
             let wires = props.stepToWires[i];
             if (wires) {
-                wires.forEach(w => board.addWire(w));
+                wires.forEach(w => {
+                    board.addWire(w)
+                });
             }
             let cmps = props.stepToCmps[i];
             if (cmps) {
-                cmps.forEach(c => board.addComponent(c));
+                cmps.forEach(c => {
+                    board.addComponent(c)
+                });
             }
         }
         return board;
@@ -414,7 +420,7 @@ namespace pxsim.instructions {
         let panel = mkPanel();
         
         //board
-        let board = mkBoard(props, step)
+        let board = mkBoard(props, step, BOARD_WIDTH)
         panel.appendChild(board.element);
         
         //number
@@ -456,9 +462,18 @@ namespace pxsim.instructions {
 
         return panel;  
     }
+    function updateFrontPanel(props: BoardProps) {
+        const FRONT_PAGE_BOARD_WIDTH = 200;
+        let panel = document.getElementById("front-panel");
+
+        let board = mkBoard(props, props.lastStep, FRONT_PAGE_BOARD_WIDTH);
+        panel.appendChild(board.element);
+        
+        return panel;
+    }
     export function drawInstructions() {
-        const CODE = "";
-        pxsim.runtime = new Runtime(CODE);
+        const COMP_CODE = "";
+        pxsim.runtime = new Runtime(COMP_CODE);
         pxsim.runtime.board = null;
         pxsim.initCurrentRuntime();
 
@@ -470,18 +485,18 @@ namespace pxsim.instructions {
         let desc = boardsvg.ARDUINO_ZERO;
         
         let props = mkBoardProps(desc);
-        
-        let panels = document.createElement("div");
-        document.body.appendChild(panels);
+
+        //front page
+        let frontPanel = updateFrontPanel(props);
 
         //all required parts
         let partsPanel = mkPartsPanel(props);
-        panels.appendChild(partsPanel);
+        document.body.appendChild(partsPanel);
 
         //steps
         for (let s = 0; s <= props.lastStep; s++){
             let p = mkStepPanel(s, props);
-            panels.appendChild(p);
+            document.body.appendChild(p);
         }
     }
 }
