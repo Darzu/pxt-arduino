@@ -229,10 +229,6 @@ namespace pxsim.boardsvg {
 
     export type Coord = [number, number];
 
-    //TODO(DZ): convert all components to implement this interface
-    // [ ] - button pair
-    // [ ] - display
-    // [ ] - accelerometer
     export interface IBoardComponent<T> {
         style: string,
         element: SVGElement,
