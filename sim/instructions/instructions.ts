@@ -5,6 +5,7 @@
 namespace pxsim.instructions {
     const LOC_LBL_SIZE = 10;
     const QUANT_LBL_SIZE = 30;
+    const WIRE_QUANT_LBL_SIZE = 20;
     const LBL_VERT_PAD = 3;
     const LBL_RIGHT_PAD = 5;
     const REQ_WIRE_HEIGHT = 45;
@@ -78,6 +79,13 @@ namespace pxsim.instructions {
             }
             .reqs-div {
                 margin-left: ${PANEL_PADDING + NUM_BOX_SIZE}px;
+            }
+            .partslist-wire,
+            .partslist-cmp {
+                margin: 5px;
+            }
+            .partslist-wire {
+                display: inline-block;
             }
             `;
 
@@ -165,7 +173,8 @@ namespace pxsim.instructions {
         botSize?: number,
         wireClr?: string,
         cmpWidth?: number,
-        cmpHeight?: number
+        cmpHeight?: number,
+        cmpScale?: number
     };
     function mkCmpDiv(type: boardsvg.Component | "wire", opts?: mkCmpDivOpts): HTMLElement {
         //TODO: Refactor this function; it is too complicated. There is a lot of error-prone math being done
@@ -199,6 +208,8 @@ namespace pxsim.instructions {
             scale(opts.cmpWidth / dims.w);
         } else if (opts.cmpHeight) {
             scale(opts.cmpHeight / dims.h)
+        } else if (opts.cmpScale) {
+            scale(opts.cmpScale)
         }
         svg.hydrate(cmpSvgEl, cmpSvgAtts);
         let elDims = {l: dims.l, t: dims.t, w: dims.w, h: dims.h};
@@ -367,7 +378,8 @@ namespace pxsim.instructions {
     function mkPartsPanel(props: BoardProps) {
         let panel = mkPanel();
 
-        const PART_HEIGHT = 100;
+        const CMP_SCALE = 0.6;
+        const WIRE_SCALE = 0.3;
     
         let cmps = props.allCmps;
         cmps.forEach(c => {
@@ -378,9 +390,9 @@ namespace pxsim.instructions {
             let cmp = mkCmpDiv(c.type, {
                 right: `x${quant}`,
                 rightSize: QUANT_LBL_SIZE,
-                cmpHeight: REQ_CMP_HEIGHT,
+                cmpScale: CMP_SCALE,
             });
-            addClass(cmp, "cmp-div");
+            addClass(cmp, "partslist-cmp");
             panel.appendChild(cmp);
         });
 
@@ -388,11 +400,11 @@ namespace pxsim.instructions {
             let quant = props.colorToWires[clr].length;
             let cmp = mkCmpDiv("wire", {
                 right: `x${quant}`,
-                rightSize: QUANT_LBL_SIZE,
+                rightSize: WIRE_QUANT_LBL_SIZE,
                 wireClr: clr,
-                cmpHeight: REQ_WIRE_HEIGHT
+                cmpScale: WIRE_SCALE
             })
-            addClass(cmp, "cmp-div");
+            addClass(cmp, "partslist-wire");
             panel.appendChild(cmp);
         })
 
