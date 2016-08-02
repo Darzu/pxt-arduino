@@ -397,7 +397,7 @@ namespace pxsim.instructions {
                 }
                 .sim-bb-outline .sim-bb-red,
                 .sim-bb-outline .sim-bb-blue {
-                    fill: #888;
+                    fill: #AAA;
                 }`;
         }
 
