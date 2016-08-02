@@ -69,15 +69,15 @@ namespace pxsim.boardsvg {
         let stop3 = svg.child(channelGrad, "stop", { offset: "80%", style: `stop-color: ${channelLight};` })
         let stop4 = svg.child(channelGrad, "stop", { offset: "100%", style: `stop-color: ${channelDark};` })
 
-        const mkChannel = (cy: number, h: number) => {
-            let channel = svg.child(bb, "rect", { class: "sim-bb-channel", y: cy - h/2, width: width, height: h});
+        const mkChannel = (cy: number, h: number, cls?: string) => {
+            let channel = svg.child(bb, "rect", { class: `sim-bb-channel ${cls || ""}`, y: cy - h/2, width: width, height: h});
             channel.setAttribute("fill", `url(#${channelGid})`);
             return channel;
         }
 
         const midChannelH = PIN_DIST;
         const smlChannelH = PIN_DIST*0.05;
-        mkChannel(barH + midH/2, midChannelH);
+        mkChannel(barH + midH/2, midChannelH, 'sim-bb-mid-channel');
         mkChannel(barH, smlChannelH);
         mkChannel(barH+midH, smlChannelH);
 
@@ -175,7 +175,7 @@ namespace pxsim.boardsvg {
     }
 
     export class Breadboard {
-        private bb: SVGGElement;
+        public bb: SVGGElement;
         private nameToPin: Map<SVGElement> = {};
         private nameToLoc: Map<[number, number]> = {};
 

@@ -381,6 +381,20 @@ namespace pxsim.instructions {
             svg.hydrate(board.background, {
                 "href": `/images/${props.board.outlineImg}`
             })
+            let bb = board.breadboard.bb;
+            svg.addClass(bb, "sim-bb-outline")
+            let style = <SVGStyleElement>svg.child(bb, "style", {});
+            style.textContent = `
+                .sim-bb-outline .sim-bb-background {
+                    stroke-width: 1px;
+                    fill: #FFF;
+                    stroke: #000;
+                }
+                .sim-bb-outline .sim-bb-mid-channel {
+                    fill: #FFF;
+                    stroke: #888;
+                    stroke-width: 1px;
+                }`;
         }
 
         //TODO handle in a general way

@@ -114,7 +114,7 @@ namespace pxsim.boardsvg {
     export const PIN_DIST = 15; //original dist: 15.25
     export const BOARD_BASE_WIDTH = 498;
     export const BOARD_BASE_HEIGHT = 725;
-    export const BB_WIDTH = BOARD_BASE_WIDTH;
+    export const BB_WIDTH = BOARD_BASE_WIDTH - 2;
     export const BB_HEIGHT = 323; //TODO: relate to PIN_DIST
     const TOP_MARGIN = 20;
     const MID_MARGIN = 40;
@@ -226,7 +226,7 @@ namespace pxsim.boardsvg {
         public board: pxsim.DalBoard;
         public background: SVGElement;
         private components: Map<IBoardComponent<any>>;
-        private breadboard: Breadboard;
+        public breadboard: Breadboard;
         private underboard: SVGGElement;
         private boardDesc: BoardDescription;
         private boardDim: BoardDimensions;
@@ -380,7 +380,7 @@ namespace pxsim.boardsvg {
             })
 
             // breadboard
-            const bbX = 0;                        
+            const bbX = (BOARD_BASE_WIDTH - BB_WIDTH)/2;                        
             const bbY = TOP_MARGIN + this.boardDim.height + MID_MARGIN;
 
             const addBBLoc = (name: string, relativeXY: [number, number]): void => {
