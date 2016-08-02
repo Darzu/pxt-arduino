@@ -191,6 +191,12 @@ namespace pxsim.instructions {
 
         return {e: img, w: w, h: h, l: l, t};
     }
+    function mkBBSvg(): boardsvg.SVGAndSize<SVGElement> {
+        let w = boardsvg.BB_WIDTH;
+        let h = boardsvg.BB_HEIGHT;
+        let res = boardsvg.mkBreadboardSvg(w, h);
+        return res;
+    }
     function wrapSvg(el: boardsvg.SVGAndSize<SVGElement>, opts: mkCmpDivOpts): HTMLElement { 
         //TODO: Refactor this function; it is too complicated. There is a lot of error-prone math being done
         // to scale and place all elements which could be simplified with more forethought.
@@ -405,6 +411,7 @@ namespace pxsim.instructions {
         let panel = mkPanel();
 
         const BOARD_SCALE = 0.15;
+        const BB_SCALE = 0.4;
         const CMP_SCALE = 0.5;
         const WIRE_SCALE = 0.3;
 
@@ -412,6 +419,9 @@ namespace pxsim.instructions {
         let boardImg = mkBoardImgSvg(props.board);
         let board = wrapSvg(boardImg, {right: `x1`, rightSize: QUANT_LBL_SIZE, cmpScale: BOARD_SCALE});
         panel.appendChild(board);
+        let bbRaw = mkBBSvg();
+        let bb = wrapSvg(bbRaw, {right: `x1`, rightSize: QUANT_LBL_SIZE, cmpScale: BB_SCALE});
+        panel.appendChild(bb);
     
         // components
         let cmps = props.allCmps;

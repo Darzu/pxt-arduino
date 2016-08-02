@@ -112,8 +112,10 @@ namespace pxsim.boardsvg {
     }
 
     export const PIN_DIST = 15; //original dist: 15.25
-    const WIDTH = 498;
-    const HEIGHT = 725;
+    export const BOARD_BASE_WIDTH = 498;
+    export const BOARD_BASE_HEIGHT = 725;
+    export const BB_WIDTH = BOARD_BASE_WIDTH;
+    export const BB_HEIGHT = 323; //TODO: relate to PIN_DIST
     const TOP_MARGIN = 20;
     const MID_MARGIN = 40;
     const BOT_MARGIN = 20;
@@ -126,7 +128,7 @@ namespace pxsim.boardsvg {
             scaleFn: scaleFn,
             height: scaleFn(b.height),
             width: width,
-            xOff: (WIDTH - width)/2.0,
+            xOff: (BOARD_BASE_WIDTH - width)/2.0,
             yOff: TOP_MARGIN
         }
     }
@@ -240,8 +242,8 @@ namespace pxsim.boardsvg {
             this.element = <SVGSVGElement>svg.elt("svg")
             svg.hydrate(this.element, {
                 "version": "1.0",
-                "viewBox": `0 0 ${WIDTH} ${HEIGHT}`,
-                "enable-background": `new 0 0 ${WIDTH} ${HEIGHT}`,
+                "viewBox": `0 0 ${BOARD_BASE_WIDTH} ${BOARD_BASE_HEIGHT}`,
+                "enable-background": `new 0 0 ${BOARD_BASE_WIDTH} ${BOARD_BASE_HEIGHT}`,
                 "class": "sim",
                 "x": "0px",
                 "y": "0px"
@@ -377,7 +379,6 @@ namespace pxsim.boardsvg {
             })
 
             // breadboard
-            const bbHeight = 323; //TODO: relate to PIN_DIST
             const bbX = 0;                        
             const bbY = TOP_MARGIN + this.boardDim.height + MID_MARGIN;
 
@@ -385,12 +386,12 @@ namespace pxsim.boardsvg {
                 this.nameToLoc[name] = [bbX + relativeXY[0], bbY + relativeXY[1]];
             }
             this.breadboard = new Breadboard()
-            this.breadboard.buildDom(this.g, this.defs, WIDTH, bbHeight, addBBLoc);
+            this.breadboard.buildDom(this.g, this.defs, BB_WIDTH, BB_HEIGHT, addBBLoc);
             this.style.textContent += this.breadboard.style;
             this.breadboard.updateLocation(bbX, bbY);
 
             // edges
-            this.boardEdges = [TOP_MARGIN, TOP_MARGIN+this.boardDim.height, bbY, bbY+bbHeight]
+            this.boardEdges = [TOP_MARGIN, TOP_MARGIN+this.boardDim.height, bbY, bbY+BB_HEIGHT]
         }
 
         // wires
