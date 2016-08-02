@@ -366,7 +366,7 @@ namespace pxsim.instructions {
             allWires: allWires, allCmps: allComponents, lastStep: lastStep, 
             colorToWires: colorToWires, allWireColors: allWireColors};
     }
-    function mkBoard(props: BoardProps, step: number, width: number) {
+    function mkBoard(props: BoardProps, step: number, width: number, outline: boolean = false) {
         let board = new pxsim.boardsvg.DalBoardSvg({
             theme: pxsim.mkRandomTheme(),
             runtime: pxsim.runtime,
@@ -377,6 +377,11 @@ namespace pxsim.instructions {
             "width": width,
             "class": "board-svg"
         });
+        if (outline){
+            svg.hydrate(board.background, {
+                "href": `/images/${props.board.outlineImg}`
+            })
+        }
 
         //TODO handle in a general way
         board.board.buttonPairState.used = true;
@@ -458,7 +463,7 @@ namespace pxsim.instructions {
         let panel = mkPanel();
         
         //board
-        let board = mkBoard(props, step, BOARD_WIDTH)
+        let board = mkBoard(props, step, BOARD_WIDTH, step > 0)
         panel.appendChild(board.element);
         
         //number

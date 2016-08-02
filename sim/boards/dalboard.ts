@@ -224,6 +224,7 @@ namespace pxsim.boardsvg {
         private defs: SVGDefsElement;
         private g: SVGElement;
         public board: pxsim.DalBoard;
+        public background: SVGElement;
         private components: Map<IBoardComponent<any>>;
         private breadboard: Breadboard;
         private underboard: SVGGElement;
@@ -356,7 +357,7 @@ namespace pxsim.boardsvg {
                 svg.child(merge, "feMergeNode", { in: "glow" })
 
             // main board
-            svg.child(this.g, "image", 
+            this.background = svg.child(this.g, "image", 
                 { class: "sim-board", x: this.boardDim.xOff, y: this.boardDim.yOff, width: this.boardDim.width, height: this.boardDim.height, 
                     "href": `/images/${this.boardDesc.photo}`});
             const mkPinGrid = (l: number, t: number, rs: number, cs: number, getNm: (i: number, j: number) => string) => {

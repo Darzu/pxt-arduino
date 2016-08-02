@@ -289,7 +289,8 @@ namespace pxsim.boardsvg {
     export type WireDescription = {bb: string, pin:  string, color: string, component?: Component, instructionStep: number};
     export type ComponentDescription = {type: Component, locations: string[], instructionStep: number, wires: WireDescription[]} 
     export interface BoardDescription {
-        photo: "arduino-zero-photo-sml.png",
+        photo: string,
+        outlineImg: string,
         width: number,
         height: number,
         pinDist: number,
@@ -309,6 +310,7 @@ namespace pxsim.boardsvg {
     }
     export const ARDUINO_ZERO: BoardDescription = {
         photo: "arduino-zero-photo-sml.png",
+        outlineImg:  "arduino-outline.svg",
         width: 1000,
         height: 762,
         pinDist: 35.5,
