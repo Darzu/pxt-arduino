@@ -77,7 +77,6 @@ namespace pxsim.instructions {
             }
             .cmp-div {
                 display: inline-block;
-                margin-right: 0px;
             }
             .reqs-div {
                 margin-left: ${PANEL_PADDING + NUM_BOX_SIZE}px;
