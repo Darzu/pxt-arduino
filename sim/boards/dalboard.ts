@@ -145,9 +145,6 @@ namespace pxsim.boardsvg {
             user-select: none;           /* Non-prefixed version, currently
                                             not supported by any browser */
         }
-        svg.sim {
-            margin-bottom:1em;
-        }
         svg.sim.grayscale {    
             -moz-filter: grayscale(1);
             -webkit-filter: grayscale(1);
@@ -217,6 +214,7 @@ namespace pxsim.boardsvg {
         }
         `;
 
+    let nextBoardId = 0;
     export class DalBoardSvg {
         public element: SVGSVGElement;
         private style: SVGStyleElement;
@@ -230,11 +228,13 @@ namespace pxsim.boardsvg {
         private boardDesc: BoardDescription;
         private boardDim: BoardDimensions;
         private boardEdges: number[];
+        private id: number;
 
         //locations
         private nameToLoc: Map<[number, number]> = {};
 
         constructor(public props: IBoardSvgProps) {
+            this.id = nextBoardId++;
             this.boardDesc = props.boardDesc;
             this.boardDim = getBoardDimensions(this.boardDesc);
             this.board = this.props.runtime.board as pxsim.DalBoard;
@@ -244,7 +244,7 @@ namespace pxsim.boardsvg {
                 "version": "1.0",
                 "viewBox": `0 0 ${BOARD_BASE_WIDTH} ${BOARD_BASE_HEIGHT}`,
                 "enable-background": `new 0 0 ${BOARD_BASE_WIDTH} ${BOARD_BASE_HEIGHT}`,
-                "class": "sim",
+                "class": `sim sim-board-id-${this.id}`,
                 "x": "0px",
                 "y": "0px"
             });
@@ -525,6 +525,23 @@ namespace pxsim.boardsvg {
                     }`
             }
             return result;
+        }
+
+        private escapeCssClassName(cls: string) {
+            //TODO: It'd probably be best to avoid these characters completely
+            let illegalChars = ["~", ":", ".", "-", ">", "<"]
+            illegalChars.forEach(c => cls = cls.replace(c, "\\"+c));
+            return cls;
+        }
+        public highlightLoc(pinNm: string) {
+            pinNm = this.escapeCssClassName(pinNm);
+            let newStyle = 
+            `
+            .sim-board-id-${this.id} .board-loc-${pinNm}.sim-board-pin-lbl text {
+                fill: red;
+            }
+            `
+            this.style.textContent += newStyle;
         }
     }
 }

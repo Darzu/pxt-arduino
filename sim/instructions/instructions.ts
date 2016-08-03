@@ -377,8 +377,8 @@ namespace pxsim.instructions {
         })
         svg.hydrate(board.element, {
             "width": width,
-            "class": "board-svg"
         });
+        svg.addClass(board.element, "board-svg");
         if (buildMode){
             svg.hydrate(board.background, {
                 "href": `/images/${props.board.outlineImg}`
@@ -430,6 +430,7 @@ namespace pxsim.instructions {
             wires.forEach(w => {
                 board.addWire(w)
                 if (buildMode) {
+                    board.highlightLoc(w.pin);
                     board.breadboard.highlightLoc(w.bb);
                 }
             });
