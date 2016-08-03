@@ -436,6 +436,7 @@ namespace pxsim.instructions {
             wires.forEach(w => {
                 let wEls = board.addWire(w)
                 if (buildMode) {
+                    //location highlights
                     if (w.end[0] == "bb")
                         board.breadboard.highlightLoc(w.end[1]);
                     else
@@ -444,6 +445,11 @@ namespace pxsim.instructions {
                         board.breadboard.highlightLoc(w.start[1]);
                     else
                         board.highlightLoc(w.start[1]);
+
+                    //underboard wires
+                    wEls.forEach(e => {
+                        (<any>e).style["visibility"] = "visible";
+                    });
                 }
             });
         }
