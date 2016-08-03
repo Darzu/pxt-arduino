@@ -243,14 +243,14 @@ namespace pxsim.boardsvg {
                 this.styleEl.textContent +=
                     `
                     .sim-bb-id-${this.id} .bb-loc-${colNum <= 25 ? "bot" : "top"}${rowStr}.sim-bb-blue {
-                        fill: blue;
+                        fill: #1AA5D7;
                     }
                     `
             } else if (colStr == "+") {
                 this.styleEl.textContent +=
                     `
                     .sim-bb-id-${this.id} .bb-loc-${colNum <= 25 ? "bot" : "top"}${rowStr}.sim-bb-red {
-                        fill: red;
+                        fill: #DD4BA0;
                     }
                     `
             } else {
