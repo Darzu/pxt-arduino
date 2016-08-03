@@ -423,8 +423,11 @@ namespace pxsim.instructions {
                 wires.forEach(w => {
                     let wEls = board.addWire(w)
                     if (buildMode) {
-                        wEls.forEach(e => {
-                            (<any>e).style["stroke"] = "#CCC";
+                        [wEls.end1, wEls.end2].forEach(e => {
+                            svg.addClass(e, "greyed");
+                        });
+                        wEls.wires.forEach(e => {
+                            svg.addClass(e, "greyed");
                         });
                     }
                 });
@@ -454,7 +457,7 @@ namespace pxsim.instructions {
                         board.highlightLoc(w.start[1]);
 
                     //underboard wires
-                    wEls.forEach(e => {
+                    wEls.wires.forEach(e => {
                         (<any>e).style["visibility"] = "visible";
                     });
                 }

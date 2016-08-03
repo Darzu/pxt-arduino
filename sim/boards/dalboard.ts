@@ -204,9 +204,15 @@ namespace pxsim.boardsvg {
             stroke-width:${WIRE_WIDTH}px;
             pointer-events: none;
         }
+        .greyed.sim-bb-wire {
+            stroke: #CCC;
+        }
         .sim-bb-wire-end {
             stroke:#333;
             fill:#333;
+        }
+        .greyed.sim-bb-wire-end {
+            stroke: #777;
         }
         .sim-bb-wire-hover {
             stroke-width: ${WIRE_WIDTH/2}px;
@@ -286,10 +292,12 @@ namespace pxsim.boardsvg {
         private getCmpClass = (type: Component) => `sim-${type}-cmp`;
         private getCmpHideClass = (type: Component) => `sim-hide-${type}-cmp`;
 
-        public addWire(w: WireDescription, cmp?: Component): SVGElement[] {
+        public addWire(w: WireDescription, cmp?: Component): {endG: SVGGElement, end1: SVGElement, end2: SVGElement, wires: SVGElement[]} {
             let wireEls = this.drawWire(w.start[1], w.end[1], w.color)
-            if (cmp)
-                wireEls.forEach(e => svg.addClass(e, this.getCmpClass(cmp)));
+            if (cmp) {
+                svg.addClass(wireEls.endG, this.getCmpClass(cmp))
+                wireEls.wires.forEach(e => svg.addClass(e, this.getCmpClass(cmp)));
+            }
             return wireEls;
         }
         public addComponent(cmpDesc: ComponentDescription): IBoardComponent<any> {
@@ -495,8 +503,8 @@ namespace pxsim.boardsvg {
             (<any>w).style["stroke-width"] = `${endW}px`;
             return w;
         }                
-        private drawWire = (pin1: string, pin2: string, clr: string) => {
-            let result: SVGElement[] = [];
+        private drawWire(pin1: string, pin2: string, clr: string): {endG: SVGGElement, end1: SVGElement, end2: SVGElement, wires: SVGElement[]} {
+            let wires: SVGElement[] = [];
             let p1 = this.loc(pin1);
             let p2 = this.loc(pin2);
             const closestPointOffBoard = (p: [number, number]): [number, number] => {
@@ -512,8 +520,7 @@ namespace pxsim.boardsvg {
             let wireId = nextWireId++;
             let end1 = this.mkWireEnd(p1, clr);
             let end2 = this.mkWireEnd(p2, clr);
-            let endG = svg.child(this.g, "g", {class: "sim-bb-wire-ends-g"});
-            result.push(endG);
+            let endG = <SVGGElement>svg.child(this.g, "g", {class: "sim-bb-wire-ends-g"});
             endG.appendChild(end1);
             endG.appendChild(end2);
             let edgeIdx1 = this.closestEdgeIdx(p1);
@@ -521,7 +528,7 @@ namespace pxsim.boardsvg {
             if (edgeIdx1 == edgeIdx2) {
                 let seg = this.mkWireSeg(p1, p2, clr);
                 this.g.appendChild(seg);
-                result.push(seg);
+                wires.push(seg);
             } else {
                 let offP1 = closestPointOffBoard(p1);
                 let offP2 = closestPointOffBoard(p2);
@@ -539,13 +546,13 @@ namespace pxsim.boardsvg {
                 } 
                 svg.addClass(midSegHover, "sim-bb-wire-hover");
                 this.g.appendChild(offSeg1);
-                result.push(offSeg1);
+                wires.push(offSeg1);
                 this.g.appendChild(offSeg2);
-                result.push(offSeg2);
+                wires.push(offSeg2);
                 this.underboard.appendChild(midSeg);
-                result.push(midSeg);
+                wires.push(midSeg);
                 this.g.appendChild(midSegHover);
-                result.push(midSegHover);
+                wires.push(midSegHover);
                 //set hover mechanism
                 let wireIdClass = `sim-bb-wire-id-${wireId}`;
                 const setId = (e: SVGElement) => svg.addClass(e, wireIdClass);
@@ -559,7 +566,7 @@ namespace pxsim.boardsvg {
                         stroke: red; 
                     }`
             }
-            return result;
+            return {endG: endG, end1: end1, end2: end2, wires: wires};
         }
 
         private escapeCssClassName(cls: string) {
