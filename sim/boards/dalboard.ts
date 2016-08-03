@@ -119,6 +119,7 @@ namespace pxsim.boardsvg {
     const TOP_MARGIN = 20;
     const MID_MARGIN = 40;
     const BOT_MARGIN = 20;
+    export const PIN_LBL_SIZE = PIN_DIST * 0.7;
 
     export type BoardDimensions = {scaleFn: (n: number)=>number, height: number, width: number, xOff: number, yOff: number};
     export function getBoardDimensions(b: BoardDescription): BoardDimensions {
@@ -134,28 +135,6 @@ namespace pxsim.boardsvg {
     }
 
     export const WIRE_WIDTH = PIN_DIST/2.5;
-    export const WIRE_STYLE = `
-        .sim-bb-wire {
-            fill:none;
-            stroke-linecap: round;
-            stroke-width:${WIRE_WIDTH}px;
-            pointer-events: none;
-        }
-        .sim-bb-wire-end {
-            stroke:#333;
-            fill:#333;
-        }
-        .sim-board-pin {
-            fill:#999;
-            stroke:#000;
-            stroke-width:${PIN_DIST/3.0}px;
-        }
-        .sim-bb-wire-hover {
-            stroke-width: ${WIRE_WIDTH}px;
-            visibility: hidden;
-            stroke-dasharray: ${PIN_DIST/2.0},${PIN_DIST/1.0};
-        }
-        `
     export const BOARD_SYTLE = `
         .noselect {
             -webkit-touch-callout: none; /* iOS Safari */
@@ -215,7 +194,27 @@ namespace pxsim.boardsvg {
             from { stroke: yellow; }
             to   { stroke: default; }
         }
-        ${WIRE_STYLE}
+
+        .sim-board-pin {
+            fill:#999;
+            stroke:#000;
+            stroke-width:${PIN_DIST/3.0}px;
+        }
+        .sim-bb-wire {
+            fill:none;
+            stroke-linecap: round;
+            stroke-width:${WIRE_WIDTH}px;
+            pointer-events: none;
+        }
+        .sim-bb-wire-end {
+            stroke:#333;
+            fill:#333;
+        }
+        .sim-bb-wire-hover {
+            stroke-width: ${WIRE_WIDTH}px;
+            visibility: hidden;
+            stroke-dasharray: ${PIN_DIST/2.0},${PIN_DIST/1.0};
+        }
         `;
 
     export class DalBoardSvg {
@@ -348,7 +347,34 @@ namespace pxsim.boardsvg {
             }
         }
 
+
+        private indexOfMin(vs: number[]): number {
+            let minIdx = 0;
+            let min = vs[0];
+            for (let i = 1; i < vs.length; i++) {
+                if (vs[i] < min) {
+                    min = vs[i];
+                    minIdx = i;
+                }   
+            }
+            return minIdx;
+        }
+        private closestEdgeIdx(p: [number, number]): number {
+            let dists = this.boardEdges.map(e => Math.abs(p[1] - e));
+            let edgeIdx = this.indexOfMin(dists);
+            return edgeIdx;
+        }
+        private closestEdge(p: [number, number]): number {
+            return this.boardEdges[this.closestEdgeIdx(p)];
+        }
+
         private buildDom() {
+            const bbX = (BOARD_BASE_WIDTH - BB_WIDTH)/2;                        
+            const bbY = TOP_MARGIN + this.boardDim.height + MID_MARGIN;
+
+            // edges
+            this.boardEdges = [TOP_MARGIN, TOP_MARGIN+this.boardDim.height, bbY, bbY+BB_HEIGHT]
+
             // filters
             let glow = svg.child(this.defs, "filter", { id: "filterglow", x: "-5%", y: "-5%", width: "120%", height: "120%" });
             svg.child(glow, "feGaussianBlur", { stdDeviation: "5", result: "glow" });
@@ -365,8 +391,26 @@ namespace pxsim.boardsvg {
                 let props = { class: "sim-board-pin" }
                 let pinFn = (p: SVGElement, i: number, j: number, x: number, y: number) => {
                     let name = getNm(i, j);
+                    svg.addClass(p, `board-loc-${name}`);
                     this.nameToLoc[name] = [x, y];
                     svg.hydrate(p, {title: name});
+                    //label
+                    let lblY: number;
+                    let lblX: number;
+                    let topEdge = this.closestEdgeIdx([x,y]) == 0;
+                    if (topEdge) {
+                        let lblLen = PIN_LBL_SIZE * 0.25 * name.length;
+                        lblY = y + 12 + lblLen;
+                        lblX = x;
+                    } else {
+                        let lblLen = PIN_LBL_SIZE * 0.32 * name.length;
+                        lblY = y - 11 - lblLen;
+                        lblX = x;
+                    }
+                    let lbl = mkTxt(lblX, lblY, PIN_LBL_SIZE, 270, name, "");
+                    svg.addClass(lbl, "sim-board-pin-lbl");
+                    svg.addClass(lbl, `board-loc-${name}`);
+                    this.g.appendChild(lbl);
                 };
                 return mkGrid(l, t, rs, cs, size, props, pinFn);
             }
@@ -380,9 +424,6 @@ namespace pxsim.boardsvg {
             })
 
             // breadboard
-            const bbX = (BOARD_BASE_WIDTH - BB_WIDTH)/2;                        
-            const bbY = TOP_MARGIN + this.boardDim.height + MID_MARGIN;
-
             const addBBLoc = (name: string, relativeXY: [number, number]): void => {
                 this.nameToLoc[name] = [bbX + relativeXY[0], bbY + relativeXY[1]];
             }
@@ -390,9 +431,6 @@ namespace pxsim.boardsvg {
             this.breadboard.buildDom(this.g, this.defs, BB_WIDTH, BB_HEIGHT, addBBLoc);
             this.style.textContent += this.breadboard.style;
             this.breadboard.updateLocation(bbX, bbY);
-
-            // edges
-            this.boardEdges = [TOP_MARGIN, TOP_MARGIN+this.boardDim.height, bbY, bbY+BB_HEIGHT]
         }
 
         // wires
@@ -426,28 +464,9 @@ namespace pxsim.boardsvg {
             let result: SVGElement[] = [];
             let p1 = this.loc(pin1);
             let p2 = this.loc(pin2);
-            const indexOfMin = (vs: number[]): number => {
-                let minIdx = 0;
-                let min = vs[0];
-                for (let i = 1; i < vs.length; i++) {
-                    if (vs[i] < min) {
-                        min = vs[i];
-                        minIdx = i;
-                    }   
-                }
-                return minIdx;
-            }
-            const closestEdgeIdx = (p: [number, number]): number => {
-                let dists = this.boardEdges.map(e => Math.abs(p[1] - e));
-                let edgeIdx =  indexOfMin(dists);
-                return edgeIdx;
-            }
-            const closestEdge = (p: [number, number]): number => {
-                return this.boardEdges[closestEdgeIdx(p)];
-            }
             const closestPointOffBoard = (p: [number, number]): [number, number] => {
                 const offset = PIN_DIST/2;
-                let e = closestEdge(p);
+                let e = this.closestEdge(p);
                 let y: number;
                 if (e - p[1] < 0)
                     y = e - offset;
@@ -462,8 +481,8 @@ namespace pxsim.boardsvg {
             result.push(endG);
             endG.appendChild(end1);
             endG.appendChild(end2);
-            let edgeIdx1 = closestEdgeIdx(p1);
-            let edgeIdx2 = closestEdgeIdx(p2);
+            let edgeIdx1 = this.closestEdgeIdx(p1);
+            let edgeIdx2 = this.closestEdgeIdx(p2);
             if (edgeIdx1 == edgeIdx2) {
                 let seg = this.mkWireSeg(p1, p2, clr);
                 this.g.appendChild(seg);

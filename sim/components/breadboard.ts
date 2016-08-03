@@ -137,15 +137,14 @@ namespace pxsim.boardsvg {
             return t;
         }
 
-        const lblSize = PIN_DIST * 0.7;
         for (let n = 1; n <= 30; n++)
-            drawLbl("j"+n, ""+n, 0, -PIN_DIST, -90, lblSize);
+            drawLbl("j"+n, ""+n, 0, -PIN_DIST, -90, PIN_LBL_SIZE);
         for (let n = 1; n <= 30; n++)
-            drawLbl("a"+n, ""+n, 0, PIN_DIST, -90, lblSize);
-        ae.forEach(a => drawLbl(a+"1", a, -PIN_DIST, 0, -90, lblSize))
-        fj.forEach(a => drawLbl(a+"1", a, -PIN_DIST, 0, -90, lblSize))
-        ae.forEach(a => drawLbl(a+"30", a, PIN_DIST, 0, -90, lblSize))
-        fj.forEach(a => drawLbl(a+"30", a, PIN_DIST, 0, -90, lblSize))
+            drawLbl("a"+n, ""+n, 0, PIN_DIST, -90, PIN_LBL_SIZE);
+        ae.forEach(a => drawLbl(a+"1", a, -PIN_DIST, 0, -90, PIN_LBL_SIZE))
+        fj.forEach(a => drawLbl(a+"1", a, -PIN_DIST, 0, -90, PIN_LBL_SIZE))
+        ae.forEach(a => drawLbl(a+"30", a, PIN_DIST, 0, -90, PIN_LBL_SIZE))
+        fj.forEach(a => drawLbl(a+"30", a, PIN_DIST, 0, -90, PIN_LBL_SIZE))
 
         //+- labels
         const pLblSize = PIN_DIST * 1.7;

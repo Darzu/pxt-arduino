@@ -10,6 +10,7 @@ namespace pxsim.instructions {
     const LBL_RIGHT_PAD = 5;
     const REQ_WIRE_HEIGHT = 45;
     const REQ_CMP_HEIGHT = 55;
+    const REQ_CMP_SCALE = 0.5;
     const WIRE_CURVE_OFF = 15;
     const WIRE_LENGTH = 100;
     type Orientation = "landscape" | "portrait";
@@ -36,7 +37,7 @@ namespace pxsim.instructions {
     const NUM_MARGIN = 5;
     const STYLE = `
             ${boardsvg.BOARD_SYTLE}
-            ${boardsvg.BUTTON_PAIR_STYLE}
+            ${boardsvg.BUTTON_PAIR_STYLE/*TODO: generalize for all components*/}
             ${boardsvg.LED_MATRIX_STYLE}
             .instr-panel {
                 margin: ${PANEL_MARGIN}px;
@@ -76,6 +77,7 @@ namespace pxsim.instructions {
             }
             .cmp-div {
                 display: inline-block;
+                margin-right: 0px;
             }
             .reqs-div {
                 margin-left: ${PANEL_PADDING + NUM_BOX_SIZE}px;
@@ -219,12 +221,13 @@ namespace pxsim.instructions {
             (<any>cmpSvgAtts).width = dims.w;
             (<any>cmpSvgAtts).height = dims.h;
         }
-        if (opts.cmpWidth) {
-            scale(opts.cmpWidth / dims.w);
-        } else if (opts.cmpHeight) {
-            scale(opts.cmpHeight / dims.h)
-        } else if (opts.cmpScale) {
+        if (opts.cmpScale) {
             scale(opts.cmpScale)
+        }
+        if (opts.cmpWidth && opts.cmpWidth < dims.w) {
+            scale(opts.cmpWidth / dims.w);
+        } else if (opts.cmpHeight && opts.cmpHeight < dims.h) {
+            scale(opts.cmpHeight / dims.h)
         }
         svg.hydrate(cmpSvgEl, cmpSvgAtts);
         let elDims = {l: dims.l, t: dims.t, w: dims.w, h: dims.h};
@@ -536,10 +539,22 @@ namespace pxsim.instructions {
             let cmp = mkCmpDiv(c.type, {
                 top: bbLocToCoordStr(c.locations[0]), 
                 topSize: LOC_LBL_SIZE, 
-                cmpHeight: REQ_CMP_HEIGHT
+                cmpHeight: REQ_CMP_HEIGHT,
+                cmpScale: REQ_CMP_SCALE
             })
             addClass(cmp, "cmp-div");
             reqsDiv.appendChild(cmp);
+            //TODO: find a generalization so we don't have to specialize for buttonpair
+            if (c.type == "buttonpair") {
+                cmp = mkCmpDiv(c.type, {
+                    top: bbLocToCoordStr(c.locations[1]), 
+                    topSize: LOC_LBL_SIZE, 
+                    cmpHeight: REQ_CMP_HEIGHT,
+                    cmpScale: REQ_CMP_SCALE
+                })
+                addClass(cmp, "cmp-div");
+                reqsDiv.appendChild(cmp);
+            }
         });
 
         return panel;  
