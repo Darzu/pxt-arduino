@@ -282,7 +282,7 @@ namespace pxsim.boardsvg {
         private getCmpHideClass = (type: Component) => `sim-hide-${type}-cmp`;
 
         public addWire(w: WireDescription, cmp?: Component) {
-            let wireEls = this.drawWire(w.bb, w.pin, mapWireColor(w.color))
+            let wireEls = this.drawWire(w.start[1], w.end[1], mapWireColor(w.color))
             if (cmp)
                 wireEls.forEach(e => svg.addClass(e, this.getCmpClass(cmp)));
         }

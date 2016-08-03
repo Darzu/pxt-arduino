@@ -431,8 +431,14 @@ namespace pxsim.instructions {
             wires.forEach(w => {
                 board.addWire(w)
                 if (buildMode) {
-                    board.highlightLoc(w.pin);
-                    board.breadboard.highlightLoc(w.bb);
+                    if (w.end[0] == "bb")
+                        board.breadboard.highlightLoc(w.end[1]);
+                    else
+                        board.highlightLoc(w.end[1]);
+                    if (w.start[0] == "bb")
+                        board.breadboard.highlightLoc(w.start[1]);
+                    else
+                        board.highlightLoc(w.start[1]);
                 }
             });
         }
@@ -525,9 +531,9 @@ namespace pxsim.instructions {
         let wires = (props.stepToWires[step] || []);
         wires.forEach(w => {
             let cmp = mkCmpDiv("wire", {
-                top: w.pin,
+                top: w.end[1],
                 topSize: LOC_LBL_SIZE, 
-                bot: bbLocToCoordStr(w.bb),
+                bot: bbLocToCoordStr(w.start[1]),
                 botSize: LOC_LBL_SIZE,
                 wireClr: w.color,
                 cmpHeight: REQ_WIRE_HEIGHT

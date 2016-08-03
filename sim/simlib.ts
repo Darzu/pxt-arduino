@@ -286,7 +286,8 @@ namespace pxsim.boardsvg {
         "compass": [() => new CompassSvg(), (d: DalBoard) => d.compassCmp, null],
         "lightsensor": [() => new LightSensorSvg(), (d: DalBoard) => d.lightSensorCmp, null]
     }
-    export type WireDescription = {bb: string, pin:  string, color: string, component?: Component, instructionStep: number};
+    export type LocDesc = ["bb" | "board", string]
+    export type WireDescription = {start: LocDesc, end: LocDesc, color: string, component?: Component, instructionStep: number};
     export type ComponentDescription = {type: Component, locations: string[], instructionStep: number, wires: WireDescription[]} 
     export interface BoardDescription {
         photo: string,
@@ -321,26 +322,26 @@ namespace pxsim.boardsvg {
             {x: 732.9, y: 704.6, labels: ["A0", "A1", "A2", "A3", "A4", "A5"]},
         ],
         basicWires: [
-            {bb: "-1", pin: "GND0", color: "blue", instructionStep: 1},
+            {start: ["bb", "-1"], end: ["board", "GND0"], color: "blue", instructionStep: 1},
         ],
         components: [
             {type: "display", locations:["h12"], instructionStep: 2, wires: [
-                {bb: "a12", pin: "~5", color: "green", instructionStep: 3},
-                {bb: "a13", pin: "~4", color: "green", instructionStep: 3},
-                {bb: "a14", pin: "~3", color: "green", instructionStep: 3},
-                {bb: "a15", pin: "2", color: "green", instructionStep: 3},
-                {bb: "j16", pin: "TX->1", color: "green", instructionStep: 3},
-                {bb: "a16", pin: "A0", color: "purple", instructionStep: 4},
-                {bb: "a17", pin: "A1", color: "purple", instructionStep: 4},
-                {bb: "a18", pin: "A2", color: "purple", instructionStep: 4},
-                {bb: "a19", pin: "A3", color: "purple", instructionStep: 4},
-                {bb: "j12", pin: "A4", color: "purple", instructionStep: 4},
+                {start: ["bb", "a12"], end: ["board", "~5"], color: "green", instructionStep: 3},
+                {start: ["bb", "a13"], end: ["board", "~4"], color: "green", instructionStep: 3},
+                {start: ["bb", "a14"], end: ["board", "~3"], color: "green", instructionStep: 3},
+                {start: ["bb", "a15"], end: ["board", "2"], color: "green", instructionStep: 3},
+                {start: ["bb", "j16"], end: ["board", "TX->1"], color: "green", instructionStep: 3},
+                {start: ["bb", "a16"], end: ["board", "A0"], color: "purple", instructionStep: 4},
+                {start: ["bb", "a17"], end: ["board", "A1"], color: "purple", instructionStep: 4},
+                {start: ["bb", "a18"], end: ["board", "A2"], color: "purple", instructionStep: 4},
+                {start: ["bb", "a19"], end: ["board", "A3"], color: "purple", instructionStep: 4},
+                {start: ["bb", "j12"], end: ["board", "A4"], color: "purple", instructionStep: 4},
             ]},
             {type: "buttonpair", locations:["f1", "f28", "d28"], instructionStep: 5, wires: [
-                {bb: "j1", pin: "7", color: "yellow", instructionStep: 6},
-                {bb: "a3", pin: "-2", color: "blue", instructionStep: 6},
-                {bb: "j28", pin: "~6", color: "orange", instructionStep: 7},
-                {bb: "a30", pin: "-25", color: "blue", instructionStep: 7},
+                {start: ["bb", "j1"], end: ["board", "7"], color: "yellow", instructionStep: 6},
+                {start: ["bb", "a3"], end: ["bb", "-2"], color: "blue", instructionStep: 6},
+                {start: ["bb", "j28"], end: ["board", "~6"], color: "orange", instructionStep: 7},
+                {start: ["bb", "a30"], end: ["bb", "-25"], color: "blue", instructionStep: 7},
             ]},
         ]
     }
