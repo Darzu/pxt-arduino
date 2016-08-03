@@ -373,7 +373,8 @@ namespace pxsim.instructions {
             theme: pxsim.mkRandomTheme(),
             runtime: pxsim.runtime,
             boardDesc: props.board,
-            blank: true
+            blank: true,
+            labeledPins: buildMode,
         })
         svg.hydrate(board.element, {
             "width": width,

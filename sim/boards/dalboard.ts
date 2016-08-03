@@ -109,6 +109,7 @@ namespace pxsim.boardsvg {
         theme?: IBoardTheme;
         disableTilt?: boolean;
         blank?: boolean; //useful for generating instructions
+        labeledPins?: boolean;
     }
 
     export const PIN_DIST = 15; //original dist: 15.25
@@ -229,12 +230,14 @@ namespace pxsim.boardsvg {
         private boardDim: BoardDimensions;
         private boardEdges: number[];
         private id: number;
+        private labeledPins: boolean;
 
         //locations
         private nameToLoc: Map<[number, number]> = {};
 
         constructor(public props: IBoardSvgProps) {
             this.id = nextBoardId++;
+            this.labeledPins = props.labeledPins;
             this.boardDesc = props.boardDesc;
             this.boardDim = getBoardDimensions(this.boardDesc);
             this.board = this.props.runtime.board as pxsim.DalBoard;
@@ -395,22 +398,24 @@ namespace pxsim.boardsvg {
                     this.nameToLoc[name] = [x, y];
                     svg.hydrate(p, {title: name});
                     //label
-                    let lblY: number;
-                    let lblX: number;
-                    let topEdge = this.closestEdgeIdx([x,y]) == 0;
-                    if (topEdge) {
-                        let lblLen = PIN_LBL_SIZE * 0.25 * name.length;
-                        lblY = y + 12 + lblLen;
-                        lblX = x;
-                    } else {
-                        let lblLen = PIN_LBL_SIZE * 0.32 * name.length;
-                        lblY = y - 11 - lblLen;
-                        lblX = x;
+                    if (this.labeledPins) {
+                        let lblY: number;
+                        let lblX: number;
+                        let topEdge = this.closestEdgeIdx([x,y]) == 0;
+                        if (topEdge) {
+                            let lblLen = PIN_LBL_SIZE * 0.25 * name.length;
+                            lblY = y + 12 + lblLen;
+                            lblX = x;
+                        } else {
+                            let lblLen = PIN_LBL_SIZE * 0.32 * name.length;
+                            lblY = y - 11 - lblLen;
+                            lblX = x;
+                        }
+                        let lbl = mkTxt(lblX, lblY, PIN_LBL_SIZE, 270, name, "");
+                        svg.addClass(lbl, "sim-board-pin-lbl");
+                        svg.addClass(lbl, `board-loc-${name}`);
+                        this.g.appendChild(lbl);
                     }
-                    let lbl = mkTxt(lblX, lblY, PIN_LBL_SIZE, 270, name, "");
-                    svg.addClass(lbl, "sim-board-pin-lbl");
-                    svg.addClass(lbl, `board-loc-${name}`);
-                    this.g.appendChild(lbl);
                 };
                 return mkGrid(l, t, rs, cs, size, props, pinFn);
             }
