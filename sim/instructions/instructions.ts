@@ -366,7 +366,7 @@ namespace pxsim.instructions {
             allWires: allWires, allCmps: allComponents, lastStep: lastStep, 
             colorToWires: colorToWires, allWireColors: allWireColors};
     }
-    function mkBoard(props: BoardProps, step: number, width: number, outline: boolean = false) {
+    function mkBoard(props: BoardProps, step: number, width: number, buildMode: boolean = false) {
         let board = new pxsim.boardsvg.DalBoardSvg({
             theme: pxsim.mkRandomTheme(),
             runtime: pxsim.runtime,
@@ -377,7 +377,7 @@ namespace pxsim.instructions {
             "width": width,
             "class": "board-svg"
         });
-        if (outline){
+        if (buildMode){
             svg.hydrate(board.background, {
                 "href": `/images/${props.board.outlineImg}`
             })
@@ -406,8 +406,8 @@ namespace pxsim.instructions {
         board.board.displayCmp.used = true;
         board.updateState();
 
-        //draw steps
-        for (let i = 0; i <= step; i++) {
+        //old steps
+        for (let i = 0; i < step; i++) {
             let wires = props.stepToWires[i];
             if (wires) {
                 wires.forEach(w => {
@@ -421,6 +421,27 @@ namespace pxsim.instructions {
                 });
             }
         }
+
+        //last steps
+        let wires = props.stepToWires[step];
+        if (wires) {
+            wires.forEach(w => {
+                board.addWire(w)
+                if (buildMode) {
+                    board.breadboard.highlightLoc(w.bb);
+                }
+            });
+        }
+        let cmps = props.stepToCmps[step];
+        if (cmps) {
+            cmps.forEach(c => {
+                board.addComponent(c)
+                if (buildMode) {
+                    board.breadboard.highlightLoc(c.locations[0]);
+                }
+            });
+        }
+
         return board;
     }
     function mkPanel() {
@@ -481,7 +502,7 @@ namespace pxsim.instructions {
         let panel = mkPanel();
         
         //board
-        let board = mkBoard(props, step, BOARD_WIDTH, step > 0)
+        let board = mkBoard(props, step, BOARD_WIDTH, true)
         panel.appendChild(board.element);
         
         //number

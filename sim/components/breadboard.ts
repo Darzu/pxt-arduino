@@ -90,8 +90,12 @@ namespace pxsim.boardsvg {
                 let name = getNm(i, j);
                 nameToPin[name] = p;
                 nameToLoc[name] = [x, y];
-                let title = `${name[0]}, ${name[1] + (name[2] || "") + (name[3] || "")}`;
+                let rowNm = name[0];
+                let colNm = name[1] + (name[2] || "") + (name[3] || "");
+                let title = `${rowNm}, ${colNm}`;
                 svg.hydrate(p, {title: title});
+                svg.addClass(p, `bb-loc-${rowNm}`)
+                svg.addClass(p, `bb-loc-${colNm}`)
             }
             return mkGrid(l, t, rs, cs, size, props, pinFn);
         }
@@ -121,13 +125,16 @@ namespace pxsim.boardsvg {
         botGrid.forEach(e => bb.appendChild(e));
 
         //labels
-        const drawTxt = (cx: number, cy: number, size: number, r: number, txt: string, cls: string) => {
+        const drawTxt = (cx: number, cy: number, size: number, r: number, txt: string, cls: string): SVGElement => {
             let g = mkTxt(cx, cy, size, r, txt, cls);
             bb.appendChild(g);
+            return g;
         }
-        const drawLbl = (pinName: string, label: string, xOff: number, yOff: number, r: number, s: number) => {
+        const drawLbl = (pinName: string, label: string, xOff: number, yOff: number, r: number, s: number): SVGElement => {
             let loc = nameToLoc[pinName];
-            drawTxt(loc[0] + xOff, loc[1] + yOff, s, r, label, "sim-bb-label");
+            let t = drawTxt(loc[0] + xOff, loc[1] + yOff, s, r, label, "sim-bb-label");
+            svg.addClass(t, `bb-loc-${label}`)
+            return t;
         }
 
         const lblSize = PIN_DIST * 0.7;
@@ -146,17 +153,17 @@ namespace pxsim.boardsvg {
         const mpLblOff = PIN_DIST * 0.8;
         const mXOff = PIN_DIST*0.07;
         //TL
-        drawTxt(0 + mpLblOff + mXOff, 0 + mpLblOff, mLblSize, -90, "-", "sim-bb-label sim-bb-blue");
-        drawTxt(0 + mpLblOff, barH - mpLblOff, pLblSize, -90, "+", "sim-bb-label sim-bb-red");
+        drawTxt(0 + mpLblOff + mXOff, 0 + mpLblOff, mLblSize, -90, `-`, `sim-bb-label sim-bb-blue bb-loc-top- `);
+        drawTxt(0 + mpLblOff, barH - mpLblOff, pLblSize, -90, `+`, `sim-bb-label sim-bb-red bb-loc-top+`);
         //TR
-        drawTxt(width - mpLblOff + mXOff, 0 + mpLblOff, mLblSize, -90, "-", "sim-bb-label sim-bb-blue");
-        drawTxt(width - mpLblOff, barH - mpLblOff, pLblSize, -90, "+", "sim-bb-label sim-bb-red");
+        drawTxt(width - mpLblOff + mXOff, 0 + mpLblOff, mLblSize, -90, `-`, `sim-bb-label sim-bb-blue bb-loc-top-`);
+        drawTxt(width - mpLblOff, barH - mpLblOff, pLblSize, -90, `+`, `sim-bb-label sim-bb-red bb-loc-top+`);
         //BL
-        drawTxt(0 + mpLblOff + mXOff, barH + midH + mpLblOff, mLblSize, -90, "-", "sim-bb-label sim-bb-blue");
-        drawTxt(0 + mpLblOff, barH + midH + barH - mpLblOff, pLblSize, -90, "+", "sim-bb-label sim-bb-red");
+        drawTxt(0 + mpLblOff + mXOff, barH + midH + mpLblOff, mLblSize, -90, `-`, `sim-bb-label sim-bb-blue bb-loc-bot-`);
+        drawTxt(0 + mpLblOff, barH + midH + barH - mpLblOff, pLblSize, -90, `+`, `sim-bb-label sim-bb-red bb-loc-bot+`);
         //BR
-        drawTxt(width - mpLblOff + mXOff, barH + midH + mpLblOff, mLblSize, -90, "-", "sim-bb-label sim-bb-blue");
-        drawTxt(width - mpLblOff, barH + midH + barH - mpLblOff, pLblSize, -90, "+", "sim-bb-label sim-bb-red");
+        drawTxt(width - mpLblOff + mXOff, barH + midH + mpLblOff, mLblSize, -90, `-`, `sim-bb-label sim-bb-blue bb-loc-bot-`);
+        drawTxt(width - mpLblOff, barH + midH + barH - mpLblOff, pLblSize, -90, `+`, `sim-bb-label sim-bb-red bb-loc-bot+`);
     
         //blue & red lines
         const lnLen = barGridW + PIN_DIST*1.5;
@@ -166,18 +173,21 @@ namespace pxsim.boardsvg {
         const mkLn = (x: number, y: number, cls: string) => {
             return svg.child(bb, "rect", { class: cls, x: x, y: y - lnThickness/2, width: lnLen, height: lnThickness});
         }
-        mkLn(topBarGridX - lnXOff, topBarGridY - lnYOff, "sim-bb-blue");
-        mkLn(topBarGridX - lnXOff, topBarGridY + PIN_DIST + lnYOff, "sim-bb-red");
-        mkLn(botBarGridX - lnXOff, botBarGridY - lnYOff, "sim-bb-blue");
-        mkLn(botBarGridX - lnXOff, botBarGridY + PIN_DIST + lnYOff, "sim-bb-red");
+        mkLn(topBarGridX - lnXOff, topBarGridY - lnYOff, "sim-bb-blue bb-loc-top-");
+        mkLn(topBarGridX - lnXOff, topBarGridY + PIN_DIST + lnYOff, "sim-bb-red bb-loc-top+");
+        mkLn(botBarGridX - lnXOff, botBarGridY - lnYOff, "sim-bb-blue bb-loc-bot-");
+        mkLn(botBarGridX - lnXOff, botBarGridY + PIN_DIST + lnYOff, "sim-bb-red bb-loc-bot+");
 
         return {e: bb, defs: defs, nameToLoc, nameToPin, l: 0, t: 0, w: width, h: height};
     }
 
+    let bbId = 0;
     export class Breadboard {
         public bb: SVGGElement;
         private nameToPin: Map<SVGElement> = {};
         private nameToLoc: Map<[number, number]> = {};
+        private styleEl: SVGStyleElement;
+        private id: number;
 
         //TODO relate font size to PIN_DIST 
         public style = `
@@ -201,6 +211,9 @@ namespace pxsim.boardsvg {
 .sim-bb-red {
     fill:#DD4BA0;
 }`
+        constructor() {
+            this.id = bbId++;
+        }
 
         public updateLocation(x: number, y: number) {
             translateEl(this.bb, [x, y]);
@@ -217,6 +230,38 @@ namespace pxsim.boardsvg {
             this.nameToPin = res.nameToPin;
             for (let nm in this.nameToLoc) {
                 addLoc(nm, this.nameToLoc[nm]);
+            }
+            this.styleEl = <SVGStyleElement>svg.child(this.bb, "style");
+            svg.addClass(this.bb, `sim-bb-id-${this.id}`)
+        }
+
+        public highlightLoc(locNm: string) {
+            let rowStr = locNm[0]
+            let colStr = locNm[1] + (locNm[2] || "") + (locNm[3] || "");
+            let colNum = Number(colStr);
+
+            if (rowStr == "-") {
+                this.styleEl.textContent +=
+                    `
+                    .sim-bb-id-${this.id} .bb-loc-${colNum <= 25 ? "bot" : "top"}${rowStr}.sim-bb-blue {
+                        fill: blue;
+                    }
+                    `
+            } else if (colStr == "+") {
+                this.styleEl.textContent +=
+                    `
+                    .sim-bb-id-${this.id} .bb-loc-${colNum <= 25 ? "bot" : "top"}${rowStr}.sim-bb-red {
+                        fill: red;
+                    }
+                    `
+            } else {
+                this.styleEl.textContent +=
+                    `
+                    .sim-bb-id-${this.id} .bb-loc-${rowStr} .sim-bb-label,
+                    .sim-bb-id-${this.id} .bb-loc-${colStr} .sim-bb-label {
+                        fill: red;
+                    }
+                    `
             }
         }
     }
