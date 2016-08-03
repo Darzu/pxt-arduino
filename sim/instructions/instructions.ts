@@ -400,8 +400,15 @@ namespace pxsim.instructions {
                 }
                 .sim-bb-outline .sim-bb-red,
                 .sim-bb-outline .sim-bb-blue {
-                    fill: #AAA;
-                }`;
+                    fill: #BBB;
+                }
+                .sim-bb-outline .sim-bb-pin {
+                    fill: #BBB;
+                }
+                .sim-bb-outline .sim-bb-label {
+                    fill: #BBB;
+                }
+                `;
         }
 
         //TODO handle in a general way

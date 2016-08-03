@@ -153,10 +153,10 @@ namespace pxsim.boardsvg {
         }
 
         .sim-text {
-        font-family:"Lucida Console", Monaco, monospace;
-        font-size:25px;
-        fill:#fff;
-        pointer-events: none;
+            font-family:"Lucida Console", Monaco, monospace;
+            font-size:25px;
+            fill:#fff;
+            pointer-events: none;
         }
 
         /* animations */
@@ -213,6 +213,9 @@ namespace pxsim.boardsvg {
             visibility: hidden;
             stroke-dasharray: ${PIN_DIST/10.0},${PIN_DIST/2.5};
             /*stroke-opacity: 0.4;*/
+        }
+        .sim-board-pin-lbl {
+            fill: #AAA;
         }
         `;
 
