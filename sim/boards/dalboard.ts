@@ -212,10 +212,12 @@ namespace pxsim.boardsvg {
             stroke-width: ${WIRE_WIDTH/2}px;
             visibility: hidden;
             stroke-dasharray: ${PIN_DIST/2.0},${PIN_DIST/0.8};
+            /*stroke-opacity: 0.4;*/
         }
         `;
 
     let nextBoardId = 0;
+    let nextWireId = 0;
     export class DalBoardSvg {
         public element: SVGSVGElement;
         private style: SVGStyleElement;
@@ -281,12 +283,13 @@ namespace pxsim.boardsvg {
         private getCmpClass = (type: Component) => `sim-${type}-cmp`;
         private getCmpHideClass = (type: Component) => `sim-hide-${type}-cmp`;
 
-        public addWire(w: WireDescription, cmp?: Component) {
-            let wireEls = this.drawWire(w.start[1], w.end[1], mapWireColor(w.color))
+        public addWire(w: WireDescription, cmp?: Component): SVGElement[] {
+            let wireEls = this.drawWire(w.start[1], w.end[1], w.color)
             if (cmp)
                 wireEls.forEach(e => svg.addClass(e, this.getCmpClass(cmp)));
+            return wireEls;
         }
-        public addComponent(cmpDesc: ComponentDescription) {
+        public addComponent(cmpDesc: ComponentDescription): IBoardComponent<any> {
             const mkCmp = (type: Component): IBoardComponent<any> => {
                 let [cnstr, stateFn] = ComponenetToCnstrAndState[cmpDesc.type];
                 let cmp = cnstr();
@@ -310,6 +313,7 @@ namespace pxsim.boardsvg {
                 }`
             cmp.updateTheme();
             cmp.updateState();
+            return cmp;
         }
         public addComponentAndWiring(cmpDesc: ComponentDescription) {
             this.addComponent(cmpDesc);
@@ -436,6 +440,18 @@ namespace pxsim.boardsvg {
             this.breadboard.buildDom(this.g, this.defs, BB_WIDTH, BB_HEIGHT, addBBLoc);
             this.style.textContent += this.breadboard.style;
             this.breadboard.updateLocation(bbX, bbY);
+
+            // wire colors
+            for (let clr in WIRE_COLOR) {
+                this.style.textContent += `
+                .wire-stroke-${clr} {
+                    stroke: ${mapWireColor(clr)};
+                }
+                .wire-fill-${clr} {
+                    fill: ${mapWireColor(clr)};
+                }
+                `
+            } 
         }
 
         // wires
@@ -444,13 +460,21 @@ namespace pxsim.boardsvg {
             let c1: [number, number] = [p1[0], p2[1]];
             let c2: [number, number] = [p2[0], p1[1]];
             let w = <SVGPathElement>svg.mkPath("sim-bb-wire", `M${coordStr(p1)} C${coordStr(c1)} ${coordStr(c2)} ${coordStr(p2)}`);
-            (<any>w).style["stroke"] = clr;
+            if (clr in WIRE_COLOR) {
+                svg.addClass(w, `wire-stroke-${clr}`);
+            } else {
+                (<any>w).style["stroke"] = clr;
+            }
             return w;
         }
         private mkWireSeg = (p1: [number, number], p2: [number, number], clr: string): SVGPathElement => {
             const coordStr = (xy: [number, number]):string => {return `${xy[0]}, ${xy[1]}`};
             let w = <SVGPathElement>svg.mkPath("sim-bb-wire", `M${coordStr(p1)} L${coordStr(p2)}`);
-            (<any>w).style["stroke"] = clr;
+            if (clr in WIRE_COLOR) {
+                svg.addClass(w, `wire-stroke-${clr}`);
+            } else {
+                (<any>w).style["stroke"] = clr;
+            }
             return w;
         }
         private mkWireEnd = (p: [number, number], clr: string): SVGElement => {
@@ -460,11 +484,14 @@ namespace pxsim.boardsvg {
             let y = p[1];
             let r = WIRE_WIDTH/2 + endW/2;
             svg.hydrate(w, {cx: x, cy: y, r: r, class: "sim-bb-wire-end"});
-            (<any>w).style["fill"] = clr;
+            if (clr in WIRE_COLOR) {
+                svg.addClass(w, `wire-fill-${clr}`);
+            } else {
+                (<any>w).style["fill"] = clr;
+            }
             (<any>w).style["stroke-width"] = `${endW}px`;
             return w;
         }                
-        private nextWireId = 0;
         private drawWire = (pin1: string, pin2: string, clr: string) => {
             let result: SVGElement[] = [];
             let p1 = this.loc(pin1);
@@ -479,7 +506,7 @@ namespace pxsim.boardsvg {
                     y = e + offset;
                 return [p[0], y];
             }
-            let wireId = this.nextWireId++;
+            let wireId = nextWireId++;
             let end1 = this.mkWireEnd(p1, clr);
             let end2 = this.mkWireEnd(p2, clr);
             let endG = svg.child(this.g, "g", {class: "sim-bb-wire-ends-g"});
@@ -517,7 +544,7 @@ namespace pxsim.boardsvg {
                 this.g.appendChild(midSegHover);
                 result.push(midSegHover);
                 //set hover mechanism
-                let wireIdClass = `sim-bb-wire-id${wireId}`;
+                let wireIdClass = `sim-bb-wire-id-${wireId}`;
                 const setId = (e: SVGElement) => svg.addClass(e, wireIdClass);
                 setId(endG);
                 setId(midSegHover);
