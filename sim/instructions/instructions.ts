@@ -414,13 +414,18 @@ namespace pxsim.instructions {
             let wires = props.stepToWires[i];
             if (wires) {
                 wires.forEach(w => {
-                    board.addWire(w)
+                    let wEls = board.addWire(w)
+                    if (buildMode) {
+                        wEls.forEach(e => {
+                            (<any>e).style["stroke"] = "#CCC";
+                        });
+                    }
                 });
             }
             let cmps = props.stepToCmps[i];
             if (cmps) {
                 cmps.forEach(c => {
-                    board.addComponent(c)
+                    let cmp = board.addComponent(c)
                 });
             }
         }
@@ -429,7 +434,7 @@ namespace pxsim.instructions {
         let wires = props.stepToWires[step];
         if (wires) {
             wires.forEach(w => {
-                board.addWire(w)
+                let wEls = board.addWire(w)
                 if (buildMode) {
                     if (w.end[0] == "bb")
                         board.breadboard.highlightLoc(w.end[1]);
@@ -445,7 +450,7 @@ namespace pxsim.instructions {
         let cmps = props.stepToCmps[step];
         if (cmps) {
             cmps.forEach(c => {
-                board.addComponent(c)
+                let cmp = board.addComponent(c)
                 if (buildMode) {
                     board.breadboard.highlightLoc(c.locations[0]);
                 }
@@ -575,6 +580,15 @@ namespace pxsim.instructions {
         
         return panel;
     }
+    function mkFinalPanel(props: BoardProps) {
+        let panel = mkPanel();
+        
+        //board
+        let board = mkBoard(props, props.lastStep, BOARD_WIDTH, false)
+        panel.appendChild(board.element);
+
+        return panel;
+    }
     export function drawInstructions() {
         const COMP_CODE = "";
         pxsim.runtime = new Runtime(COMP_CODE);
@@ -602,5 +616,9 @@ namespace pxsim.instructions {
             let p = mkStepPanel(s, props);
             document.body.appendChild(p);
         }
+
+        //final
+        let finalPanel = mkFinalPanel(props);
+        document.body.appendChild(finalPanel);
     }
 }
