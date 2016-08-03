@@ -211,7 +211,7 @@ namespace pxsim.boardsvg {
         .sim-bb-wire-hover {
             stroke-width: ${WIRE_WIDTH/2}px;
             visibility: hidden;
-            stroke-dasharray: ${PIN_DIST/2.0},${PIN_DIST/0.8};
+            stroke-dasharray: ${PIN_DIST/10.0},${PIN_DIST/2.5};
             /*stroke-opacity: 0.4;*/
         }
         `;
