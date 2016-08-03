@@ -587,10 +587,11 @@ namespace pxsim.instructions {
         return panel;
     }
     function mkFinalPanel(props: BoardProps) {
+        const BACK_PAGE_BOARD_WIDTH = PANEL_WIDTH - 20;
+
         let panel = mkPanel();
-        
-        //board
-        let board = mkBoard(props, props.lastStep, BOARD_WIDTH, false)
+        addClass(panel, "back-panel");
+        let board = mkBoard(props, props.lastStep, BACK_PAGE_BOARD_WIDTH, false)
         panel.appendChild(board.element);
 
         return panel;
