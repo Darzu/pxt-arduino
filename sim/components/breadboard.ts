@@ -21,7 +21,7 @@ namespace pxsim.boardsvg {
     }
 
     export type BBPin = {p: SVGRectElement, i: number, j: number, x: number, y: number, rowNm: string, colNm: string, pinNm: string};
-    export type BBLbl = {l: SVGGElement, cx: number, cy: number, size: number, rot: number, nm: string, nearestPin: BBPin};
+    export type BBLbl = {l: SVGTextElement, cx: number, cy: number, size: number, rot: number, nm: string, nearestPin: BBPin};
     type NegPosBar = {e: SVGRectElement, nm: string};
 
     const MK_PIN_NM = (rowNm: string, colNm: string) => rowNm + colNm;
@@ -91,7 +91,7 @@ namespace pxsim.boardsvg {
             }
             /*Highlighted*/
             .sim-bb-label.highlight {
-                fill: red;
+                fill: #D00;
                 font-weight: bold;
             }
             .sim-bb-blue.highlight {
@@ -110,6 +110,22 @@ namespace pxsim.boardsvg {
 
         public updateLocation(x: number, y: number) {
             translateEl(this.bb, [x, y]);
+        }
+
+        private drawLbl = (cx: number, cy: number, size: number, rot: number, txt: string, nearestPin: BBPin | string, cls?: string[]): SVGTextElement => {
+            let el = mkTxt(cx, cy, size, rot, txt);
+            svg.addClass(el, "sim-bb-label");
+            if (cls)
+                cls.forEach(c => svg.addClass(el, c));
+            this.bb.appendChild(el);
+            let nP: BBPin;
+            if (typeof nearestPin === "string") {
+                nP = this.pinNmToPin[nearestPin];
+            } else {
+                nP = nearestPin;
+            }
+            this.allLbls.push({l: el, cx: cx, cy: cy, size: size, rot: rot, nm: txt, nearestPin: nP});
+            return el;
         }
         
         private buildDom(addLoc?: (nm: string, xy: [number, number])=>void) 
@@ -222,25 +238,10 @@ namespace pxsim.boardsvg {
             })
             
             //labels
-            const drawLbl = (cx: number, cy: number, size: number, rot: number, txt: string, nearestPin: BBPin | string, cls?: string[]): SVGTextElement => {
-                let el = mkTxt(cx, cy, size, rot, txt);
-                svg.addClass(el, "sim-bb-label");
-                if (cls)
-                    cls.forEach(c => svg.addClass(el, c));
-                bb.appendChild(el);
-                let nP: BBPin;
-                if (typeof nearestPin === "string") {
-                    nP = this.pinNmToPin[nearestPin];
-                } else {
-                    nP = nearestPin;
-                }
-                this.allLbls.push({l: el, cx: cx, cy: cy, size: size, rot: rot, nm: txt, nearestPin: nP});
-                return el;
-            }
             const drawLblAtPin = (pinName: string, label: string, xOff: number, yOff: number, r: number, s: number): SVGTextElement => {
                 let pin = this.pinNmToPin[pinName];
                 let loc = [pin.x, pin.y];
-                let t = drawLbl(loc[0] + xOff, loc[1] + yOff, s, r, label, pin);
+                let t = this.drawLbl(loc[0] + xOff, loc[1] + yOff, s, r, label, pin);
                 return t;
             }
 
@@ -259,17 +260,17 @@ namespace pxsim.boardsvg {
             const mpLblOff = PIN_DIST * 0.8;
             const mXOff = PIN_DIST*0.07;
             //TL
-            drawLbl(0 + mpLblOff + mXOff, 0 + mpLblOff, mLblSize, -90, `-`, "-26", [`sim-bb-label`, `sim-bb-blue`]);
-            drawLbl(0 + mpLblOff, barH - mpLblOff, pLblSize, -90, `+`, "+26", [`sim-bb-label`, `sim-bb-red`]);
+            this.drawLbl(0 + mpLblOff + mXOff, 0 + mpLblOff, mLblSize, -90, `-`, "-26", [`sim-bb-label`, `sim-bb-blue`]);
+            this.drawLbl(0 + mpLblOff, barH - mpLblOff, pLblSize, -90, `+`, "+26", [`sim-bb-label`, `sim-bb-red`]);
             //TR
-            drawLbl(width - mpLblOff + mXOff, 0 + mpLblOff, mLblSize, -90, `-`, "-60", [`sim-bb-label`, `sim-bb-blue`]);
-            drawLbl(width - mpLblOff, barH - mpLblOff, pLblSize, -90, `+`, "+60", [`sim-bb-label`, `sim-bb-red`]);
+            this.drawLbl(width - mpLblOff + mXOff, 0 + mpLblOff, mLblSize, -90, `-`, "-60", [`sim-bb-label`, `sim-bb-blue`]);
+            this.drawLbl(width - mpLblOff, barH - mpLblOff, pLblSize, -90, `+`, "+60", [`sim-bb-label`, `sim-bb-red`]);
             //BL
-            drawLbl(0 + mpLblOff + mXOff, barH + midH + mpLblOff, mLblSize, -90, `-`, "-1", [`sim-bb-label`, `sim-bb-blue`]);
-            drawLbl(0 + mpLblOff, barH + midH + barH - mpLblOff, pLblSize, -90, `+`, "+1", [`sim-bb-label`, `sim-bb-red`]);
+            this.drawLbl(0 + mpLblOff + mXOff, barH + midH + mpLblOff, mLblSize, -90, `-`, "-1", [`sim-bb-label`, `sim-bb-blue`]);
+            this.drawLbl(0 + mpLblOff, barH + midH + barH - mpLblOff, pLblSize, -90, `+`, "+1", [`sim-bb-label`, `sim-bb-red`]);
             //BR
-            drawLbl(width - mpLblOff + mXOff, barH + midH + mpLblOff, mLblSize, -90, `-`, "-25", [`sim-bb-label`, `sim-bb-blue`]);
-            drawLbl(width - mpLblOff, barH + midH + barH - mpLblOff, pLblSize, -90, `+`, "+25", [`sim-bb-label`, `sim-bb-red`]);
+            this.drawLbl(width - mpLblOff + mXOff, barH + midH + mpLblOff, mLblSize, -90, `-`, "-25", [`sim-bb-label`, `sim-bb-blue`]);
+            this.drawLbl(width - mpLblOff, barH + midH + barH - mpLblOff, pLblSize, -90, `+`, "+25", [`sim-bb-label`, `sim-bb-red`]);
         
             //catalog lbls
             this.allLbls.forEach(lbl => {
@@ -336,13 +337,18 @@ namespace pxsim.boardsvg {
         public highlightLoc(pinNm: string): BBLbl[] {
             let {rowNm, colNm, x, y} = this.pinNmToPin[pinNm];
             let lbls = this.pinNmToLbls[pinNm];
+            const highlightLbl = (lbl: BBLbl) => {
+                svg.addClass(lbl.l, "highlight");
+                const SIZE_SCALAR = 1.3;
+                resetTxt(lbl.l, lbl.cx, lbl.cy, lbl.size * SIZE_SCALAR, lbl.rot, lbl.nm);
+            };
             if (rowNm == "-" || rowNm == "+") {
                 //+/- sign
                 let lblCoords = lbls.map((l):Coord => [l.cx, l.cy]);
                 let lblIdx = this.getClosestPointIdx([x, y], lblCoords);
                 let lbl = lbls[lblIdx];
                 lbls = [lbl]
-                svg.addClass(lbl.l, "highlight");
+                highlightLbl(lbl);
 
                 //bar
                 let colNumber = Number(colNm);
@@ -351,7 +357,7 @@ namespace pxsim.boardsvg {
                 svg.addClass(bar.e, "highlight");
             } else {
                 if (lbls) {
-                    lbls.forEach(l => svg.addClass(l.l, "highlight"));
+                    lbls.forEach(highlightLbl);
                 }
             }
             return lbls;

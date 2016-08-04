@@ -239,17 +239,20 @@ namespace pxsim.boardsvg {
         updateTheme (): void,
     }
 
-    export function mkTxt(cx: number, cy: number, size: number, rot: number, txt: string, txtXOffFactor?: number, txtYOffFactor?: number): SVGTextElement {
-        //HACK: these constants (txtXOffFactor, txtYOffFactor) tweak the way this algorithm knows how to center the text
+    export function resetTxt(el: SVGTextElement, cx: number, cy: number, size: number, rot: number, txt: string, txtXOffFactor?: number, txtYOffFactor?: number) {
+         //HACK: these constants (txtXOffFactor, txtYOffFactor) tweak the way this algorithm knows how to center the text
         txtXOffFactor = txtXOffFactor || -0.33333;
         txtYOffFactor = txtYOffFactor || 0.3;
         const xOff = txtXOffFactor*size*txt.length;
         const yOff = txtYOffFactor*size;
-        let el = <SVGTextElement>svg.elt("text")
-        svg.hydrate(el, {style: `font-size:${size}px;`,
+        svg.hydrate(el, {style: `font-size:${size}px;`, 
             transform: `translate(${cx} ${cy}) rotate(${rot}) translate(${xOff} ${yOff})` });
         svg.addClass(el, "noselect");
         el.textContent = txt;
+    }
+    export function mkTxt(cx: number, cy: number, size: number, rot: number, txt: string, txtXOffFactor?: number, txtYOffFactor?: number): SVGTextElement {
+        let el = <SVGTextElement>svg.elt("text")
+        resetTxt(el, cx, cy, size, rot, txt, txtXOffFactor, txtYOffFactor);
         return el;
     }
 
