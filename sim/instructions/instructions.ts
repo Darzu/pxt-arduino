@@ -396,6 +396,18 @@ namespace pxsim.instructions {
         board.board.buttonPairState.used = true;
         board.board.displayCmp.used = true;
         board.updateState();
+        
+        //set smiley
+        //HACK
+        // let img = board.board.displayCmp.image;
+        // img.set(1, 0, 255);
+        // img.set(3, 0, 255);
+        // img.set(0, 2, 255);
+        // img.set(1, 3, 255);
+        // img.set(2, 3, 255);
+        // img.set(3, 3, 255);
+        // img.set(4, 2, 255);
+        // board.updateState();
 
         //old steps
         if (buildMode && step > 0) {
