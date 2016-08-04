@@ -91,7 +91,8 @@ namespace pxsim.instructions {
             `;
 
     function bbLocToCoordStr(loc: string) {
-        return `(${loc[0]},${loc[1] + (loc[2] || "") + (loc[3] || "")})`;
+        let {rowNm, colNm} = boardsvg.BRK_PIN_NM(loc);
+        return `(${rowNm},${colNm})`
     }
     function addClass(el: HTMLElement, cls: string) {
         //TODO move to library

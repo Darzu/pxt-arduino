@@ -24,8 +24,8 @@ namespace pxsim.boardsvg {
     export type BBLbl = {l: SVGTextElement, cx: number, cy: number, size: number, rot: number, nm: string, nearestPin: BBPin};
     type NegPosBar = {e: SVGRectElement, nm: string};
 
-    const MK_PIN_NM = (rowNm: string, colNm: string) => rowNm + colNm;
-    const BRK_PIN_NM = (pinNm: string) => {return {rowNm: pinNm[0], colNm: name[1] + (name[2] || "") + (name[3] || "")}};
+    export const MK_PIN_NM = (rowNm: string, colNm: string) => rowNm + colNm;
+    export const BRK_PIN_NM = (pinNm: string) => {return {rowNm: pinNm[0], colNm: pinNm[1] + (pinNm[2] || "") + (pinNm[3] || "")}};
 
     let bbId = 0;
     export class Breadboard {
