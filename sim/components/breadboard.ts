@@ -47,6 +47,8 @@ namespace pxsim.boardsvg {
         //locations
         let nameToPin: Map<SVGElement> = {};
         let nameToLoc: Map<[number, number]> = {};
+        let lblNmToLbls: Map<SVGElement[]> = {};//TODO
+        let coordNmToLbls: Map<SVGElement[]> = {};//TODO
 
         //wrapper
         let bb = <SVGGElement>svg.elt("g")
@@ -209,7 +211,30 @@ namespace pxsim.boardsvg {
 }
 .sim-bb-red {
     fill:#DD4BA0;
-}`
+}
+/*Outline mode*/
+.sim-bb-outline .sim-bb-background {
+    stroke-width: 1px;
+    fill: #FFF;
+    stroke: #000;
+}
+.sim-bb-outline .sim-bb-mid-channel {
+    fill: #FFF;
+    stroke: #888;
+    stroke-width: 1px;
+}
+/*Greyed out*/
+.greyed .sim-bb-red,
+.greyed .sim-bb-blue {
+    fill: #BBB;
+}
+.greyed .sim-bb-pin {
+    fill: #BBB;
+}
+.greyed .sim-bb-label {
+    fill: #BBB;
+}
+`
         constructor() {
             this.id = bbId++;
         }

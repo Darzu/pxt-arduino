@@ -387,28 +387,6 @@ namespace pxsim.instructions {
             let bb = board.breadboard.bb;
             svg.addClass(bb, "sim-bb-outline")
             let style = <SVGStyleElement>svg.child(bb, "style", {});
-            style.textContent = `
-                .sim-bb-outline .sim-bb-background {
-                    stroke-width: 1px;
-                    fill: #FFF;
-                    stroke: #000;
-                }
-                .sim-bb-outline .sim-bb-mid-channel {
-                    fill: #FFF;
-                    stroke: #888;
-                    stroke-width: 1px;
-                }
-                .sim-bb-outline .sim-bb-red,
-                .sim-bb-outline .sim-bb-blue {
-                    fill: #BBB;
-                }
-                .sim-bb-outline .sim-bb-pin {
-                    fill: #BBB;
-                }
-                .sim-bb-outline .sim-bb-label {
-                    fill: #BBB;
-                }
-                `;
         }
 
         //TODO handle in a general way

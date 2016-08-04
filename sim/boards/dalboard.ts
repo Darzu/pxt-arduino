@@ -215,7 +215,7 @@ namespace pxsim.boardsvg {
             /*stroke-opacity: 0.4;*/
         }
         .sim-board-pin-lbl {
-            fill: #AAA;
+            fill: #333;
         }
         /* Greying out */
         .greyed .sim-bb-wire-end:not(.notgreyed) {
@@ -223,6 +223,13 @@ namespace pxsim.boardsvg {
         }
         .greyed .sim-bb-wire:not(.notgreyed) {
             stroke: #CCC;
+        }
+        .greyed .sim-board-pin-lbl:not(.notgreyed) {
+            fill: #AAA;
+        }
+        .greyed .sim-board-pin {
+            fill:#BBB;
+            stroke:#777;
         }
         `;
 
