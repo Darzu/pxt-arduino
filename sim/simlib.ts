@@ -239,18 +239,18 @@ namespace pxsim.boardsvg {
         updateTheme (): void,
     }
 
-    export function mkTxt(cx: number, cy: number, size: number, r: number, txt: string, cls: string, txtXOffFactor?: number, txtYOffFactor?: number): SVGElement {
+    export function mkTxt(cx: number, cy: number, size: number, rot: number, txt: string, txtXOffFactor?: number, txtYOffFactor?: number): SVGTextElement {
         //HACK: these constants (txtXOffFactor, txtYOffFactor) tweak the way this algorithm knows how to center the text
         txtXOffFactor = txtXOffFactor || -0.33333;
         txtYOffFactor = txtYOffFactor || 0.3;
         const xOff = txtXOffFactor*size*txt.length;
         const yOff = txtYOffFactor*size;
-        let g = svg.elt("g");
-        svg.hydrate(g, {transform: `translate(${cx} ${cy})`});
-        let el = svg.child(g, "text", { class: "noselect " + cls, x: xOff, y: yOff, style: `font-size:${size}px;`,
-            transform: `translate(${0} ${0}) rotate(${r})` }) as SVGTextElement;
+        let el = <SVGTextElement>svg.elt("text")
+        svg.hydrate(el, {style: `font-size:${size}px;`,
+            transform: `translate(${cx} ${cy}) rotate(${rot}) translate(${xOff} ${yOff})` });
+        svg.addClass(el, "noselect");
         el.textContent = txt;
-        return g
+        return el;
     }
 
     export const WIRE_COLOR: Map<string> = {

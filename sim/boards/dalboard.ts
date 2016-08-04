@@ -435,7 +435,7 @@ namespace pxsim.boardsvg {
                             lblY = y - 11 - lblLen;
                             lblX = x;
                         }
-                        let lbl = mkTxt(lblX, lblY, PIN_LBL_SIZE, 270, name, "");
+                        let lbl = mkTxt(lblX, lblY, PIN_LBL_SIZE, 270, name);
                         svg.addClass(lbl, "sim-board-pin-lbl");
                         svg.addClass(lbl, `board-loc-${name}`);
                         this.g.appendChild(lbl);
@@ -456,8 +456,9 @@ namespace pxsim.boardsvg {
             const addBBLoc = (name: string, relativeXY: [number, number]): void => {
                 this.nameToLoc[name] = [bbX + relativeXY[0], bbY + relativeXY[1]];
             }
-            this.breadboard = new Breadboard()
-            this.breadboard.buildDom(this.g, this.defs, BB_WIDTH, BB_HEIGHT, addBBLoc);
+            this.breadboard = new Breadboard(BB_WIDTH, BB_HEIGHT, addBBLoc)
+            this.g.appendChild(this.breadboard.bb);
+            this.breadboard.defs.forEach(d => this.defs.appendChild(d));
             this.style.textContent += this.breadboard.style;
             this.breadboard.updateLocation(bbX, bbY);
 
@@ -588,7 +589,7 @@ namespace pxsim.boardsvg {
             pinNm = this.escapeCssClassName(pinNm);
             let newStyle = 
             `
-            .sim-board-id-${this.id} .board-loc-${pinNm}.sim-board-pin-lbl text {
+            .sim-board-id-${this.id} .board-loc-${pinNm}.sim-board-pin-lbl {
                 fill: red;
             }
             `

@@ -178,7 +178,9 @@ namespace pxsim.boardsvg {
 
                 let btng = <SVGGElement>svg.elt("g");
                 let btn = svg.child(btng, "rect", { class: "sim-button-virtual", x: x, y: y, rx: corner, ry: corner, width: w, height: w});
-                let btnTxt = mkTxt(cx+txtXOff, cy+txtYOff, txtSize, 0, "A+B", "sim-text sim-text-virtual");
+                let btnTxt = mkTxt(cx+txtXOff, cy+txtYOff, txtSize, 0, "A+B");
+                svg.addClass(btnTxt, "sim-text")
+                svg.addClass(btnTxt, "sim-text-virtual");
                 btng.appendChild(btnTxt);
 
                 return btng;

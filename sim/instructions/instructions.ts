@@ -195,8 +195,8 @@ namespace pxsim.instructions {
     function mkBBSvg(): boardsvg.SVGAndSize<SVGElement> {
         let w = boardsvg.BB_WIDTH;
         let h = boardsvg.BB_HEIGHT;
-        let res = boardsvg.mkBreadboardSvg(w, h);
-        return res;
+        let bb = new boardsvg.Breadboard(w, h);
+        return bb.getSVGAndSize();
     }
     function wrapSvg(el: boardsvg.SVGAndSize<SVGElement>, opts: mkCmpDivOpts): HTMLElement { 
         //TODO: Refactor this function; it is too complicated. There is a lot of error-prone math being done
@@ -268,7 +268,8 @@ namespace pxsim.instructions {
             let txtW = size / txtAspectRatio[0];
             let txtH = size / txtAspectRatio[1];
             let [cx, y] = [elDims.l + elDims.w/2, elDims.t - LBL_VERT_PAD - txtH/2];
-            let lbl = boardsvg.mkTxt(cx, y, size, 0, opts.top, "cmp-lbl", xOff, yOff);
+            let lbl = boardsvg.mkTxt(cx, y, size, 0, opts.top, xOff, yOff);
+            svg.addClass(lbl, "cmp-lbl");
             svgEl.appendChild(lbl);
 
             let len = txtW*opts.top.length;
@@ -281,7 +282,8 @@ namespace pxsim.instructions {
             let txtW = size / txtAspectRatio[0];
             let txtH = size / txtAspectRatio[1];
             let [cx, y] = [elDims.l + elDims.w/2, elDims.t + elDims.h + LBL_VERT_PAD + txtH/2];
-            let lbl = boardsvg.mkTxt(cx, y, size, 0, opts.bot, "cmp-lbl", xOff, yOff);
+            let lbl = boardsvg.mkTxt(cx, y, size, 0, opts.bot, xOff, yOff);
+            svg.addClass(lbl, "cmp-lbl");
             svgEl.appendChild(lbl);
 
             let len = txtW*opts.bot.length;
@@ -295,7 +297,8 @@ namespace pxsim.instructions {
             let txtH = size / txtAspectRatio[1];
             let len = txtW*opts.right.length;
             let [cx, cy] = [elDims.l + elDims.w + LBL_RIGHT_PAD + len/2, elDims.t + elDims.h/2];
-            let lbl = boardsvg.mkTxt(cx, cy, size, 0, opts.right, "cmp-lbl", xOff, yOff);
+            let lbl = boardsvg.mkTxt(cx, cy, size, 0, opts.right, xOff, yOff);
+            svg.addClass(lbl, "cmp-lbl");
             svgEl.appendChild(lbl);
 
             updateT(cy - txtH/2);
