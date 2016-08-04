@@ -295,8 +295,9 @@ namespace pxsim.boardsvg {
         public addWire(w: WireDescription, cmp?: Component): {endG: SVGGElement, end1: SVGElement, end2: SVGElement, wires: SVGElement[]} {
             let wireEls = this.drawWire(w.start[1], w.end[1], w.color)
             if (cmp) {
-                svg.addClass(wireEls.endG, this.getCmpClass(cmp))
-                wireEls.wires.forEach(e => svg.addClass(e, this.getCmpClass(cmp)));
+                let cls = this.getCmpClass(cmp);
+                svg.addClass(wireEls.endG, cls)
+                wireEls.wires.forEach(e => svg.addClass(e, cls));
             }
             return wireEls;
         }
@@ -328,7 +329,7 @@ namespace pxsim.boardsvg {
         }
         public addComponentAndWiring(cmpDesc: ComponentDescription) {
             this.addComponent(cmpDesc);
-            cmpDesc.wires.forEach(w => this.addWire(w));
+            cmpDesc.wires.forEach(w => this.addWire(w, cmpDesc.type));
         }
 
         private updateTheme() {

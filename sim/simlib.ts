@@ -287,7 +287,7 @@ namespace pxsim.boardsvg {
         "lightsensor": [() => new LightSensorSvg(), (d: DalBoard) => d.lightSensorCmp, null]
     }
     export type LocDesc = ["bb" | "board", string]
-    export type WireDescription = {start: LocDesc, end: LocDesc, color: string, component?: Component, instructionStep: number};
+    export type WireDescription = {start: LocDesc, end: LocDesc, color: string, instructionStep: number};
     export type ComponentDescription = {type: Component, locations: string[], instructionStep: number, wires: WireDescription[]} 
     export interface BoardDescription {
         photo: string,
