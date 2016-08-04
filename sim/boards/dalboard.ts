@@ -224,10 +224,10 @@ namespace pxsim.boardsvg {
         .greyed .sim-bb-wire:not(.notgreyed) {
             stroke: #CCC;
         }
-        .greyed .sim-board-pin-lbl:not(.notgreyed, .highlight) {
+        .greyed .sim-board-pin-lbl:not(.highlight) {
             fill: #AAA;
         }
-        .greyed .sim-board-pin:not(.notgreyed, .highlight) {
+        .greyed .sim-board-pin:not(.highlight) {
             fill:#BBB;
             stroke:#777;
         }
