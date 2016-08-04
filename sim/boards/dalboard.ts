@@ -224,12 +224,21 @@ namespace pxsim.boardsvg {
         .greyed .sim-bb-wire:not(.notgreyed) {
             stroke: #CCC;
         }
-        .greyed .sim-board-pin-lbl:not(.notgreyed) {
+        .greyed .sim-board-pin-lbl:not(.notgreyed, .highlight) {
             fill: #AAA;
         }
-        .greyed .sim-board-pin {
+        .greyed .sim-board-pin:not(.notgreyed, .highlight) {
             fill:#BBB;
             stroke:#777;
+        }
+        /* Highlighting */
+        .sim-board-pin-lbl.highlight {
+            fill: #D00;
+            font-weight: bold;
+        }
+        .sim-board-pin.highlight {
+            fill:#999;
+            stroke:#000;
         }
         `;
 
@@ -252,6 +261,9 @@ namespace pxsim.boardsvg {
         private labeledPins: boolean;
         public bbX: number;
         public bbY: number;
+        private allPins: BBPin[] = [];
+        private allLbls: BBLbl[] = [];
+        private pinNmToLbl: Map<BBLbl> = {};
 
         //locations
         private nameToLoc: Map<[number, number]> = {};
@@ -396,7 +408,23 @@ namespace pxsim.boardsvg {
         private closestEdge(p: [number, number]): number {
             return this.boardEdges[this.closestEdgeIdx(p)];
         }
-
+        private resetLbl(lbl: SVGTextElement, pinX: number, pinY: number, size: number, name: string) {
+            let [x,y] = [pinX, pinY];
+            let lblY: number;
+            let lblX: number;
+            let topEdge = this.closestEdgeIdx([x,y]) == 0;
+            if (topEdge) {
+                let lblLen = size * 0.25 * name.length;
+                lblY = y + 12 + lblLen;
+                lblX = x;
+            } else {
+                let lblLen = size * 0.32 * name.length;
+                lblY = y - 11 - lblLen;
+                lblX = x;
+            }
+            resetTxt(lbl, lblX, lblY, size, 270, name);
+            svg.addClass(lbl, "sim-board-pin-lbl");
+        }
         private buildDom() {
             const bbX = (BOARD_BASE_WIDTH - BB_WIDTH)/2;              
             this.bbX = bbX;          
@@ -420,29 +448,20 @@ namespace pxsim.boardsvg {
             const mkPinGrid = (l: number, t: number, rs: number, cs: number, getNm: (i: number, j: number) => string) => {
                 const size = PIN_DIST*0.66666;
                 let props = { class: "sim-board-pin" }
-                let pinFn = (p: SVGElement, i: number, j: number, x: number, y: number) => {
+                let pinFn = (p: SVGRectElement, i: number, j: number, x: number, y: number) => {
                     let name = getNm(i, j);
-                    svg.addClass(p, `board-loc-${name}`);
                     this.nameToLoc[name] = [x, y];
                     svg.hydrate(p, {title: name});
+                    let pin: BBPin = {p: p, i: i, j: j, x: x, y: y, rowNm: name, colNm: name, pinNm: name};
+                    this.allPins.push(pin);
                     //label
                     if (this.labeledPins) {
-                        let lblY: number;
-                        let lblX: number;
-                        let topEdge = this.closestEdgeIdx([x,y]) == 0;
-                        if (topEdge) {
-                            let lblLen = PIN_LBL_SIZE * 0.25 * name.length;
-                            lblY = y + 12 + lblLen;
-                            lblX = x;
-                        } else {
-                            let lblLen = PIN_LBL_SIZE * 0.32 * name.length;
-                            lblY = y - 11 - lblLen;
-                            lblX = x;
-                        }
-                        let lbl = mkTxt(lblX, lblY, PIN_LBL_SIZE, 270, name);
-                        svg.addClass(lbl, "sim-board-pin-lbl");
-                        svg.addClass(lbl, `board-loc-${name}`);
+                        let lbl = <SVGTextElement>svg.elt("text");    
+                        this.resetLbl(lbl, x, y, PIN_LBL_SIZE, name);
+                        let bbLbl: BBLbl = {l: lbl, cx: x, cy: y, size: PIN_LBL_SIZE, rot: 270, nm: name, nearestPin: pin};
                         this.g.appendChild(lbl);
+                        this.allLbls.push(bbLbl);
+                        this.pinNmToLbl[name] = bbLbl;
                     }
                 };
                 return mkGrid(l, t, rs, cs, size, props, pinFn);
@@ -583,21 +602,15 @@ namespace pxsim.boardsvg {
             return {endG: endG, end1: end1, end2: end2, wires: wires};
         }
 
-        private escapeCssClassName(cls: string) {
-            //TODO: It'd probably be best to avoid these characters completely
-            let illegalChars = ["~", ":", ".", "-", ">", "<"]
-            illegalChars.forEach(c => cls = cls.replace(c, "\\"+c));
-            return cls;
-        }
         public highlightLoc(pinNm: string) {
-            pinNm = this.escapeCssClassName(pinNm);
-            let newStyle = 
-            `
-            .sim-board-id-${this.id} .board-loc-${pinNm}.sim-board-pin-lbl {
-                fill: red;
+            let lbl = this.pinNmToLbl[pinNm];
+            if (lbl) {
+                svg.addClass(lbl.l, "highlight");
+                const SIZE_SCALAR = 1.3;
+                this.resetLbl(lbl.l, lbl.cx, lbl.cy, lbl.size * SIZE_SCALAR, lbl.nm);
+                svg.addClass(lbl.nearestPin.p, "highlight");
+                this.element.appendChild(lbl.l);
             }
-            `
-            this.style.textContent += newStyle;
         }
     }
 }
