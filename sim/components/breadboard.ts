@@ -20,8 +20,8 @@ namespace pxsim.boardsvg {
         return grid;
     }
 
-    type Pin = {p: SVGRectElement, i: number, j: number, x: number, y: number, rowNm: string, colNm: string, pinNm: string};
-    type PinLbl = {l: SVGGElement, cx: number, cy: number, size: number, rot: number, nm: string, nearestPin: Pin};
+    export type BBPin = {p: SVGRectElement, i: number, j: number, x: number, y: number, rowNm: string, colNm: string, pinNm: string};
+    export type BBLbl = {l: SVGGElement, cx: number, cy: number, size: number, rot: number, nm: string, nearestPin: BBPin};
     type NegPosBar = {e: SVGRectElement, nm: string};
 
     const MK_PIN_NM = (rowNm: string, colNm: string) => rowNm + colNm;
@@ -35,12 +35,12 @@ namespace pxsim.boardsvg {
         private width: number;
         private height: number;
         
-        private allPins: Pin[] = [];
-        private pinNmToPin: Map<Pin> = {};
+        private allPins: BBPin[] = [];
+        private pinNmToPin: Map<BBPin> = {};
         private pinNmToLoc: Map<Coord> = {};
-        private allLbls: PinLbl[] = [];
-        private lblNmToLbls: Map<PinLbl[]> = {};
-        private pinNmToLbls: Map<PinLbl[]> = {};
+        private allLbls: BBLbl[] = [];
+        private lblNmToLbls: Map<BBLbl[]> = {};
+        private pinNmToLbls: Map<BBLbl[]> = {};
         private barNmToBar: Map<NegPosBar> = {};
 
         public defs: SVGElement[] = [];
@@ -92,6 +92,7 @@ namespace pxsim.boardsvg {
             /*Highlighted*/
             .sim-bb-label.highlight {
                 fill: red;
+                font-weight: bold;
             }
             .sim-bb-blue.highlight {
                 fill:#1AA5D7;
@@ -221,13 +222,13 @@ namespace pxsim.boardsvg {
             })
             
             //labels
-            const drawLbl = (cx: number, cy: number, size: number, rot: number, txt: string, nearestPin: Pin | string, cls?: string[]): SVGTextElement => {
+            const drawLbl = (cx: number, cy: number, size: number, rot: number, txt: string, nearestPin: BBPin | string, cls?: string[]): SVGTextElement => {
                 let el = mkTxt(cx, cy, size, rot, txt);
                 svg.addClass(el, "sim-bb-label");
                 if (cls)
                     cls.forEach(c => svg.addClass(el, c));
                 bb.appendChild(el);
-                let nP: Pin;
+                let nP: BBPin;
                 if (typeof nearestPin === "string") {
                     nP = this.pinNmToPin[nearestPin];
                 } else {
@@ -278,7 +279,7 @@ namespace pxsim.boardsvg {
             this.allPins.forEach(pin => {
                 let {rowNm, colNm, pinNm} = pin;
                 let rowLbls = this.lblNmToLbls[rowNm];
-                let colLbls: PinLbl[] = [];
+                let colLbls: BBLbl[] = [];
                 if (rowNm != "-" && rowNm != "+")
                     colLbls = this.lblNmToLbls[colNm];
                 this.pinNmToLbls[pinNm] = (this.pinNmToLbls[pinNm] || []).concat(rowLbls, colLbls);
@@ -332,7 +333,7 @@ namespace pxsim.boardsvg {
             });
             return minIdx;
         }  
-        public highlightLoc(pinNm: string) {
+        public highlightLoc(pinNm: string): BBLbl[] {
             let {rowNm, colNm, x, y} = this.pinNmToPin[pinNm];
             let lbls = this.pinNmToLbls[pinNm];
             if (rowNm == "-" || rowNm == "+") {
@@ -340,6 +341,7 @@ namespace pxsim.boardsvg {
                 let lblCoords = lbls.map((l):Coord => [l.cx, l.cy]);
                 let lblIdx = this.getClosestPointIdx([x, y], lblCoords);
                 let lbl = lbls[lblIdx];
+                lbls = [lbl]
                 svg.addClass(lbl.l, "highlight");
 
                 //bar
@@ -352,6 +354,7 @@ namespace pxsim.boardsvg {
                     lbls.forEach(l => svg.addClass(l.l, "highlight"));
                 }
             }
+            return lbls;
         }
     }
 }

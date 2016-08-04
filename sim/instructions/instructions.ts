@@ -423,14 +423,21 @@ namespace pxsim.instructions {
                 let wEls = board.addWire(w)
                 if (buildMode) {
                     //location highlights
-                    if (w.end[0] == "bb")
-                        board.breadboard.highlightLoc(w.end[1]);
-                    else
-                        board.highlightLoc(w.end[1]);
-                    if (w.start[0] == "bb")
-                        board.breadboard.highlightLoc(w.start[1]);
-                    else
+                    if (w.start[0] == "bb") {
+                        let lbls = board.breadboard.highlightLoc(w.start[1]);
+                        lbls.forEach(l => {
+                            let oldTransform = l.l.getAttribute("transform");
+                            l.l.setAttribute("transform", `translate(${board.bbX} ${board.bbY}) ${oldTransform}`);
+                            board.element.appendChild(l.l);
+                        });
+                    } else {
                         board.highlightLoc(w.start[1]);
+                    }
+                    if (w.end[0] == "bb") {
+                        let lbls = board.breadboard.highlightLoc(w.end[1]);
+                    } else {
+                        board.highlightLoc(w.end[1]);
+                    }
 
                     //underboard wires
                     wEls.wires.forEach(e => {

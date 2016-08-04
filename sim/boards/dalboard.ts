@@ -250,6 +250,8 @@ namespace pxsim.boardsvg {
         private boardEdges: number[];
         private id: number;
         private labeledPins: boolean;
+        public bbX: number;
+        public bbY: number;
 
         //locations
         private nameToLoc: Map<[number, number]> = {};
@@ -289,7 +291,7 @@ namespace pxsim.boardsvg {
             }
         }
 
-        private loc(name: string): [number, number] {
+        public loc(name: string): [number, number] {
             if (!(name in this.nameToLoc)) {
                 console.error("Unknown location: " + name)
                 return [0,0];
@@ -396,8 +398,10 @@ namespace pxsim.boardsvg {
         }
 
         private buildDom() {
-            const bbX = (BOARD_BASE_WIDTH - BB_WIDTH)/2;                        
+            const bbX = (BOARD_BASE_WIDTH - BB_WIDTH)/2;              
+            this.bbX = bbX;          
             const bbY = TOP_MARGIN + this.boardDim.height + MID_MARGIN;
+            this.bbY = bbY;
 
             // edges
             this.boardEdges = [TOP_MARGIN, TOP_MARGIN+this.boardDim.height, bbY, bbY+BB_HEIGHT]
