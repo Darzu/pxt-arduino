@@ -204,15 +204,9 @@ namespace pxsim.boardsvg {
             stroke-width:${WIRE_WIDTH}px;
             pointer-events: none;
         }
-        .greyed.sim-bb-wire {
-            stroke: #CCC;
-        }
         .sim-bb-wire-end {
             stroke:#333;
             fill:#333;
-        }
-        .greyed.sim-bb-wire-end {
-            stroke: #777;
         }
         .sim-bb-wire-hover {
             stroke-width: ${WIRE_WIDTH/2}px;
@@ -222,6 +216,13 @@ namespace pxsim.boardsvg {
         }
         .sim-board-pin-lbl {
             fill: #AAA;
+        }
+        /* Greying out */
+        .greyed .sim-bb-wire-end:not(.notgreyed) {
+            stroke: #777;
+        }
+        .greyed .sim-bb-wire:not(.notgreyed) {
+            stroke: #CCC;
         }
         `;
 

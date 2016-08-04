@@ -417,19 +417,14 @@ namespace pxsim.instructions {
         board.updateState();
 
         //old steps
+        if (buildMode && step > 0) {
+            svg.addClass(board.element, "greyed");
+        }
         for (let i = 0; i < step; i++) {
             let wires = props.stepToWires[i];
             if (wires) {
                 wires.forEach(w => {
                     let wEls = board.addWire(w)
-                    if (buildMode) {
-                        [wEls.end1, wEls.end2].forEach(e => {
-                            svg.addClass(e, "greyed");
-                        });
-                        wEls.wires.forEach(e => {
-                            svg.addClass(e, "greyed");
-                        });
-                    }
                 });
             }
             let cmps = props.stepToCmps[i];
@@ -460,6 +455,16 @@ namespace pxsim.instructions {
                     wEls.wires.forEach(e => {
                         (<any>e).style["visibility"] = "visible";
                     });
+
+                    //un greyed out
+                    if (buildMode) {
+                        [wEls.end1, wEls.end2].forEach(e => {
+                            svg.addClass(e, "notgreyed");
+                        });
+                        wEls.wires.forEach(e => {
+                            svg.addClass(e, "notgreyed");
+                        });
+                    }
                 }
             });
         }
