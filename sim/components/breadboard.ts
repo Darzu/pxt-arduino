@@ -73,11 +73,11 @@ namespace pxsim.boardsvg {
                 pointer-events: all;
                 stroke-width: ${PIN_DIST/2}px;
                 stroke: transparent;
-                fill: #555;
+                fill: #777;
             }
             .sim-bb-pin-hover:hover {
                 visibility: visible;
-                fill:#333;
+                fill:#444;
             }
             .sim-bb-pin-group {
                 pointer-events: all;
