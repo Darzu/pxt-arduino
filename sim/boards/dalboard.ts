@@ -480,7 +480,7 @@ namespace pxsim.boardsvg {
                     let name = getNm(i, j);
                     this.nameToLoc[name] = [x, y];
                     svg.hydrate(p, {title: name});
-                    let pin: BBPin = {p: p, i: i, j: j, x: x, y: y, rowNm: name, colNm: name, pinNm: name};
+                    let pin: BBPin = {p: p, x: x, y: y, rowNm: name, colNm: name, pinNm: name};
                     this.allPins.push(pin);
                     //label
                     if (this.labeledPins) {

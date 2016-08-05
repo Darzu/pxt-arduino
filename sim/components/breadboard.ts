@@ -1,4 +1,6 @@
 namespace pxsim.boardsvg {
+    const PIN_HOVER_SCALAR = 1.4;
+
     export declare type PinFn = (p: SVGRectElement, i: number, j: number, x: number, y: number, overPin: SVGRectElement)=>void;
 
     export const mkGrid = (l: number, t: number, rs: number, cs: number, size: number, overSize: number, props: any, pinFn: PinFn): SVGGElement => {
@@ -29,7 +31,7 @@ namespace pxsim.boardsvg {
         return grid;
     }
 
-    export type BBPin = {p: SVGRectElement, i: number, j: number, x: number, y: number, rowNm: string, colNm: string, pinNm: string, overPin?: SVGRectElement};
+    export type BBPin = {p: SVGRectElement, x: number, y: number, rowNm: string, colNm: string, pinNm: string, overPin?: SVGRectElement};
     export type BBLbl = {l: SVGTextElement, cx: number, cy: number, size: number, rot: number, nm: string, nearestPin: BBPin};
     type NegPosBar = {e: SVGRectElement, nm: string};
 
@@ -68,8 +70,17 @@ namespace pxsim.boardsvg {
             .sim-bb-pin-hover {
                 visibility: hidden;
                 pointer-events: all;
+                stroke-width: ${PIN_DIST/2}px;
+                stroke: transparent;
             }
             .sim-bb-pin-hover:hover {
+                visibility: visible;
+                fill:#777;
+            }
+            .sim-bb-pin-group {
+                pointer-events: all;
+            }
+            .sim-bb-pin-group:hover .sim-bb-pin-hover {
                 visibility: visible;
             }
             .sim-bb-label {
@@ -205,7 +216,6 @@ namespace pxsim.boardsvg {
             mkChannel(barH+midH, smlChannelH);
 
             //pins
-            const PIN_HOVER_SCALAR = 1.5;
             const mkPinGrid = (l: number, t: number, rs: number, cs: number, rowNm: (i: number) => string, colNm: (i: number) => string) => {
                 const size = PIN_DIST/2.5;
                 const rounding = size/3;
@@ -214,7 +224,7 @@ namespace pxsim.boardsvg {
                     let rNm = rowNm(i);
                     let cNm = colNm(j);
                     let pNm = MK_PIN_NM(rNm, cNm);
-                    this.allPins.push({p: p, i: i, j: j, x: x, y: y, rowNm: rNm, colNm: cNm, pinNm: pNm, overPin: overP});
+                    this.allPins.push({p: p, x: x, y: y, rowNm: rNm, colNm: cNm, pinNm: pNm, overPin: overP});
                     svg.addClass(overP, "sim-bb-pin-hover");
                 }
                 return mkGrid(l, t, rs, cs, size, size * PIN_HOVER_SCALAR, props, pinFn);
@@ -235,14 +245,10 @@ namespace pxsim.boardsvg {
             let mp = ["-", "+"];
             const jStr = (j: number):string => {return (j+1)+""};
 
-            let midGrid1 = mkPinGrid(midGridX,midGridY,5,30, i => fj[i], jStr);
-            bb.appendChild(midGrid1);
-            let midGrid2 = mkPinGrid(midGridX,midGridY+7*PIN_DIST,5,30, i => ae[i], jStr);
-            bb.appendChild(midGrid2);
-            let topGrid = mkBar(topBarGridX, topBarGridY, i => mp[i], j => jStr(j+25));
-            topGrid.forEach(e => bb.appendChild(e));
-            let botGrid = mkBar(botBarGridX, botBarGridY, i => mp[i], jStr);
-            botGrid.forEach(e => bb.appendChild(e));
+            mkPinGrid(midGridX,midGridY,5,30, i => fj[i], jStr);
+            mkPinGrid(midGridX,midGridY+7*PIN_DIST,5,30, i => ae[i], jStr);
+            mkBar(topBarGridX, topBarGridY, i => mp[i], j => jStr(j+25));
+            mkBar(botBarGridX, botBarGridY, i => mp[i], jStr);
 
             //tooltip
             this.allPins.forEach(pin => {
@@ -258,6 +264,38 @@ namespace pxsim.boardsvg {
                 this.pinNmToPin[pinNm] = pin;
                 this.pinNmToLoc[pinNm] = [x, y];
             })
+
+            //electrically connected groups
+            let mapToGroup = (pin: BBPin) => {
+                let {rowNm, colNm} = pin;
+                if (mp.indexOf(rowNm) >= 0) {
+                    let colNumber = Number(colNm);
+                    return `${rowNm}${colNumber <= 25 ? "b" : "t"}`
+                } else if (ae.indexOf(rowNm) >= 0) {
+                    return `b${colNm}`
+                } else {
+                    return `t${colNm}`
+                }
+            }
+            let idxToGrpNm = this.allPins.map(mapToGroup);
+            let allGrpNms = idxToGrpNm.filter((g, i, a) => a.indexOf(g) == i);
+            let grpNmToPins: Map<BBPin[]> = {};
+            this.allPins.forEach((p, i) => {
+                let g = idxToGrpNm[i];
+                (grpNmToPins[g] = grpNmToPins[g] || []).push(p);
+            });
+            let groups: SVGGElement[] = allGrpNms.map(grpNm => {
+                let g = <SVGGElement>svg.elt("g");
+                let pins = grpNmToPins[grpNm];
+                pins.forEach(p => {
+                    g.appendChild(p.p);
+                    g.appendChild(p.overPin);
+                });
+                return g;
+            });
+            groups.forEach(g => svg.addClass(g, "sim-bb-pin-group"));
+            groups.forEach((g, i) => svg.addClass(g, `group-${allGrpNms[i]}`));
+            groups.forEach(g => bb.appendChild(g)); //attach to breadboard
             
             //labels
             const drawLblAtPin = (pinName: string, label: string, xOff: number, yOff: number, r: number, s: number): SVGTextElement => {
