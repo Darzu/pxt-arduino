@@ -94,7 +94,7 @@ namespace pxsim.boardsvg {
             }
             /*Highlighted*/
             .sim-bb-label.highlight {
-                fill: #D00;
+                fill: #000;
                 font-weight: bold;
             }
             .sim-bb-blue.highlight {

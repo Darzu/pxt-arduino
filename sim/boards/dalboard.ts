@@ -219,7 +219,7 @@ namespace pxsim.boardsvg {
         }
         .gray-cover {
             fill:#FFF;
-            opacity: 0.5;
+            opacity: 0.7;
             stroke-width:0;
             visibility: hidden;
         }
@@ -241,11 +241,11 @@ namespace pxsim.boardsvg {
             visibility: inherit;
         }
         .grayed .sim-cmp:not(.notgrayed) {
-            opacity: 0.5;
+            opacity: 0.3;
         }
         /* Highlighting */
         .sim-board-pin-lbl.highlight {
-            fill: #D00;
+            fill: #000;
             font-weight: bold;
         }
         .sim-board-pin.highlight {
