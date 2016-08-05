@@ -69,7 +69,7 @@ namespace pxsim.boardsvg {
             }
             /*Outline mode*/
             .sim-bb-outline .sim-bb-background {
-                stroke-width: 1px;
+                stroke-width: 2px;
                 fill: #FFF;
                 stroke: #000;
             }
@@ -88,6 +88,9 @@ namespace pxsim.boardsvg {
             }
             .grayed .sim-bb-label {
                 fill: #BBB;
+            }
+            .grayed .sim-bb-background {
+                stroke: #BBB;
             }
             /*Highlighted*/
             .sim-bb-label.highlight {

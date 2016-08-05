@@ -470,6 +470,7 @@ namespace pxsim.instructions {
                 let cmp = board.addComponent(c)
                 if (buildMode) {
                     board.breadboard.highlightLoc(c.locations[0]);
+                    svg.addClass(cmp.element, "notgrayed");
                 }
             });
         }

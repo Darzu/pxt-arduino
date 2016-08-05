@@ -224,10 +224,10 @@ namespace pxsim.boardsvg {
             visibility: hidden;
         }
         /* Graying out */
-        .grayed .sim-bb-wire-end:not(.notgray) {
+        .grayed .sim-bb-wire-end:not(.notgrayed) {
             stroke: #777;
         }
-        .grayed .sim-bb-wire:not(.notgray) {
+        .grayed .sim-bb-wire:not(.notgrayed) {
             stroke: #CCC;
         }
         .grayed .sim-board-pin-lbl:not(.highlight) {
@@ -239,6 +239,9 @@ namespace pxsim.boardsvg {
         }
         .grayed .gray-cover {
             visibility: inherit;
+        }
+        .grayed .sim-cmp:not(.notgrayed) {
+            opacity: 0.5;
         }
         /* Highlighting */
         .sim-board-pin-lbl.highlight {
@@ -353,6 +356,7 @@ namespace pxsim.boardsvg {
             cmp.setLocations(...locCoords);
             let cls = this.getCmpClass(cmpDesc.type);
             svg.addClass(cmp.element, cls);
+            svg.addClass(cmp.element, "sim-cmp");
             let hideCls = this.getCmpHideClass(cmpDesc.type);
             this.style.textContent += `
                 .${hideCls} .${cls} {
