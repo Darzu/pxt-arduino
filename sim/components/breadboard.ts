@@ -84,7 +84,8 @@ namespace pxsim.boardsvg {
             .sim-bb-pin-group:hover .sim-bb-pin-hover {
                 visibility: visible;
             }
-            .sim-bb-label {
+            .sim-bb-label,
+            .sim-bb-label-hover {
                 font-family:"Lucida Console", Monaco, monospace;
                 fill:#555;
                 pointer-events: none;
