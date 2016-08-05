@@ -223,6 +223,14 @@ namespace pxsim.boardsvg {
             stroke-width:0;
             visibility: hidden;
         }
+        .sim-board-pin-hover {
+            visibility: hidden;
+            pointer-events: all;
+            stroke-width:${PIN_DIST/6.0}px;
+        }
+        .sim-board-pin-hover:hover {
+            visibility: visible;
+        }
         /* Graying out */
         .grayed .sim-bb-wire-end:not(.notgrayed) {
             stroke: #777;
@@ -466,8 +474,9 @@ namespace pxsim.boardsvg {
             this.g.appendChild(backgroundCover);
             const mkPinGrid = (l: number, t: number, rs: number, cs: number, getNm: (i: number, j: number) => string) => {
                 const size = PIN_DIST*0.66666;
+                const hoverSize = PIN_DIST*0.66666 + PIN_DIST/3.0;
                 let props = { class: "sim-board-pin" }
-                let pinFn = (p: SVGRectElement, i: number, j: number, x: number, y: number) => {
+                let pinFn = (p: SVGRectElement, i: number, j: number, x: number, y: number, overP: SVGRectElement) => {
                     let name = getNm(i, j);
                     this.nameToLoc[name] = [x, y];
                     svg.hydrate(p, {title: name});
@@ -482,8 +491,11 @@ namespace pxsim.boardsvg {
                         this.allLbls.push(bbLbl);
                         this.pinNmToLbl[name] = bbLbl;
                     }
+                    //hover
+                    svg.addClass(overP, "sim-board-pin-hover");
+                    svg.hydrate(overP, {title: name});
                 };
-                return mkGrid(l, t, rs, cs, size, props, pinFn);
+                return mkGrid(l, t, rs, cs, size, size, props, pinFn);
             }
             this.boardDesc.pins.forEach(pinDisc => {
                 let l = this.boardDim.xOff + this.boardDim.scaleFn(pinDisc.x) + PIN_DIST/2.0;

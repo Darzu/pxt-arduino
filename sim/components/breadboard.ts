@@ -1,26 +1,35 @@
 namespace pxsim.boardsvg {
-    export declare type PinFn = (p: SVGRectElement, i: number, j: number, x: number, y: number)=>void;
+    export declare type PinFn = (p: SVGRectElement, i: number, j: number, x: number, y: number, overPin: SVGRectElement)=>void;
 
-    export const mkGrid = (l: number, t: number, rs: number, cs: number, size: number, props: any, pinFn: PinFn): SVGGElement => {
+    export const mkGrid = (l: number, t: number, rs: number, cs: number, size: number, overSize: number, props: any, pinFn: PinFn): SVGGElement => {
         const x = l - size/2;
         const y = t - size/2;
 
         let grid = <SVGGElement>svg.elt("g");
         for (let i = 0; i < rs; i++) {
             for (let j = 0; j < cs; j++) {
-                let pin = <SVGRectElement>svg.elt("rect")
+                let mkPin = (x: number, y: number, size: number) => {
+                    let pin = <SVGRectElement>svg.elt("rect")
+                    svg.hydrate(pin, props)
+                    svg.hydrate(pin, { x: x, y: y, width: size, height: size })
+                    return pin;
+                }
                 let pinX = x+j*PIN_DIST;
                 let pinY = y+i*PIN_DIST;
-                svg.hydrate(pin, props)
-                svg.hydrate(pin, { x: pinX, y: pinY, width: size, height: size })
+                let pin = mkPin(pinX, pinY, size);
+                let sizeDiff = overSize - size;
+                let overX = pinX - sizeDiff/2;
+                let overY = pinY - sizeDiff/2;
+                let overPin = mkPin(overX, overY, overSize);
                 grid.appendChild(pin);
-                pinFn(pin, i, j, pinX+size/2, pinY+size/2);
+                grid.appendChild(overPin);
+                pinFn(pin, i, j, pinX+size/2, pinY+size/2, overPin);
             }
         }
         return grid;
     }
 
-    export type BBPin = {p: SVGRectElement, i: number, j: number, x: number, y: number, rowNm: string, colNm: string, pinNm: string};
+    export type BBPin = {p: SVGRectElement, i: number, j: number, x: number, y: number, rowNm: string, colNm: string, pinNm: string, overPin?: SVGRectElement};
     export type BBLbl = {l: SVGTextElement, cx: number, cy: number, size: number, rot: number, nm: string, nearestPin: BBPin};
     type NegPosBar = {e: SVGRectElement, nm: string};
 
@@ -55,6 +64,13 @@ namespace pxsim.boardsvg {
             }
             .sim-bb-pin {
                 fill:#999;
+            }
+            .sim-bb-pin-hover {
+                visibility: hidden;
+                pointer-events: all;
+            }
+            .sim-bb-pin-hover:hover {
+                visibility: visible;
             }
             .sim-bb-label {
                 font-family:"Lucida Console", Monaco, monospace;
@@ -189,17 +205,19 @@ namespace pxsim.boardsvg {
             mkChannel(barH+midH, smlChannelH);
 
             //pins
+            const PIN_HOVER_SCALAR = 1.5;
             const mkPinGrid = (l: number, t: number, rs: number, cs: number, rowNm: (i: number) => string, colNm: (i: number) => string) => {
                 const size = PIN_DIST/2.5;
                 const rounding = size/3;
                 let props = { class: "sim-bb-pin", rx: rounding, ry: rounding }
-                let pinFn: PinFn = (p, i, j, x, y) => {
+                let pinFn: PinFn = (p, i, j, x, y, overP) => {
                     let rNm = rowNm(i);
                     let cNm = colNm(j);
                     let pNm = MK_PIN_NM(rNm, cNm);
-                    this.allPins.push({p: p, i: i, j: j, x: x, y: y, rowNm: rNm, colNm: cNm, pinNm: pNm});
+                    this.allPins.push({p: p, i: i, j: j, x: x, y: y, rowNm: rNm, colNm: cNm, pinNm: pNm, overPin: overP});
+                    svg.addClass(overP, "sim-bb-pin-hover");
                 }
-                return mkGrid(l, t, rs, cs, size, props, pinFn);
+                return mkGrid(l, t, rs, cs, size, size * PIN_HOVER_SCALAR, props, pinFn);
             }
 
             const mkBar = (x: number, y: number, rowNm: (i: number) => string, colNm: (i: number) => string) => {
@@ -228,9 +246,10 @@ namespace pxsim.boardsvg {
 
             //tooltip
             this.allPins.forEach(pin => {
-                let {p, rowNm, colNm} = pin
+                let {p, rowNm, colNm, overPin} = pin
                 let title = `(${rowNm}, ${colNm})`;
                 svg.hydrate(p, {title: title});
+                svg.hydrate(overPin, {title: title});
             })
 
             //catalog pins
