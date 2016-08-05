@@ -1,5 +1,5 @@
 namespace pxsim.boardsvg {
-    const PIN_HOVER_SCALAR = 1.4;
+    const PIN_HOVER_SCALAR = 1.25;
     const LBL_HOVER_SCALAR = 1.3;
 
     export declare type PinFn = (p: SVGRectElement, i: number, j: number, x: number, y: number, overPin: SVGRectElement)=>void;
@@ -79,17 +79,19 @@ namespace pxsim.boardsvg {
                 visibility: visible;
                 fill:#444;
             }
+            .sim-bb-group-wire {
+                stroke: #999;
+                stroke-width: ${PIN_DIST/3.5}px;
+                visibility: hidden;
+            }
             .sim-bb-pin-group {
                 pointer-events: all;
-            }
-            .sim-bb-pin-group:hover .sim-bb-pin-hover {
-                visibility: visible;
             }
             .sim-bb-label,
             .sim-bb-label-hover {
                 font-family:"Lucida Console", Monaco, monospace;
                 fill:#555;
-                pointer-events: none;
+                pointer-events: all;
                 stroke-width: 0;
             }
             .sim-bb-label-hover {
@@ -99,9 +101,6 @@ namespace pxsim.boardsvg {
             }
             .sim-bb-pin-group:hover .sim-bb-label:not(.highlight) {
                 visibility: hidden;
-            }
-            .sim-bb-pin-group:hover .sim-bb-label-hover {
-                visibility: visible;
             }
             .sim-bb-bar {
                 stroke-width: 0;
@@ -113,6 +112,11 @@ namespace pxsim.boardsvg {
             .sim-bb-red {
                 fill:#DD4BA0;
                 stroke:#DD4BA0;
+            }
+            .sim-bb-pin-group:hover .sim-bb-pin-hover,
+            .sim-bb-pin-group:hover .sim-bb-group-wire,
+            .sim-bb-pin-group:hover .sim-bb-label-hover {
+                visibility: visible;
             }
             /*Outline mode*/
             .sim-bb-outline .sim-bb-background {
@@ -391,6 +395,21 @@ namespace pxsim.boardsvg {
             groups.forEach(g => bb.appendChild(g)); //attach to breadboard
             let grpNmToGroup: Map<SVGGElement> = {};
             allGrpNms.forEach((g, i) => grpNmToGroup[g] = groups[i]);
+            //connecting wire
+            allGrpNms.forEach(grpNm => {
+                let pins = grpNmToPins[grpNm];
+                let [xs, ys] = [pins.map(p => p.x), pins.map(p => p.y)];
+                let minFn = (arr: number[]) => arr.reduce((a, b) => a < b ? a : b);
+                let maxFn = (arr: number[]) => arr.reduce((a, b) => a > b ? a : b);
+                let [minX, maxX, minY, maxY] = [minFn(xs), maxFn(xs), minFn(ys), maxFn(ys)];
+                let wire = svg.elt("rect");
+                let width = Math.max(maxX - minX, 0.0001/*rects with no width aren't displayed*/);
+                let height =  Math.max(maxY - minY, 0.0001);
+                svg.hydrate(wire, {x: minX, y: minY, width: width, height: height});
+                svg.addClass(wire, "sim-bb-group-wire")
+                let g = grpNmToGroup[grpNm];
+                g.appendChild(wire);
+            });
             //group pins
             this.allPins.forEach(p => {
                 let g = grpNmToGroup[p.grpNm];
