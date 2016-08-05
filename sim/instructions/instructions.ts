@@ -541,6 +541,7 @@ namespace pxsim.instructions {
         //number
         let numDiv = document.createElement("div");
         addClass(numDiv, "panel-num-outer");
+        addClass(numDiv, "noselect");
         panel.appendChild(numDiv)
         let num = document.createElement("div");
         addClass(num, "panel-num");
