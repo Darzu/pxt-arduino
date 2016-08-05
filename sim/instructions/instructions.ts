@@ -21,7 +21,7 @@ namespace pxsim.instructions {
     const PAGE_MARGIN = PPI * 0.45;
     const PAGE_WIDTH = FULL_PAGE_WIDTH - PAGE_MARGIN * 2;
     const PAGE_HEIGHT = FULL_PAGE_HEIGHT - PAGE_MARGIN * 2;
-    const BORDER_COLOR = "grey";
+    const BORDER_COLOR = "gray";
     const BORDER_RADIUS = 5;
     const BORDER_WIDTH = 2;
     const [PANEL_ROWS, PANEL_COLS] = [2, 2];
@@ -412,7 +412,7 @@ namespace pxsim.instructions {
 
         //old steps
         if (buildMode && step > 0) {
-            svg.addClass(board.element, "greyed");
+            svg.addClass(board.element, "grayed");
         }
         for (let i = 0; i < step; i++) {
             let wires = props.stepToWires[i];
@@ -455,10 +455,10 @@ namespace pxsim.instructions {
                     //un greyed out
                     if (buildMode) {
                         [wEls.end1, wEls.end2].forEach(e => {
-                            svg.addClass(e, "notgreyed");
+                            svg.addClass(e, "notgrayed");
                         });
                         wEls.wires.forEach(e => {
-                            svg.addClass(e, "notgreyed");
+                            svg.addClass(e, "notgrayed");
                         });
                     }
                 }

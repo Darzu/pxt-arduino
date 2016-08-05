@@ -78,15 +78,15 @@ namespace pxsim.boardsvg {
                 stroke: #888;
                 stroke-width: 1px;
             }
-            /*Greyed out*/
-            .greyed .sim-bb-red,
-            .greyed .sim-bb-blue {
+            /*Grayed out*/
+            .grayed .sim-bb-red,
+            .grayed .sim-bb-blue {
                 fill: #BBB;
             }
-            .greyed .sim-bb-pin {
+            .grayed .sim-bb-pin {
                 fill: #BBB;
             }
-            .greyed .sim-bb-label {
+            .grayed .sim-bb-label {
                 fill: #BBB;
             }
             /*Highlighted*/

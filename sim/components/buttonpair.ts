@@ -94,7 +94,7 @@ namespace pxsim.boardsvg {
                 fill: #979797;
             }
             .sim-button-outer:hover {
-                stroke:grey;
+                stroke:gray;
                 stroke-width: ${PIN_DIST/5}px;
             }
             .sim-button-nut {

@@ -217,19 +217,28 @@ namespace pxsim.boardsvg {
         .sim-board-pin-lbl {
             fill: #333;
         }
-        /* Greying out */
-        .greyed .sim-bb-wire-end:not(.notgreyed) {
+        .gray-cover {
+            fill:#FFF;
+            opacity: 0.5;
+            stroke-width:0;
+            visibility: hidden;
+        }
+        /* Graying out */
+        .grayed .sim-bb-wire-end:not(.notgray) {
             stroke: #777;
         }
-        .greyed .sim-bb-wire:not(.notgreyed) {
+        .grayed .sim-bb-wire:not(.notgray) {
             stroke: #CCC;
         }
-        .greyed .sim-board-pin-lbl:not(.highlight) {
+        .grayed .sim-board-pin-lbl:not(.highlight) {
             fill: #AAA;
         }
-        .greyed .sim-board-pin:not(.highlight) {
+        .grayed .sim-board-pin:not(.highlight) {
             fill:#BBB;
             stroke:#777;
+        }
+        .grayed .gray-cover {
+            visibility: inherit;
         }
         /* Highlighting */
         .sim-board-pin-lbl.highlight {
@@ -264,8 +273,6 @@ namespace pxsim.boardsvg {
         private allPins: BBPin[] = [];
         private allLbls: BBLbl[] = [];
         private pinNmToLbl: Map<BBLbl> = {};
-
-        //locations
         private nameToLoc: Map<[number, number]> = {};
 
         constructor(public props: IBoardSvgProps) {
@@ -309,6 +316,12 @@ namespace pxsim.boardsvg {
                 return [0,0];
             }
             return this.nameToLoc[name];
+        }
+
+        private mkGrayCover(x: number, y: number, w: number, h: number) {
+            let rect = <SVGRectElement>svg.elt("rect");
+            svg.hydrate(rect, {x: x, y: y, width: w, height: h, class: "gray-cover"});
+            return rect;
         }
 
         private getCmpClass = (type: Component) => `sim-${type}-cmp`;
@@ -388,7 +401,6 @@ namespace pxsim.boardsvg {
             }
         }
 
-
         private indexOfMin(vs: number[]): number {
             let minIdx = 0;
             let min = vs[0];
@@ -425,6 +437,7 @@ namespace pxsim.boardsvg {
             resetTxt(lbl, lblX, lblY, size, 270, name);
             svg.addClass(lbl, "sim-board-pin-lbl");
         }
+
         private buildDom() {
             const bbX = (BOARD_BASE_WIDTH - BB_WIDTH)/2;              
             this.bbX = bbX;          
@@ -445,6 +458,8 @@ namespace pxsim.boardsvg {
             this.background = svg.child(this.g, "image", 
                 { class: "sim-board", x: this.boardDim.xOff, y: this.boardDim.yOff, width: this.boardDim.width, height: this.boardDim.height, 
                     "href": `/images/${this.boardDesc.photo}`});
+            let backgroundCover = this.mkGrayCover(this.boardDim.xOff, this.boardDim.yOff, this.boardDim.width, this.boardDim.height);
+            this.g.appendChild(backgroundCover);
             const mkPinGrid = (l: number, t: number, rs: number, cs: number, getNm: (i: number, j: number) => string) => {
                 const size = PIN_DIST*0.66666;
                 let props = { class: "sim-board-pin" }
