@@ -639,16 +639,23 @@ namespace pxsim.instructions {
             //TODO: render the blocks code directly
             let md = "```blocks\n" + tsCode + "```"
             pxtdocs.requireMarked = function() { return (<any>window).marked; }
-            pxtrunner.renderMarkdownAsync(codeContainerDiv, md).done(function() {
-                //takes the svg out of the wrapper markdown
-                let codeSvg = $("#proj-code-container svg");
-                codeSvg.css("width", "inherit");
-                codeSvg.css("height", "inherit");
-                codeContainerDiv.innerHTML = "";
-                codeContainerDiv.appendChild(codeSvg[0]);
-                $(codeContainerDiv).show();
-                $(codeSpinnerDiv).hide();
-            });
+            pxtrunner.renderMarkdownAsync(codeContainerDiv, md)
+                .done(function() {
+                    let codeSvg = $("#proj-code-container svg");
+                    if (codeSvg.length > 0) {
+                        //code rendered successfully as blocks
+                        codeSvg.css("width", "inherit");
+                        codeSvg.css("height", "inherit");
+                        //takes the svg out of the wrapper markdown
+                        codeContainerDiv.innerHTML = "";
+                        codeContainerDiv.appendChild(codeSvg[0]);
+                    } else {
+                        //code failed to convert to blocks, display as typescript instead
+                        codeContainerDiv.innerText = tsCode;
+                    }
+                    $(codeContainerDiv).show();
+                    $(codeSpinnerDiv).hide();
+                });
         }
 
         //init runtime
