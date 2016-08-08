@@ -3,11 +3,14 @@
 /// <reference path="../libs/microbit/dal.d.ts"/>
 
 namespace pxsim {
-
-    pxsim.initCurrentRuntime = () => {
+        
+    export function initRuntimeWithDalBoard() {
         U.assert(!runtime.board);
         let b = new DalBoard();
         runtime.board = b;
+    } 
+    if (!pxsim.initCurrentRuntime) {
+        pxsim.initCurrentRuntime = initRuntimeWithDalBoard;
     }
 
     export function board() {

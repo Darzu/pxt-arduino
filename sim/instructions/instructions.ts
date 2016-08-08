@@ -1,6 +1,11 @@
 /// <reference path="../../node_modules/pxt-core/typings/bluebird/bluebird.d.ts"/>
 /// <reference path="../../node_modules/pxt-core/built/pxtsim.d.ts"/>
+/// <reference path="../../node_modules/pxt-core/built/pxtblocks.d.ts"/>
 /// <reference path="../../libs/microbit/dal.d.ts"/>
+
+//HACK: allows instructions.html to access pxtblocks without requiring simulator.html to import blocks as well 
+if (!(<any>window).pxt) (<any>window).pxt = {};
+import pxtblocks = pxt.blocks;
 
 namespace pxsim.instructions {
     const LOC_LBL_SIZE = 10;
@@ -609,8 +614,23 @@ namespace pxsim.instructions {
 
         return panel;
     }
+    function renderBlocks() {
+        let blocksSplit = window.location.search.split("blocks=");
+        if (blocksSplit.length > 1) {
+            let blocksRaw = blocksSplit[1];
+            let blocksXml = decodeURIComponent(blocksRaw).replace(/\+/g, " ");
+            let blocksSvg = pxtblocks.render(blocksXml);
+            let blocksHtml = blocksSvg[0];
+            document.body.appendChild(blocksHtml);
+        }
+    }
     export function drawInstructions() {
+        renderBlocks();
+
         const COMP_CODE = "";
+
+        if (!pxsim.initCurrentRuntime)
+            pxsim.initCurrentRuntime = initRuntimeWithDalBoard; 
         pxsim.runtime = new Runtime(COMP_CODE);
         pxsim.runtime.board = null;
         pxsim.initCurrentRuntime();
