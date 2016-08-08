@@ -615,14 +615,23 @@ namespace pxsim.instructions {
 
         return panel;
     }
+    function parseQs(): (key: string)=>string {
+        let qs = window.location.search.substring(1);
+        let getQsVal = (key: string) => decodeURIComponent((qs.split(`${key}=`)[1] || "").split("&")[0] || "").replace(/\+/g, " ");
+        return getQsVal;
+    }
     function renderBlocks() {
-        let blocksSplit = window.location.search.split("blocks=");
-        if (blocksSplit.length > 1) {
-            let blocksRaw = blocksSplit[1];
-            let blocksXml = decodeURIComponent(blocksRaw).replace(/\+/g, " ");
+        let getQsVal = parseQs();
+        let name = getQsVal("name") || "Untitled";
+        if (name) {
+            $("#code-title").text(name);
+        }
+        let blocksXml = getQsVal("blocks");
+        if (blocksXml) {
             let blocksSvg = pxtblocks.render(blocksXml);
             let blocksHtml = blocksSvg[0];
-            document.body.appendChild(blocksHtml);
+            //TODO: this doesn't work yet; the blocks show up as a black blob
+            //$("#front-panel").append(blocksHtml);
         }
     }
     export function drawInstructions() {
