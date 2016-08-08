@@ -1,5 +1,5 @@
 namespace pxsim.boardsvg {
-    const PIN_HOVER_SCALAR = 1.25;
+    const PIN_HOVER_SCALAR = 1.3;
     const LBL_HOVER_SCALAR = 1.3;
 
     export declare type PinFn = (p: SVGRectElement, i: number, j: number, x: number, y: number, overPin: SVGRectElement)=>void;
@@ -142,6 +142,9 @@ namespace pxsim.boardsvg {
             }
             .grayed .sim-bb-background {
                 stroke: #BBB;
+            }
+            .grayed .sim-bb-group-wire {
+                stroke: #DDD;
             }
             /*Highlighted*/
             .sim-bb-label.highlight {
@@ -474,6 +477,7 @@ namespace pxsim.boardsvg {
             let lbls = this.pinNmToLbls[pinNm];
             const highlightLbl = (lbl: BBLbl) => {
                 svg.addClass(lbl.l, "highlight");
+                svg.addClass(lbl.overLbl, "highlight");
                 resetTxt(lbl.l, lbl.cx, lbl.cy, lbl.size * LBL_HOVER_SCALAR, lbl.rot, lbl.nm);
             };
             if (rowNm == "-" || rowNm == "+") {
