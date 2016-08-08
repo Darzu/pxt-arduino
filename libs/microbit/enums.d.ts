@@ -38,6 +38,84 @@ declare namespace basic {
     P1 = 8,  // MICROBIT_ID_IO_P1
     P2 = 9,  // MICROBIT_ID_IO_P2
     }
+
+
+    declare enum AcceleratorRange {
+    /**
+     * The accelerator measures forces up to 1 gravity
+     */
+    //%  block="1g"
+    OneG = 1,
+    /**
+     * The accelerator measures forces up to 2 gravity
+     */
+    //%  block="2g"
+    TwoG = 2,
+    /**
+     * The accelerator measures forces up to 4 gravity
+     */
+    //% block="4g"
+    FourG = 4,
+    /**
+     * The accelerator measures forces up to 8 gravity
+     */
+    //% block="8g"
+    EightG = 8,
+    }
+
+
+    declare enum Gesture {
+    /**
+     * Raised when shaken
+     */
+    //% block=shake
+    Shake = 11,  // MICROBIT_ACCELEROMETER_EVT_SHAKE
+    /**
+     * Raised when the logo is upward and the screen is vertical
+     */
+    //% block="logo up"
+    LogoUp = 1,  // MICROBIT_ACCELEROMETER_EVT_TILT_UP
+    /**
+     * Raised when the logo is downward and the screen is vertical
+     */
+    //% block="logo down"
+    LogoDown = 2,  // MICROBIT_ACCELEROMETER_EVT_TILT_DOWN
+    /**
+     * Raised when the screen is pointing down and the board is horizontal
+     */
+    //% block="screen up"
+    ScreenUp = 5,  // MICROBIT_ACCELEROMETER_EVT_FACE_UP
+    /**
+     * Raised when the screen is pointing up and the board is horizontal
+     */
+    //% block="screen down"
+    ScreenDown = 6,  // MICROBIT_ACCELEROMETER_EVT_FACE_DOWN
+    /**
+     * Raised when the screen is pointing left
+     */
+    //% block="tilt left"
+    TiltLeft = 3,  // MICROBIT_ACCELEROMETER_EVT_TILT_LEFT
+    /**
+     * Raised when the screen is pointing right
+     */
+    //% block="tilt right"
+    TiltRight = 4,  // MICROBIT_ACCELEROMETER_EVT_TILT_RIGHT
+    /**
+     * Raised when the board is falling!
+     */
+    //% block="free fall"
+    FreeFall = 7,  // MICROBIT_ACCELEROMETER_EVT_FREEFALL
+    /**
+     * Raised when a 3G shock is detected
+     */
+    //% block="3g"
+    ThreeG = 8,  // MICROBIT_ACCELEROMETER_EVT_3G
+    /**
+     * Raised when a 6G shock is detected
+     */
+    //% block="6g"
+    SixG = 9,  // MICROBIT_ACCELEROMETER_EVT_6G
+    }
 declare namespace input {
 }
 

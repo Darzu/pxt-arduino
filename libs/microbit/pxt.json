@@ -27,22 +27,17 @@
         "serial.cpp",
         "serial.ts",
         "buffer.cpp",
-        "_locales/ar/microbit-strings.json",
-        "_locales/de/microbit-strings.json",
-        "_locales/es-ES/microbit-strings.json",
-        "_locales/fr/microbit-strings.json",
-        "_locales/ja/microbit-strings.json"
+        "_locales/fr/microbit-jsdoc-strings.json"
     ],
     "public": true,
     "dependencies": {},
     "yotta": {
+        "configIsJustDefaults": true,
         "config": {
             "microbit-dal": {
                 "bluetooth": {
                     "enabled": 0
-                },
-                "system_tick_period": 3,
-                "sram_end": "0x20008000"
+                }
             }
         }
     }

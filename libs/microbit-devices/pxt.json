@@ -1,12 +1,11 @@
 {
-    "name": "microbit-radio",
-    "description": "The radio services",
+    "name": "microbit-devices",
+    "description": "The BLE specific services",
     "files": [
         "README.md",
-        "shims.d.ts",
         "enums.d.ts",
-        "radio.cpp",
-        "radio.ts"
+        "shims.d.ts",
+        "devices.cpp"
     ],
     "public": true,
     "dependencies": {
@@ -16,10 +15,10 @@
         "config": {
             "microbit-dal": {
                 "bluetooth": {
-                    "enabled": 0
+                    "enabled": 1
                 }
             }
         }
     },
-    "installedVersion": "rlfgis"
+    "installedVersion": "ljipgq"
 }

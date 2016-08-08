@@ -1,0 +1,10 @@
+{
+  "devices.onGamepadButton|block": "on gamepad button|%NAME",
+  "devices.onNotified|block": "on notified|%event",
+  "devices.onSignalStrengthChanged|block": "on signal strength changed",
+  "devices.raiseAlertTo|block": "raise alert to|%property",
+  "devices.signalStrength|block": "signal strength",
+  "devices.tellCameraTo|block": "tell camera to|%property",
+  "devices.tellRemoteControlTo|block": "tell remote control to|%property",
+  "devices|block": "devices"
+}

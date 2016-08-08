@@ -65,11 +65,11 @@
         "aspectRatio": 0.69
     },
     "compileService": {
-        "yottaTarget": "nrf51dk-classic-gcc",
-        "yottaCorePackage": "pxt-arduino-core",
-        "githubCorePackage": "microsoft/pxt-arduino-core",
-        "gittag": "v0.0.5",
-        "serviceId": "nrf51dk"
+        "yottaTarget": "bbc-microbit-classic-gcc",
+        "yottaCorePackage": "pxt-microbit-core",
+        "githubCorePackage": "microsoft/pxt-microbit-core",
+        "gittag": "v0.2.2",
+        "serviceId": "ws"
     },
     "serial": {
         "manufacturerFilter": "^mbed$",
