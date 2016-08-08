@@ -315,6 +315,7 @@ namespace pxsim.boardsvg {
             throw `unsupported compoment type: ${type}`;
         }
     }
+    const AZ_DISPLAY_COL = 7;
     export const ARDUINO_ZERO: BoardDescription = {
         photo: "arduino-zero-photo-sml.png",
         outlineImg:  "arduino-outline.svg",
@@ -331,17 +332,17 @@ namespace pxsim.boardsvg {
             {start: ["bb", "-1"], end: ["board", "GND0"], color: "blue", instructionStep: 1},
         ],
         components: [
-            {type: "display", locations:["h12"], instructionStep: 2, wires: [
-                {start: ["bb", "j12"], end: ["board", "~5"], color: "purple", instructionStep: 3},
-                {start: ["bb", "j13"], end: ["board", "~4"], color: "purple", instructionStep: 3},
-                {start: ["bb", "j14"], end: ["board", "~3"], color: "purple", instructionStep: 3},
-                {start: ["bb", "j15"], end: ["board", "2"], color: "purple", instructionStep: 3},
-                {start: ["bb", "a19"], end: ["board", "TX->1"], color: "purple", instructionStep: 3},
-                {start: ["bb", "a12"], end: ["board", "A0"], color: "green", instructionStep: 4},
-                {start: ["bb", "a13"], end: ["board", "A1"], color: "green", instructionStep: 4},
-                {start: ["bb", "a14"], end: ["board", "A2"], color: "green", instructionStep: 4},
-                {start: ["bb", "a15"], end: ["board", "A3"], color: "green", instructionStep: 4},
-                {start: ["bb", "j16"], end: ["board", "A4"], color: "green", instructionStep: 4},
+            {type: "display", locations:[`h${AZ_DISPLAY_COL}`], instructionStep: 2, wires: [
+                {start: ["bb", `j${AZ_DISPLAY_COL+0}`], end: ["board", "~5"], color: "purple", instructionStep: 3},
+                {start: ["bb", `j${AZ_DISPLAY_COL+1}`], end: ["board", "~4"], color: "purple", instructionStep: 3},
+                {start: ["bb", `j${AZ_DISPLAY_COL+2}`], end: ["board", "~3"], color: "purple", instructionStep: 3},
+                {start: ["bb", `j${AZ_DISPLAY_COL+3}`], end: ["board", "2"], color: "purple", instructionStep: 3},
+                {start: ["bb", `a${AZ_DISPLAY_COL+7}`], end: ["board", "TX->1"], color: "purple", instructionStep: 3},
+                {start: ["bb", `a${AZ_DISPLAY_COL+0}`], end: ["board", "A0"], color: "green", instructionStep: 4},
+                {start: ["bb", `a${AZ_DISPLAY_COL+1}`], end: ["board", "A1"], color: "green", instructionStep: 4},
+                {start: ["bb", `a${AZ_DISPLAY_COL+2}`], end: ["board", "A2"], color: "green", instructionStep: 4},
+                {start: ["bb", `a${AZ_DISPLAY_COL+3}`], end: ["board", "A3"], color: "green", instructionStep: 4},
+                {start: ["bb", `j${AZ_DISPLAY_COL+4}`], end: ["board", "A4"], color: "green", instructionStep: 4},
             ]},
             {type: "buttonpair", locations:["f1", "f28", "d28"], instructionStep: 5, wires: [
                 {start: ["bb", "j1"], end: ["board", "7"], color: "yellow", instructionStep: 6},
