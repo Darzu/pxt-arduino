@@ -1,11 +1,12 @@
 /// <reference path="../../node_modules/pxt-core/typings/bluebird/bluebird.d.ts"/>
 /// <reference path="../../node_modules/pxt-core/built/pxtsim.d.ts"/>
-/// <reference path="../../node_modules/pxt-core/built/pxtblocks.d.ts"/>
+/// <reference path="../../node_modules/pxt-core/built/pxtrunner.d.ts"/>
 /// <reference path="../../libs/microbit/dal.d.ts"/>
 
 //HACK: allows instructions.html to access pxtblocks without requiring simulator.html to import blocks as well 
 if (!(<any>window).pxt) (<any>window).pxt = {};
-import pxtblocks = pxt.blocks;
+import pxtrunner = pxt.runner;
+import pxtdocs = pxt.docs;
 
 namespace pxsim.instructions {
     const LOC_LBL_SIZE = 10;
@@ -622,20 +623,32 @@ namespace pxsim.instructions {
     }
     export function drawInstructions() {
         let getQsVal = parseQs();
+
+        //project name
         let name = getQsVal("name") || "Untitled";
         if (name) {
-            $("#code-title").text(name);
-        }
-        let blocksXml = getQsVal("blocks");
-        if (blocksXml) {
-            let blocksSvg = pxtblocks.render(blocksXml);
-            let blocksHtml = blocksSvg[0];
-            //TODO: this doesn't work yet; the blocks show up as a black blob
-            //$("#front-panel").append(blocksHtml);
+            $("#proj-title").text(name);
         }
 
+        //project code
+        let tsCode = getQsVal("code");  
+        var codeDiv = document.getElementById('proj-code'); 
+        var codeHiddenDiv = document.getElementById('proj-code-hidden'); 
+        if (tsCode) {
+            //we use the docs renderer to decompile the code to blocks and render it
+            //TODO: render the blocks code directly
+            let md = "```blocks\n" + tsCode + "```"
+            pxtdocs.requireMarked = function() { return (<any>window).marked; }
+            pxtrunner.renderMarkdownAsync(codeHiddenDiv, md).done(function() {
+                //takes the svg out of the wrapper markdown
+                let codeSvg = $("#proj-code-hidden svg")[0]; 
+                codeDiv.innerHTML = "";
+                codeDiv.appendChild(codeSvg);
+            });
+        }
+
+        //init runtime
         const COMP_CODE = "";
-
         if (!pxsim.initCurrentRuntime)
             pxsim.initCurrentRuntime = initRuntimeWithDalBoard; 
         pxsim.runtime = new Runtime(COMP_CODE);
