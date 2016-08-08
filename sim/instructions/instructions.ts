@@ -620,7 +620,7 @@ namespace pxsim.instructions {
         let getQsVal = (key: string) => decodeURIComponent((qs.split(`${key}=`)[1] || "").split("&")[0] || "").replace(/\+/g, " ");
         return getQsVal;
     }
-    function renderBlocks() {
+    export function drawInstructions() {
         let getQsVal = parseQs();
         let name = getQsVal("name") || "Untitled";
         if (name) {
@@ -633,9 +633,6 @@ namespace pxsim.instructions {
             //TODO: this doesn't work yet; the blocks show up as a black blob
             //$("#front-panel").append(blocksHtml);
         }
-    }
-    export function drawInstructions() {
-        renderBlocks();
 
         const COMP_CODE = "";
 
