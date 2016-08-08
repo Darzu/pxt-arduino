@@ -10,6 +10,7 @@ import pxtblocks = pxt.blocks;
 namespace pxsim.instructions {
     const LOC_LBL_SIZE = 10;
     const QUANT_LBL_SIZE = 30;
+    const QUANT_LBL = (q: number) => `${q}x`;
     const WIRE_QUANT_LBL_SIZE = 20;
     const LBL_VERT_PAD = 3;
     const LBL_RIGHT_PAD = 5;
@@ -499,10 +500,10 @@ namespace pxsim.instructions {
 
         // board and breadboard
         let boardImg = mkBoardImgSvg(props.board);
-        let board = wrapSvg(boardImg, {right: `x1`, rightSize: QUANT_LBL_SIZE, cmpScale: BOARD_SCALE});
+        let board = wrapSvg(boardImg, {right: QUANT_LBL(1), rightSize: QUANT_LBL_SIZE, cmpScale: BOARD_SCALE});
         panel.appendChild(board);
         let bbRaw = mkBBSvg();
-        let bb = wrapSvg(bbRaw, {right: `x1`, rightSize: QUANT_LBL_SIZE, cmpScale: BB_SCALE});
+        let bb = wrapSvg(bbRaw, {right: QUANT_LBL(1), rightSize: QUANT_LBL_SIZE, cmpScale: BB_SCALE});
         panel.appendChild(bb);
     
         // components
@@ -513,7 +514,7 @@ namespace pxsim.instructions {
                 quant = 2;
             }
             let cmp = mkCmpDiv(c.type, {
-                right: `x${quant}`,
+                right: QUANT_LBL(quant),
                 rightSize: QUANT_LBL_SIZE,
                 cmpScale: CMP_SCALE,
             });
@@ -525,7 +526,7 @@ namespace pxsim.instructions {
         props.allWireColors.forEach(clr => {
             let quant = props.colorToWires[clr].length;
             let cmp = mkCmpDiv("wire", {
-                right: `x${quant}`,
+                right: QUANT_LBL(quant),
                 rightSize: WIRE_QUANT_LBL_SIZE,
                 wireClr: clr,
                 cmpScale: WIRE_SCALE
