@@ -632,18 +632,22 @@ namespace pxsim.instructions {
 
         //project code
         let tsCode = getQsVal("code");  
-        var codeDiv = document.getElementById('proj-code'); 
-        var codeHiddenDiv = document.getElementById('proj-code-hidden'); 
+        var codeSpinnerDiv = document.getElementById('proj-code-spinner'); 
+        var codeContainerDiv = document.getElementById('proj-code-container'); 
         if (tsCode) {
             //we use the docs renderer to decompile the code to blocks and render it
             //TODO: render the blocks code directly
             let md = "```blocks\n" + tsCode + "```"
             pxtdocs.requireMarked = function() { return (<any>window).marked; }
-            pxtrunner.renderMarkdownAsync(codeHiddenDiv, md).done(function() {
+            pxtrunner.renderMarkdownAsync(codeContainerDiv, md).done(function() {
                 //takes the svg out of the wrapper markdown
-                let codeSvg = $("#proj-code-hidden svg")[0]; 
-                codeDiv.innerHTML = "";
-                codeDiv.appendChild(codeSvg);
+                let codeSvg = $("#proj-code-container svg");
+                codeSvg.css("width", "inherit");
+                codeSvg.css("height", "inherit");
+                codeContainerDiv.innerHTML = "";
+                codeContainerDiv.appendChild(codeSvg[0]);
+                $(codeContainerDiv).show();
+                $(codeSpinnerDiv).hide();
             });
         }
 

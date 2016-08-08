@@ -117,17 +117,26 @@
             top: 8rem;
         }
 
+        #proj-title {
+            top: 20px;
+            position: absolute;
+            width: 100%;
+        }
+
         #proj-code {
             width: 140px;
+            height: 200px;
             position: absolute;
             right: 1rem;
             top: 8rem;
         }
-        #proj-code > * {
+        #proj-code-container {
             width: 100%;
-        }
-        #proj-code-hidden {
+            height: 100%;
             display: none;
+        }
+        #proj-code-spinner {
+            width: 100%;
         }
 
         .back-panel svg {
@@ -183,8 +192,8 @@ mixpanel.init("762fef19c053a0ea4cec43d2fecae76e");</script><!-- end Mixpanel -->
 
         <!--TODO: extract real code snapshot from PXT -->
         <div id="proj-code">
-            <i class="spinner loading icon"></i>
-            <div id="proj-code-hidden">
+            <i id="proj-code-spinner" class="spinner loading icon"></i>
+            <div id="proj-code-container">
             </div>
         </div>
 
