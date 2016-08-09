@@ -15,6 +15,7 @@ namespace pxsim.instructions {
     const WIRE_QUANT_LBL_SIZE = 20;
     const LBL_VERT_PAD = 3;
     const LBL_RIGHT_PAD = 5;
+    const LBL_LEFT_PAD = 5;
     const REQ_WIRE_HEIGHT = 45;
     const REQ_CMP_HEIGHT = 55;
     const REQ_CMP_SCALE = 0.5;
@@ -178,6 +179,8 @@ namespace pxsim.instructions {
         topSize?: number,
         right?: string,
         rightSize?: number,
+        left?: string,
+        leftSize?: number,
         bot?: string,
         botSize?: number,
         wireClr?: string,
@@ -311,6 +314,20 @@ namespace pxsim.instructions {
 
             updateT(cy - txtH/2);
             updateR(cx + len/2);
+            updateB(cy + txtH/2);
+        }
+        if (opts && opts.left) {
+            let size = opts.leftSize;
+            let txtW = size / txtAspectRatio[0];
+            let txtH = size / txtAspectRatio[1];
+            let len = txtW*opts.left.length;
+            let [cx, cy] = [elDims.l - LBL_LEFT_PAD - len/2, elDims.t + elDims.h/2];
+            let lbl = boardsvg.mkTxt(cx, cy, size, 0, opts.left, xOff, yOff);
+            svg.addClass(lbl, "cmp-lbl");
+            svgEl.appendChild(lbl);
+
+            updateT(cy - txtH/2);
+            updateL(cx - len/2);
             updateB(cy + txtH/2);
         }
         
@@ -501,10 +518,10 @@ namespace pxsim.instructions {
 
         // board and breadboard
         let boardImg = mkBoardImgSvg(props.board);
-        let board = wrapSvg(boardImg, {right: QUANT_LBL(1), rightSize: QUANT_LBL_SIZE, cmpScale: BOARD_SCALE});
+        let board = wrapSvg(boardImg, {left: QUANT_LBL(1), leftSize: QUANT_LBL_SIZE, cmpScale: BOARD_SCALE});
         panel.appendChild(board);
         let bbRaw = mkBBSvg();
-        let bb = wrapSvg(bbRaw, {right: QUANT_LBL(1), rightSize: QUANT_LBL_SIZE, cmpScale: BB_SCALE});
+        let bb = wrapSvg(bbRaw, {left: QUANT_LBL(1), leftSize: QUANT_LBL_SIZE, cmpScale: BB_SCALE});
         panel.appendChild(bb);
     
         // components
@@ -515,8 +532,8 @@ namespace pxsim.instructions {
                 quant = 2;
             }
             let cmp = mkCmpDiv(c.type, {
-                right: QUANT_LBL(quant),
-                rightSize: QUANT_LBL_SIZE,
+                left: QUANT_LBL(quant),
+                leftSize: QUANT_LBL_SIZE,
                 cmpScale: CMP_SCALE,
             });
             addClass(cmp, "partslist-cmp");
@@ -527,8 +544,8 @@ namespace pxsim.instructions {
         props.allWireColors.forEach(clr => {
             let quant = props.colorToWires[clr].length;
             let cmp = mkCmpDiv("wire", {
-                right: QUANT_LBL(quant),
-                rightSize: WIRE_QUANT_LBL_SIZE,
+                left: QUANT_LBL(quant),
+                leftSize: WIRE_QUANT_LBL_SIZE,
                 wireClr: clr,
                 cmpScale: WIRE_SCALE
             })
