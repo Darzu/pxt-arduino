@@ -42,7 +42,7 @@ function getBitDrivesAsync(): Promise<string[]> {
     }
     else if (process.platform == "darwin") {
         return readDirAsync("/Volumes")
-            .then(lst => lst.filter(s => /MBED/.test(s)).map(s => "/Volumes/" + s + "/"))
+            .then(lst => lst.filter(s => /MICROBIT/.test(s)).map(s => "/Volumes/" + s + "/"))
     } else {
         return Promise.resolve([])
     }
