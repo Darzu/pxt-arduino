@@ -33,10 +33,10 @@ namespace pxsim.boardsvg {
 
         //TODO(DZ): Parameterize stroke
         public style = `
-.sim-light-level-button {
-    stroke:#fff;
-    stroke-width: 3px;
-}`; 
+            .sim-light-level-button {
+                stroke:#fff;
+                stroke-width: 3px;
+            }`; 
 
         public init(bus: EventBus, state: LightSensorCmp, svgEl: SVGSVGElement) {
             this.bus = bus;
