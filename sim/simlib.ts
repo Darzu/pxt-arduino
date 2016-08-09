@@ -292,7 +292,7 @@ namespace pxsim.boardsvg {
         "accelerometer": [() => new AccelerometerSvg(), (d: DalBoard) => d.accelerometerCmp, null],
         "compass": [() => new CompassSvg(), (d: DalBoard) => d.compassCmp, null],
         "lightsensor": [() => new LightSensorSvg(), (d: DalBoard) => d.lightSensorCmp, null],
-        "neopixel": [() => new NeopixelSvg(), (d: DalBoard) => d.neopixelCmp, null],
+        "neopixel": [() => new NeoPixelSvg(), (d: DalBoard) => d.neopixelCmp, null],
     }
     export function mkComponent(type: Component, xy: Coord): SVGAndSize<SVGElement> {
         if (type == "buttonpair") {
@@ -318,7 +318,7 @@ namespace pxsim.boardsvg {
         basicWires: WireDescription[], 
         components: ComponentDescription[],
     }
-    export type SVGAndSize<T extends SVGElement> = {e: T, t: number, l: number, w: number, h: number};
+    export interface SVGAndSize<T extends SVGElement> {e: T, t: number, l: number, w: number, h: number};
     const AZ_DISPLAY_COL = 7;
     export const ARDUINO_ZERO: BoardDescription = {
         photo: "arduino-zero-photo-sml.png",
