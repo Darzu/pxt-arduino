@@ -35,6 +35,7 @@ namespace pxsim {
         lightSensorCmp: LightSensorCmp;
         buttonPairState: ButtonPairCmp;
         radioCmp: RadioCmp;
+        neopixelCmp: NeopixelCmp;
 
         constructor() {
             super()
@@ -51,6 +52,7 @@ namespace pxsim {
             this.thermometerCmp = new ThermometerCmp();
             this.lightSensorCmp = new LightSensorCmp();
             this.compassCmp = new CompassCmp();
+            this.neopixelCmp = new NeopixelCmp();
         }
 
         receiveMessage(msg: SimulatorMessage) {

@@ -237,9 +237,9 @@ namespace pxsim.boardsvg {
         element: SVGElement,
         defs: SVGElement[],
         init(bus: EventBus, state: T, svgEl: SVGSVGElement): void, //NOTE: constructors not supported in interfaces
-        setLocations (...xys: Coord[]): void,
-        updateState (): void,
-        updateTheme (): void,
+        setLocations(...xys: Coord[]): void,
+        updateState(): void,
+        updateTheme(): void,
     }
 
     export function resetTxt(el: SVGTextElement, cx: number, cy: number, size: number, rot: number, txt: string, txtXOffFactor?: number, txtYOffFactor?: number) {
@@ -278,7 +278,8 @@ namespace pxsim.boardsvg {
     // board description
     // arduino zero description
     export type Component = ("buttonpair" | "display" | "edgeconnector" | "serial" 
-        | "radio" | "thermometer" | "accelerometer" | "compass" | "lightsensor");
+        | "radio" | "thermometer" | "accelerometer" | "compass" | "lightsensor"
+        | "neopixel" );
     //TODO this type decleration without the last ", any" goofs VS Code's syntax highlighting
     export type CnstrAndStateFns = [ () => IBoardComponent<any>, (d: DalBoard) => any, any ];
     export const ComponenetToCnstrAndState: {[key: string]: CnstrAndStateFns} = {
@@ -290,7 +291,19 @@ namespace pxsim.boardsvg {
         "thermometer": [() => new ThermometerSvg(), (d: DalBoard) => d.thermometerCmp, null],
         "accelerometer": [() => new AccelerometerSvg(), (d: DalBoard) => d.accelerometerCmp, null],
         "compass": [() => new CompassSvg(), (d: DalBoard) => d.compassCmp, null],
-        "lightsensor": [() => new LightSensorSvg(), (d: DalBoard) => d.lightSensorCmp, null]
+        "lightsensor": [() => new LightSensorSvg(), (d: DalBoard) => d.lightSensorCmp, null],
+        "neopixel": [() => new NeopixelSvg(), (d: DalBoard) => d.neopixelCmp, null],
+    }
+    export function mkComponent(type: Component, xy: Coord): SVGAndSize<SVGElement> {
+        if (type == "buttonpair") {
+            return mkBtnSvg(xy);
+        } else if (type == "display") {
+            return mkLedMatrixSvg(xy, 8, 8);
+        } else if (type == "neopixel") {
+            return mkNeoPixelPart(xy);
+        } else {
+            throw `unsupported compoment type: ${type}`;
+        }
     }
     export type LocDesc = ["bb" | "board", string]
     export type WireDescription = {start: LocDesc, end: LocDesc, color: string, instructionStep: number};
@@ -306,15 +319,6 @@ namespace pxsim.boardsvg {
         components: ComponentDescription[],
     }
     export type SVGAndSize<T extends SVGElement> = {e: T, t: number, l: number, w: number, h: number};
-    export function mkComponent(type: Component, xy: Coord): SVGAndSize<SVGElement> {
-        if (type == "buttonpair") {
-            return mkBtnSvg(xy);
-        } else if (type == "display") {
-            return mkLedMatrixSvg(xy, 8, 8);
-        } else {
-            throw `unsupported compoment type: ${type}`;
-        }
-    }
     const AZ_DISPLAY_COL = 7;
     export const ARDUINO_ZERO: BoardDescription = {
         photo: "arduino-zero-photo-sml.png",
@@ -330,6 +334,8 @@ namespace pxsim.boardsvg {
         ],
         basicWires: [
             {start: ["bb", "-1"], end: ["board", "GND0"], color: "blue", instructionStep: 1},
+            {start: ["bb", "+26"], end: ["board", "5V"], color: "red", instructionStep: 1},
+            {start: ["bb", "-27"], end: ["board", "GND1"], color: "blue", instructionStep: 1},
         ],
         components: [
             {type: "display", locations:[`h${AZ_DISPLAY_COL}`], instructionStep: 2, wires: [
@@ -349,6 +355,11 @@ namespace pxsim.boardsvg {
                 {start: ["bb", "a3"], end: ["bb", "-2"], color: "blue", instructionStep: 6},
                 {start: ["bb", "j28"], end: ["board", "~6"], color: "orange", instructionStep: 7},
                 {start: ["bb", "a30"], end: ["bb", "-25"], color: "blue", instructionStep: 7},
+            ]},
+            {type: "neopixel", locations:["h20"], instructionStep: 8, wires: [
+                {start: ["bb", "j21"], end: ["bb", "-43"], color: "blue", instructionStep: 8},
+                {start: ["bb", "j22"], end: ["bb", "+44"], color: "red", instructionStep: 9},
+                {start: ["bb", "j20"], end: ["board", "~12"], color: "violet", instructionStep: 9},
             ]},
         ]
     }
