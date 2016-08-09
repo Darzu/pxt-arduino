@@ -32,6 +32,7 @@ namespace pxsim {
 
 //TODO move to utils
 namespace pxsim {
+    //expects rgb from 0,255, gives h in [0,260], s in [0, 100], l in [0, 100]
     export function rgbToHsl(rgb: [number, number, number]): [number, number, number] {
         let [r, g, b] = rgb;
         let [r$, g$, b$] = [r/255, g/255, b/255];
