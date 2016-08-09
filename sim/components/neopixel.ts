@@ -30,6 +30,42 @@ namespace pxsim {
     }
 }
 
+//TODO move to utils
+namespace pxsim {
+    export function rgbToHsl(rgb: [number, number, number]): [number, number, number] {
+        let [r, g, b] = rgb;
+        let [r$, g$, b$] = [r/255, g/255, b/255];
+        let cMin = Math.min(r$, g$, b$);
+        let cMax = Math.max(r$, g$, b$);
+        let cDelta = cMax - cMin;
+        let h: number, s: number, l: number;
+        let maxAndMin = cMax + cMin;
+
+        //lum
+        l = (maxAndMin / 2)*100
+        
+        if (cDelta === 0)
+            s = h = 0;
+        else {
+            //hue
+            if (cMax === r$)
+                h = 60 * (((g$-b$)/cDelta) % 6);
+            else if (cMax === g$)
+                h = 60 * (((b$-r$)/cDelta) + 2);
+            else if (cMax === b$)
+                h = 60 * (((r$-g$)/cDelta) + 4);
+
+            //sat
+            if (l > 50)
+                s = 100*(cDelta / (2 - maxAndMin));
+            else
+                s = 100*(cDelta / maxAndMin);
+        }
+
+        return [Math.floor(h), Math.floor(s), Math.floor(l)];
+    }
+}
+
 namespace pxsim.boardsvg {
     // For the instructions parts list
     export function mkNeoPixelPart(xy: Coord): SVGAndSize<SVGCircleElement> {
@@ -65,15 +101,21 @@ namespace pxsim.boardsvg {
                 svg.hydrate(this.element, {cx: xy[0], cy: xy[1]});
             });
         }
+        
         public updateState(): void {
+            const mapRange = (v: number, from: [number, number], to: [number, number]) =>
+                (v - from[0]) / (from[1] - from[0]) * (to[1] - to[0]) + to[0];
+                
             for (let pin in this.state.buffers) {
                 let buf = this.state.buffers[pin];
                 if (buf && buf.length >= 3 && buf.length % 3 == 0) {
                     for (let [ri, gi, bi] = [0, 1, 2]; bi < buf.length; ri+=3,gi+=3,bi+=3) {
-                        let [r,g,b] = [buf[ri], buf[gi], buf[bi]];
+                        let rgb: [number, number, number] = [buf[ri] as any as number, buf[gi] as any as number, buf[bi] as any as number];
+                        let hsl = rgbToHsl(rgb);
+                        let [h, s, l] = hsl;
 
-                        //TODO:
-                        this.element.setAttribute("fill", `rgb(${r}, ${g}, ${b})`);
+                        //We ignore luminosity since it doesn't map well to real-life brightness
+                        this.element.setAttribute("fill", `hsl(${h}, ${s}%, 70%)`);
                     }
                 }
             }
