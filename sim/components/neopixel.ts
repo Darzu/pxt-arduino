@@ -166,7 +166,7 @@ namespace pxsim.boardsvg {
                             //Fewer pixels; do anything?
                         }
                     }
-                    for (let [i, ri, gi, bi] = [0, 0, 1, 2]; bi < buf.length; i++,ri+=3,gi+=3,bi+=3) {
+                    for (let [i, gi, ri, bi] = [0, 0, 1, 2]; bi < buf.length; i++,ri+=3,gi+=3,bi+=3) {
                         let rgb: [number, number, number] = [buf[ri] as any as number, buf[gi] as any as number, buf[bi] as any as number];
                         let pixel = pixels[i];
                         pixel.setRgb(rgb);
