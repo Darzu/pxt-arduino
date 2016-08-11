@@ -324,7 +324,7 @@ namespace pxsim.boardsvg {
         components: ComponentDescription[],
     }
     export interface SVGAndSize<T extends SVGElement> {e: T, t: number, l: number, w: number, h: number};
-    const AZ_DISPLAY_COL = 7;
+    const AZ_DISPLAY_COL = 4;
     export const ARDUINO_ZERO: BoardDescription = {
         photo: "arduino-zero-photo-sml.png",
         outlineImg:  "arduino-outline.svg",
@@ -361,7 +361,7 @@ namespace pxsim.boardsvg {
                 {start: ["bb", "j28"], end: ["board", "~6"], color: "orange", instructionStep: 7},
                 {start: ["bb", "a30"], end: ["bb", "-25"], color: "blue", instructionStep: 7},
             ]},
-            {type: "neopixel", locations:["h20"], instructionStep: 8, wires: [
+            {type: "neopixel", locations:["h13","h18","h23"], instructionStep: 8, wires: [
                 {start: ["bb", "j21"], end: ["bb", "-43"], color: "blue", instructionStep: 8},
                 {start: ["bb", "j22"], end: ["bb", "+44"], color: "red", instructionStep: 9},
                 {start: ["bb", "j20"], end: ["board", "~12"], color: "violet", instructionStep: 9},

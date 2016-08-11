@@ -130,16 +130,18 @@ namespace pxsim.boardsvg {
         }
     }
 
-    const CANVAS_VIEW_WIDTH = 100;
-    const CANVAS_VIEW_HEIGHT = 100;
-    const CANVAS_WIDTH = 100;
-    const CANVAS_HEIGHT = 100;
+
+    const CANVAS_WIDTH = 4*PIN_DIST;
+    const CANVAS_HEIGHT = 12*PIN_DIST;
+    const CANVAS_VIEW_WIDTH = CANVAS_WIDTH;
+    const CANVAS_VIEW_HEIGHT = CANVAS_HEIGHT;
     const CANVAS_PADDING = PIN_DIST*2;
     class NeoPixelCanvas {
         public canvas: SVGSVGElement;
         public pin: number;
         public pixels: NeoPixel[];
         private viewBox: [number, number, number, number];
+        private background: SVGRectElement;
         
         constructor(pin: number) {
             this.pixels = [];
@@ -153,12 +155,14 @@ namespace pxsim.boardsvg {
                 "height": `${CANVAS_HEIGHT}px`,
             });
             this.canvas = el;
-            this.updateViewBox(0, 0, CANVAS_VIEW_WIDTH, CANVAS_VIEW_HEIGHT);
+            this.background = <SVGRectElement>svg.child(el, "rect", { class: "sim-neopixel-background"});
+            this.updateViewBox(-CANVAS_VIEW_WIDTH/2, 0, CANVAS_VIEW_WIDTH, CANVAS_VIEW_HEIGHT);
         }
 
         private updateViewBox(x: number, y: number, w: number, h: number) {
             this.viewBox = [x,y,w,h];
             svg.hydrate(this.canvas, {"viewBox": `${x} ${y} ${w} ${h}`});
+            svg.hydrate(this.background, {"x": x, "y": y, "width": w, "height": h});
         }
         
         public update(colors: RGBW[]) {
@@ -176,16 +180,24 @@ namespace pxsim.boardsvg {
             //resize if necessary
             let [first, last] = [this.pixels[0], this.pixels[this.pixels.length-1]]
             let yDiff = last.cy - first.cy;
-            let newHeight = yDiff + CANVAS_PADDING*2;
+            let newH = yDiff + CANVAS_PADDING*2;
             let [oldX, oldY, oldW, oldH] = this.viewBox;
-            if (oldH < newHeight) {
-                this.updateViewBox(oldX, oldY, oldW, newHeight);
+            if (oldH < newH) {
+                let scalar = newH/oldH;
+                let newW = oldW*scalar;
+                this.updateViewBox(-newW/2, oldY, newW, newH);
             }
         }
     };
 
     export class NeoPixelSvg implements IBoardComponent<NeoPixelCmp> {
         public style: string = `
+            .sim-neopixel-canvas {
+                overflow: hidden;
+            }
+            .sim-neopixel-background {
+                fill: rgba(255,255,255,0.5);
+            }
         `;
         public element: SVGElement;
         public defs: SVGElement[];
