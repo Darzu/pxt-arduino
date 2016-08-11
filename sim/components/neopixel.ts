@@ -131,7 +131,7 @@ namespace pxsim.boardsvg {
     }
 
 
-    const CANVAS_WIDTH = 4*PIN_DIST;
+    const CANVAS_WIDTH = 2*PIN_DIST;
     const CANVAS_HEIGHT = 12*PIN_DIST;
     const CANVAS_VIEW_WIDTH = CANVAS_WIDTH;
     const CANVAS_VIEW_HEIGHT = CANVAS_HEIGHT;
@@ -188,6 +188,11 @@ namespace pxsim.boardsvg {
                 this.updateViewBox(-newW/2, oldY, newW, newH);
             }
         }
+
+        public setLoc(xy: Coord) {
+            let [x,y] = xy;
+            svg.hydrate(this.canvas, {x: x, y: y});
+        }
     };
 
     export class NeoPixelSvg implements IBoardComponent<NeoPixelCmp> {
@@ -203,24 +208,35 @@ namespace pxsim.boardsvg {
         public defs: SVGElement[];
         private state: NeoPixelCmp;
         private canvases: {[pin: number]: NeoPixelCanvas} = {};
+        private canvasGroup: SVGGElement;
+        private lastLocations: Coord[] = [];
 
         public init(bus: EventBus, state: NeoPixelCmp, svgEl: SVGSVGElement): void {
             this.state = state;
 
-            let firstPin: DigitalPin;
-            for (let pin in NEOPIXEL_LAYOUT) {
-                firstPin = Number(pin);
-                break;
-            }
-            let canv = new NeoPixelCanvas(firstPin);
-            this.canvases[firstPin] = canv; 
-            this.element = canv.canvas;
+            this.canvasGroup = <SVGGElement>svg.elt("g");
+            this.element = this.canvasGroup;
         }
-        public setLocations (...xys: Coord[]): void {
-            xys.forEach(xy => {
-                //TODO: handle all pixels
-                let [x,y] = xy; 
-                svg.hydrate(this.element, {x: x, y: y});
+        private getCanvasesList() {
+            let canvs: NeoPixelCanvas[] = [];
+            for (let pinNm in this.canvases) {
+                let pin = Number(pinNm);
+                canvs.push(this.canvases[pin]);
+            }
+            return canvs;
+        }
+        public setLocations(...xys: Coord[]): void {
+            this.lastLocations = xys;
+            this.updateCanvasLocs();
+        }
+        private updateCanvasLocs() {
+            let xys = this.lastLocations;
+            let canvs = this.getCanvasesList();
+            xys.forEach((xy, i) => {
+                let c = canvs[i];
+                if (c) {
+                    c.setLoc(xy);
+                }
             });
         }
         
@@ -230,8 +246,11 @@ namespace pxsim.boardsvg {
                 let pin = Number(pinStr);
                 let colors = this.state.pixelColors[pin];
                 let canvas = this.canvases[pin];
-                if (!canvas)
+                if (!canvas) {
                     canvas = this.canvases[pin] = new NeoPixelCanvas(pin);
+                    this.canvasGroup.appendChild(canvas.canvas);
+                    this.updateCanvasLocs();
+                }
                 canvas.update(colors);
             }
 
