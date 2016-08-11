@@ -3,7 +3,6 @@
 /// <reference path="../../libs/microbit/shims.d.ts"/>
 /// <reference path="../../libs/microbit/enums.d.ts"/>
 
-
 namespace pxsim {
     export function sendBufferAsm(buffer: Buffer, pin: DigitalPin) {
         let b = board();
@@ -18,21 +17,44 @@ namespace pxsim {
 }
 
 namespace pxsim {
-    // class NPBuffer implements Buffer {
-    // }
+
     export class NeoPixelCmp {
-        public buffers: {[pin: number]: Uint8Array[]} = {};
+        private buffers: {[pin: number]: Uint8Array[]} = {};
+        public pixelColors: {[pin: number]: RGBW[]} = {};
+        public pinModes: {[pin: number]: NeoPixelMode};
+
+        constructor(pinModes: {[pin: number]: NeoPixelMode}) {
+            this.pinModes = pinModes;
+        }
 
         public sendBuffer(buffer: Buffer, pin: DigitalPin) {
-            let data = <Uint8Array[]>(<any>buffer).data;
-            this.buffers[pin] = data;
+            //update buffers
+            let buf = <Uint8Array[]>(<any>buffer).data;
+            this.buffers[pin] = buf;
+
+            //update colors
+            let stride = this.pinModes[pin] === NeoPixelMode.RGBW ? 4 : 3;
+            
+            let pixelCount = Math.floor(buf.length / stride);
+            let pixelColors = (this.pixelColors[pin] || (this.pixelColors[pin] = []));
+                
+            for (let i = 0; i < pixelCount; i++) {
+                // NOTE: for whatever reason, NeoPixels pack GRB not RGB
+                let r = buf[i * stride + 1] as any as number
+                let g = buf[i * stride + 0] as any as number
+                let b = buf[i * stride + 2] as any as number
+                let w = 0;
+                if (stride === 4)
+                    w = buf[i * stride + 3] as any as number
+                pixelColors[i] = [r,g,b,w]
+            }
         }
     }
 }
 
 //TODO move to utils
 namespace pxsim {
-    //expects rgb from 0,255, gives h in [0,260], s in [0, 100], l in [0, 100]
+    //expects rgb from 0,255, gives h in [0,360], s in [0, 100], l in [0, 100]
     export function rgbToHsl(rgb: [number, number, number]): [number, number, number] {
         let [r, g, b] = rgb;
         let [r$, g$, b$] = [r/255, g/255, b/255];
@@ -74,22 +96,7 @@ namespace pxsim.boardsvg {
     // For the instructions parts list
     export function mkNeoPixelPart(xy: Coord): SVGAndSize<SVGCircleElement> {
         //TODO
-        return mkNeoPixel(xy);
-    }
-    export function mkNeoPixel(xy: Coord): NeoPixel {
-        //TODO
-        //let box = <SVGRectElement>svg.elt("rect");
-        let circle = <SVGCircleElement>svg.elt("circle");
-        let r = PIXEL_RADIUS;
-        let [cx, cy] = xy;
-        svg.hydrate(circle, {cx: cx, cy: cy, r: r, class: "sim-neopixel"});
-        let p = new NeoPixel;
-        p.e = circle;
-        p.w = r*2;
-        p.h = r*2;
-        p.l = cx - r;
-        p.t = cy - r;
-        return p;
+        return new NeoPixel(xy);
     }
     export class NeoPixel implements SVGAndSize<SVGCircleElement> {
         public e: SVGCircleElement;
@@ -97,6 +104,22 @@ namespace pxsim.boardsvg {
         public h: number;
         public l: number;
         public t: number;
+        public cx: number;
+        public cy: number;
+
+        constructor(xy: Coord = [0,0]) {
+            let circle = <SVGCircleElement>svg.elt("circle");
+            let r = PIXEL_RADIUS;
+            let [cx, cy] = xy;
+            svg.hydrate(circle, {cx: cx, cy: cy, r: r, class: "sim-neopixel"});
+            this.e = circle;
+            this.w = r*2;
+            this.h = r*2;
+            this.l = cx - r;
+            this.t = cy - r;
+            this.cx = cx;
+            this.cy = cy;
+        }
 
         public setRgb(rgb: [number, number, number]) {
             let hsl = rgbToHsl(rgb);
@@ -105,74 +128,102 @@ namespace pxsim.boardsvg {
             let fill = `hsl(${h}, ${s}%, 70%)`;
             this.e.setAttribute("fill", fill);
         }
-        public setLoc(cxy: boardsvg.Coord) {
-            let [cx, cy] = cxy;
-            this.l = cx - this.w/2;
-            this.t = cy - this.h/2;
-            svg.hydrate(this.e, {cx: cx, cy: cy});
-        }
     }
+
+    const CANVAS_VIEW_WIDTH = 100;
+    const CANVAS_VIEW_HEIGHT = 100;
+    const CANVAS_WIDTH = 100;
+    const CANVAS_HEIGHT = 100;
+    const CANVAS_PADDING = PIN_DIST*2;
+    class NeoPixelCanvas {
+        public canvas: SVGSVGElement;
+        public pin: number;
+        public pixels: NeoPixel[];
+        private viewBox: [number, number, number, number];
+        
+        constructor(pin: number) {
+            this.pixels = [];
+            this.pin = pin;
+            let el = <SVGSVGElement>svg.elt("svg");
+            svg.hydrate(el, {
+                "class": `sim-neopixel-canvas`,
+                "x": "0px",
+                "y": "0px",
+                "width": `${CANVAS_WIDTH}px`,
+                "height": `${CANVAS_HEIGHT}px`,
+            });
+            this.canvas = el;
+            this.updateViewBox(0, 0, CANVAS_VIEW_WIDTH, CANVAS_VIEW_HEIGHT);
+        }
+
+        private updateViewBox(x: number, y: number, w: number, h: number) {
+            this.viewBox = [x,y,w,h];
+            svg.hydrate(this.canvas, {"viewBox": `${x} ${y} ${w} ${h}`});
+        }
+        
+        public update(colors: RGBW[]) {
+            for (let i = 0; i < colors.length; i++) {
+                let pixel = this.pixels[i];
+                if (!pixel) {
+                    let cxy: Coord = [0, CANVAS_PADDING + i*PIXEL_SPACING];
+                    pixel = this.pixels[i] = new NeoPixel(cxy);
+                    this.canvas.appendChild(pixel.e);
+                }
+                let color = colors[i];
+                pixel.setRgb(color);
+            }
+
+            //resize if necessary
+            let [first, last] = [this.pixels[0], this.pixels[this.pixels.length-1]]
+            let yDiff = last.cy - first.cy;
+            let newHeight = yDiff + CANVAS_PADDING*2;
+            let [oldX, oldY, oldW, oldH] = this.viewBox;
+            if (oldH < newHeight) {
+                this.updateViewBox(oldX, oldY, oldW, newHeight);
+            }
+        }
+    };
 
     export class NeoPixelSvg implements IBoardComponent<NeoPixelCmp> {
         public style: string = `
         `;
         public element: SVGElement;
         public defs: SVGElement[];
-        state: NeoPixelCmp;
-        pixels: {[pin: number]: NeoPixel[]} = {};
-        pixelGroups: {[pin: number]: SVGGElement} = {};
+        private state: NeoPixelCmp;
+        private canvases: {[pin: number]: NeoPixelCanvas} = {};
 
         public init(bus: EventBus, state: NeoPixelCmp, svgEl: SVGSVGElement): void {
             this.state = state;
 
-            let initG = this.mkGroup();
-            this.pixelGroups[7/*DigitalPin.P0*/] = initG; //TODO: don't hardcode to P0
-            this.element = initG;
+            let firstPin: DigitalPin;
+            for (let pin in NEOPIXEL_LAYOUT) {
+                firstPin = Number(pin);
+                break;
+            }
+            let canv = new NeoPixelCanvas(firstPin);
+            this.canvases[firstPin] = canv; 
+            this.element = canv.canvas;
         }
         public setLocations (...xys: Coord[]): void {
             xys.forEach(xy => {
                 //TODO: handle all pixels
-                svg.hydrate(this.element, {cx: xy[0], cy: xy[1]});
+                let [x,y] = xy; 
+                svg.hydrate(this.element, {x: x, y: y});
             });
-        }
-        private mkGroup(): SVGGElement {
-            return <SVGGElement>svg.elt("g");
         }
         
         public updateState(): void {
-            const mapRange = (v: number, from: [number, number], to: [number, number]) =>
-                (v - from[0]) / (from[1] - from[0]) * (to[1] - to[0]) + to[0];
-                
-            for (let pin in this.state.buffers) {
-                let buf = this.state.buffers[pin];
-                if (buf && buf.length >= 3 && buf.length % 3 == 0) {
-                    let pixelCount = buf.length / 3;
-                    let group = this.pixelGroups[pin];
-                    if (!group)
-                        group = this.pixelGroups[pin] = this.mkGroup();
-                    this.element = group //HACK
-                    let pixels = this.pixels[pin];
-                    if (!pixels)
-                        pixels = this.pixels[pin] = [];
-                    if (pixels.length != pixelCount) {
-                        //resize
-                        if (pixels.length < pixelCount) {
-                            for (let i = pixels.length; i < pixelCount; i++) {
-                                let p = mkNeoPixel([0, i*PIXEL_SPACING]);
-                                pixels[i] = p;
-                                group.appendChild(p.e);
-                            }
-                        } else {
-                            //Fewer pixels; do anything?
-                        }
-                    }
-                    for (let [i, gi, ri, bi] = [0, 0, 1, 2]; bi < buf.length; i++,ri+=3,gi+=3,bi+=3) {
-                        let rgb: [number, number, number] = [buf[ri] as any as number, buf[gi] as any as number, buf[bi] as any as number];
-                        let pixel = pixels[i];
-                        pixel.setRgb(rgb);
-                    }
-                }
+            //update canvases
+            for (let pinStr in this.state.pixelColors) {
+                let pin = Number(pinStr);
+                let colors = this.state.pixelColors[pin];
+                let canvas = this.canvases[pin];
+                if (!canvas)
+                    canvas = this.canvases[pin] = new NeoPixelCanvas(pin);
+                canvas.update(colors);
             }
+
+            //TODO: update NeoPixel part
          }
         public updateTheme (): void { }
     }

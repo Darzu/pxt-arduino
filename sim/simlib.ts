@@ -205,6 +205,11 @@ namespace pxsim.bluetooth {
     }
 }
 
+namespace pxsim {
+    export enum NeoPixelMode {RGB, RGBW};
+    export type RGBW = [number, number, number, number];
+}
+
 namespace pxsim.boardsvg {
     export interface IPointerEvents {
         up: string,
@@ -363,6 +368,14 @@ namespace pxsim.boardsvg {
             ]},
         ]
     }
+    //TODO: don't hardcode this
+    export const NEOPIXEL_LAYOUT: {[pin: number]: NeoPixelMode} = (() => {
+        let map: {[pin: number]: NeoPixelMode} = {};
+        map[7/*DigitalPin.P0*/] = NeoPixelMode.RGB;
+        map[8/*DigitalPin.P1*/] = NeoPixelMode.RGBW;
+        map[9/*DigitalPin.P2*/] = NeoPixelMode.RGB;
+        return map
+    })();
 }
 
 namespace pxsim {

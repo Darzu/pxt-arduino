@@ -52,7 +52,7 @@ namespace pxsim {
             this.thermometerCmp = new ThermometerCmp();
             this.lightSensorCmp = new LightSensorCmp();
             this.compassCmp = new CompassCmp();
-            this.neopixelCmp = new NeoPixelCmp();
+            this.neopixelCmp = new NeoPixelCmp(boardsvg.NEOPIXEL_LAYOUT/*TODO don't hardcode*/);
         }
 
         receiveMessage(msg: SimulatorMessage) {
@@ -309,7 +309,7 @@ namespace pxsim.boardsvg {
             this.defs = <SVGDefsElement>svg.child(this.element, "defs", {});
             this.g = svg.elt("g");
             this.element.appendChild(this.g);
-            this.underboard = <SVGGElement>svg.child(this.g, "g");
+            this.underboard = <SVGGElement>svg.child(this.g, "g", {class: "sim-underboard"});
             this.components = {};
 
             this.buildDom();
@@ -505,6 +505,7 @@ namespace pxsim.boardsvg {
                 let rs = 1;
                 let cs = pinDisc.labels.length;
                 let pins = mkPinGrid(l, t, rs, cs, (i, j) => pinDisc.labels[j]);
+                svg.addClass(pins, "sim-board-pin-group");
                 this.g.appendChild(pins);
             })
 
@@ -573,6 +574,7 @@ namespace pxsim.boardsvg {
             let wires: SVGElement[] = [];
             let p1 = this.loc(pin1);
             let p2 = this.loc(pin2);
+            let g = svg.child(this.g, "g", {class: "sim-bb-wire-group"});
             const closestPointOffBoard = (p: [number, number]): [number, number] => {
                 const offset = PIN_DIST/2;
                 let e = this.closestEdge(p);
@@ -586,14 +588,14 @@ namespace pxsim.boardsvg {
             let wireId = nextWireId++;
             let end1 = this.mkWireEnd(p1, clr);
             let end2 = this.mkWireEnd(p2, clr);
-            let endG = <SVGGElement>svg.child(this.g, "g", {class: "sim-bb-wire-ends-g"});
+            let endG = <SVGGElement>svg.child(g, "g", {class: "sim-bb-wire-ends-g"});
             endG.appendChild(end1);
             endG.appendChild(end2);
             let edgeIdx1 = this.closestEdgeIdx(p1);
             let edgeIdx2 = this.closestEdgeIdx(p2);
             if (edgeIdx1 == edgeIdx2) {
                 let seg = this.mkWireSeg(p1, p2, clr);
-                this.g.appendChild(seg);
+                g.appendChild(seg);
                 wires.push(seg);
             } else {
                 let offP1 = closestPointOffBoard(p1);
@@ -611,13 +613,13 @@ namespace pxsim.boardsvg {
                     midSegHover = this.mkWireSeg(offP1, offP2, clr);
                 } 
                 svg.addClass(midSegHover, "sim-bb-wire-hover");
-                this.g.appendChild(offSeg1);
+                g.appendChild(offSeg1);
                 wires.push(offSeg1);
-                this.g.appendChild(offSeg2);
+                g.appendChild(offSeg2);
                 wires.push(offSeg2);
                 this.underboard.appendChild(midSeg);
                 wires.push(midSeg);
-                this.g.appendChild(midSegHover);
+                g.appendChild(midSegHover);
                 wires.push(midSegHover);
                 //set hover mechanism
                 let wireIdClass = `sim-bb-wire-id-${wireId}`;
