@@ -169,7 +169,7 @@ namespace pxsim.boardsvg {
                 "height": `${CANVAS_HEIGHT}px`,
             });
             this.canvas = el;
-            this.background = <SVGRectElement>svg.child(el, "rect", { class: "sim-neopixel-background"});
+            this.background = <SVGRectElement>svg.child(el, "rect", { class: "sim-neopixel-background hidden"});
             this.updateViewBox(-CANVAS_VIEW_WIDTH/2, 0, CANVAS_VIEW_WIDTH, CANVAS_VIEW_HEIGHT);
         }
 
@@ -190,6 +190,10 @@ namespace pxsim.boardsvg {
                 let color = colors[i];
                 pixel.setRgb(color);
             }
+
+            //show the canvas if it's hidden
+            if (colors.length > 0)
+                svg.removeClass(this.background, "hidden");
 
             //resize if necessary
             let [first, last] = [this.pixels[0], this.pixels[this.pixels.length-1]]
@@ -215,6 +219,9 @@ namespace pxsim.boardsvg {
         public style: string = `
             .sim-neopixel-canvas {
             }
+            .sim-neopixel-canvas .hidden {
+                visibility:hidden;
+            }
             .sim-neopixel-background {
                 fill: rgba(255,255,255,0.8);
             }
@@ -233,6 +240,12 @@ namespace pxsim.boardsvg {
 
             this.stripsGroup = <SVGGElement>svg.elt("g");
             this.element = this.stripsGroup;
+
+            //TODO: determine this from static analysis
+            for (let pinNm in NEOPIXEL_LAYOUT) {
+                let pin = Number(pinNm);
+                this.mkStrip(pin);
+            }
         }
         private getStripsList() {
             let strips: NeoPixelStrip[] = [];
