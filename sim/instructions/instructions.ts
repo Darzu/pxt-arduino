@@ -511,10 +511,10 @@ namespace pxsim.instructions {
     function mkPartsPanel(props: BoardProps) {
         let panel = mkPanel();
 
-        const BOARD_SCALE = 0.15;
-        const BB_SCALE = 0.4;
-        const CMP_SCALE = 0.5;
-        const WIRE_SCALE = 0.3;
+        const BOARD_SCALE = 0.1;
+        const BB_SCALE = 0.25;
+        const CMP_SCALE = 0.3;
+        const WIRE_SCALE = 0.23;
 
         // board and breadboard
         let boardImg = mkBoardImgSvg(props.board);
@@ -527,10 +527,7 @@ namespace pxsim.instructions {
         // components
         let cmps = props.allCmps;
         cmps.forEach(c => {
-            let quant = 1;
-            if (c.type == "buttonpair") { //TODO don't specialcase this
-                quant = 2;
-            }
+            let quant = c.locations.length;
             let cmp = mkCmpDiv(c.type, {
                 left: QUANT_LBL(quant),
                 leftSize: QUANT_LBL_SIZE,
@@ -591,25 +588,16 @@ namespace pxsim.instructions {
         });
         let cmps = (props.stepToCmps[step] || []);
         cmps.forEach(c => {
-            let cmp = mkCmpDiv(c.type, {
-                top: bbLocToCoordStr(c.locations[0]), 
-                topSize: LOC_LBL_SIZE, 
-                cmpHeight: REQ_CMP_HEIGHT,
-                cmpScale: REQ_CMP_SCALE
-            })
-            addClass(cmp, "cmp-div");
-            reqsDiv.appendChild(cmp);
-            //TODO: find a generalization so we don't have to specialize for buttonpair
-            if (c.type == "buttonpair") {
-                cmp = mkCmpDiv(c.type, {
-                    top: bbLocToCoordStr(c.locations[1]), 
+            c.locations.forEach((l, i) => {
+                let cmp = mkCmpDiv(c.type, {
+                    top: bbLocToCoordStr(l), 
                     topSize: LOC_LBL_SIZE, 
                     cmpHeight: REQ_CMP_HEIGHT,
                     cmpScale: REQ_CMP_SCALE
                 })
                 addClass(cmp, "cmp-div");
                 reqsDiv.appendChild(cmp);
-            }
+            });
         });
 
         return panel;  

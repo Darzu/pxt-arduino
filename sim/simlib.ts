@@ -355,7 +355,7 @@ namespace pxsim.boardsvg {
                 {start: ["bb", `a${AZ_DISPLAY_COL+3}`], end: ["board", "A3"], color: "green", instructionStep: 4},
                 {start: ["bb", `j${AZ_DISPLAY_COL+4}`], end: ["board", "A4"], color: "green", instructionStep: 4},
             ]},
-            {type: "buttonpair", locations:["f1", "f28", "d28"], instructionStep: 5, wires: [
+            {type: "buttonpair", locations:["f1", "f28"], instructionStep: 5, wires: [
                 {start: ["bb", "j1"], end: ["board", "7"], color: "yellow", instructionStep: 6},
                 {start: ["bb", "a3"], end: ["bb", "-2"], color: "blue", instructionStep: 6},
                 {start: ["bb", "j28"], end: ["board", "~6"], color: "orange", instructionStep: 7},
@@ -363,17 +363,17 @@ namespace pxsim.boardsvg {
             ]},
             {type: "neopixel", locations:["h13","h18","h23"], instructionStep: 8, wires: [
                 //strip1
-                {start: ["bb", "j14"], end: ["bb", "-37"], color: "blue", instructionStep: 8},
-                {start: ["bb", "j15"], end: ["bb", "+38"], color: "red", instructionStep: 9},
-                {start: ["bb", "j16"], end: ["board", "~12"], color: "violet", instructionStep: 9},
+                {start: ["bb", "j14"], end: ["bb", "-37"], color: "blue", instructionStep: 9},
+                {start: ["bb", "j15"], end: ["bb", "+38"], color: "red", instructionStep: 10},
+                {start: ["bb", "j16"], end: ["board", "~12"], color: "violet", instructionStep: 10},
                 //strip2
-                {start: ["bb", "j19"], end: ["bb", "-41"], color: "blue", instructionStep: 8},
-                {start: ["bb", "j20"], end: ["bb", "+42"], color: "red", instructionStep: 9},
-                {start: ["bb", "j21"], end: ["board", "~11"], color: "violet", instructionStep: 9},
+                {start: ["bb", "j19"], end: ["bb", "-41"], color: "blue", instructionStep: 9},
+                {start: ["bb", "j20"], end: ["bb", "+42"], color: "red", instructionStep: 10},
+                {start: ["bb", "j21"], end: ["board", "~11"], color: "violet", instructionStep: 10},
                 //strip3
-                {start: ["bb", "j24"], end: ["bb", "-45"], color: "blue", instructionStep: 8},
-                {start: ["bb", "j25"], end: ["bb", "+46"], color: "red", instructionStep: 9},
-                {start: ["bb", "j26"], end: ["board", "~10"], color: "violet", instructionStep: 9},
+                {start: ["bb", "j24"], end: ["bb", "-45"], color: "blue", instructionStep: 9},
+                {start: ["bb", "j25"], end: ["bb", "+46"], color: "red", instructionStep: 10},
+                {start: ["bb", "j26"], end: ["board", "~10"], color: "violet", instructionStep: 10},
             ]},
         ]
     }
