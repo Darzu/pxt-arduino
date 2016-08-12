@@ -364,15 +364,15 @@ namespace pxsim.boardsvg {
             {type: "neopixel", locations:["h13","h18","h23"], instructionStep: 8, wires: [
                 //strip1
                 {start: ["bb", "j14"], end: ["bb", "-37"], color: "blue", instructionStep: 9},
-                {start: ["bb", "j15"], end: ["bb", "+38"], color: "red", instructionStep: 10},
+                {start: ["bb", "j15"], end: ["bb", "+38"], color: "red", instructionStep: 11},
                 {start: ["bb", "j16"], end: ["board", "~12"], color: "violet", instructionStep: 10},
                 //strip2
                 {start: ["bb", "j19"], end: ["bb", "-41"], color: "blue", instructionStep: 9},
-                {start: ["bb", "j20"], end: ["bb", "+42"], color: "red", instructionStep: 10},
+                {start: ["bb", "j20"], end: ["bb", "+42"], color: "red", instructionStep: 11},
                 {start: ["bb", "j21"], end: ["board", "~11"], color: "violet", instructionStep: 10},
                 //strip3
                 {start: ["bb", "j24"], end: ["bb", "-45"], color: "blue", instructionStep: 9},
-                {start: ["bb", "j25"], end: ["bb", "+46"], color: "red", instructionStep: 10},
+                {start: ["bb", "j25"], end: ["bb", "+46"], color: "red", instructionStep: 11},
                 {start: ["bb", "j26"], end: ["board", "~10"], color: "violet", instructionStep: 10},
             ]},
         ]
