@@ -377,8 +377,8 @@ namespace pxsim.boardsvg {
             return cmp;
         }
         public addComponentAndWiring(cmpDesc: ComponentDescription) {
-            this.addComponent(cmpDesc);
             cmpDesc.wires.forEach(w => this.addWire(w, cmpDesc.type));
+            this.addComponent(cmpDesc);
         }
 
         private updateTheme() {

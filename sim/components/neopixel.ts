@@ -146,12 +146,12 @@ namespace pxsim.boardsvg {
     }
 
 
-    const CANVAS_WIDTH = 2*PIN_DIST;
+    const CANVAS_WIDTH = 1.2*PIN_DIST;
     const CANVAS_HEIGHT = 12*PIN_DIST;
     const CANVAS_VIEW_WIDTH = CANVAS_WIDTH;
     const CANVAS_VIEW_HEIGHT = CANVAS_HEIGHT;
-    const CANVAS_PADDING = PIN_DIST*4;
-    const CANVAS_LEFT = PIN_DIST;
+    const CANVAS_VIEW_PADDING = PIN_DIST*4;
+    const CANVAS_LEFT = 1.4*PIN_DIST;
     const CANVAS_TOP = PIN_DIST;
     export class NeoPixelCanvas {
         public canvas: SVGSVGElement;
@@ -186,7 +186,7 @@ namespace pxsim.boardsvg {
             for (let i = 0; i < colors.length; i++) {
                 let pixel = this.pixels[i];
                 if (!pixel) {
-                    let cxy: Coord = [0, CANVAS_PADDING + i*PIXEL_SPACING];
+                    let cxy: Coord = [0, CANVAS_VIEW_PADDING + i*PIXEL_SPACING];
                     pixel = this.pixels[i] = new NeoPixel(cxy);
                     this.canvas.appendChild(pixel.e);
                 }
@@ -202,7 +202,7 @@ namespace pxsim.boardsvg {
             //resize if necessary
             let [first, last] = [this.pixels[0], this.pixels[this.pixels.length-1]]
             let yDiff = last.cy - first.cy;
-            let newH = yDiff + CANVAS_PADDING*2;
+            let newH = yDiff + CANVAS_VIEW_PADDING*2;
             let [oldX, oldY, oldW, oldH] = this.viewBox;
             if (oldH < newH) {
                 let scalar = newH/oldH;
@@ -222,6 +222,10 @@ namespace pxsim.boardsvg {
     export class NeoPixelSvg implements IBoardComponent<NeoPixelCmp> {
         public style: string = `
             .sim-neopixel-canvas {
+            }
+            .sim-neopixel-canvas-parent:hover {
+                transform-origin: center;
+                transform: scale(4) translateY(-60px);
             }
             .sim-neopixel-canvas .hidden {
                 visibility:hidden;
@@ -274,7 +278,8 @@ namespace pxsim.boardsvg {
             let part = mkNeoPixelPart();
             this.stripsGroup.appendChild(part.e);
             let canvas = new NeoPixelCanvas(pin);
-            this.stripsGroup.appendChild(canvas.canvas);
+            let canvasG = svg.child(this.stripsGroup, "g", {class: "sim-neopixel-canvas-parent"});
+            canvasG.appendChild(canvas.canvas);
             let strip = {canvas: canvas, part: part};
             this.strips[pin] = strip;
             this.updateStripLocs();
