@@ -449,6 +449,15 @@ namespace pxsim.instructions {
             if (cmps) {
                 cmps.forEach(c => {
                     let cmp = board.addComponent(c)
+                    //TODO: don't special case this, find a generalization
+                    if (c.type == "neopixel") {
+                        let np = <boardsvg.NeoPixelSvg>cmp;
+                        //TODO: determine this from static analysis
+                        for (let pinNm in boardsvg.NEOPIXEL_LAYOUT) {
+                            let pin = Number(pinNm);
+                            np.mkStrip(pin);
+                        }
+                    }
                 });
             }
         }
@@ -495,6 +504,15 @@ namespace pxsim.instructions {
                 if (buildMode) {
                     board.breadboard.highlightLoc(c.locations[0]);
                     svg.addClass(cmp.element, "notgrayed");
+                }
+                //TODO: don't special case this, find a generalization
+                if (c.type == "neopixel") {
+                    let np = <boardsvg.NeoPixelSvg>cmp;
+                    //TODO: determine this from static analysis
+                    for (let pinNm in boardsvg.NEOPIXEL_LAYOUT) {
+                        let pin = Number(pinNm);
+                        np.mkStrip(pin);
+                    }
                 }
             });
         }

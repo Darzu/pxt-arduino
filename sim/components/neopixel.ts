@@ -150,7 +150,7 @@ namespace pxsim.boardsvg {
     const CANVAS_PADDING = PIN_DIST*2;
     const CANVAS_LEFT = PIN_DIST;
     const CANVAS_TOP = PIN_DIST;
-    class NeoPixelCanvas {
+    export class NeoPixelCanvas {
         public canvas: SVGSVGElement;
         public pin: number;
         public pixels: NeoPixel[];
@@ -213,7 +213,7 @@ namespace pxsim.boardsvg {
         }
     };
 
-    type NeoPixelStrip = {canvas: NeoPixelCanvas, part: SVGAndSize<SVGElement>};
+    export type NeoPixelStrip = {canvas: NeoPixelCanvas, part: SVGAndSize<SVGElement>};
 
     export class NeoPixelSvg implements IBoardComponent<NeoPixelCmp> {
         public style: string = `
@@ -240,12 +240,6 @@ namespace pxsim.boardsvg {
 
             this.stripsGroup = <SVGGElement>svg.elt("g");
             this.element = this.stripsGroup;
-
-            //TODO: determine this from static analysis
-            for (let pinNm in NEOPIXEL_LAYOUT) {
-                let pin = Number(pinNm);
-                this.mkStrip(pin);
-            }
         }
         private getStripsList() {
             let strips: NeoPixelStrip[] = [];
@@ -272,7 +266,7 @@ namespace pxsim.boardsvg {
                 }
             });
         }
-        private mkStrip(pin: DigitalPin) {
+        public mkStrip(pin: DigitalPin) {
             let part = mkNeoPixelPart();
             this.stripsGroup.appendChild(part.e);
             let canvas = new NeoPixelCanvas(pin);
