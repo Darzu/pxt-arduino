@@ -94,9 +94,21 @@ namespace pxsim.boardsvg {
     const PIXEL_RADIUS = PIN_DIST;
 
     // For the instructions parts list
-    export function mkNeoPixelPart(xy: Coord): SVGAndSize<SVGCircleElement> {
-        //TODO
-        return new NeoPixel(xy);
+    export function mkNeoPixelPart(xy: Coord = [0,0]): SVGAndSize<SVGElement> {
+        const NP_PART_XOFF = -13.5;
+        const NP_PART_YOFF = -11;
+        const NP_PART_WIDTH = 87.5;
+        const NP_PART_HEIGHT = 370;
+        const NEOPIXEL_PART_IMG = "neopixel-black-60-vert.svg";
+        let [x,y] = xy;
+        let l = x + NP_PART_XOFF;
+        let t = y + NP_PART_YOFF;
+        let w = NP_PART_WIDTH;
+        let h = NP_PART_HEIGHT;
+        let img = <SVGImageElement>svg.elt("image");
+        svg.hydrate(img, {class: "sim-neopixel-strip", x: l, y: t, width: w, height: h,
+            href: `/images/${NEOPIXEL_PART_IMG}`});
+        return {e: img, l: l, t: t, w: w, h: h};
     }
     export class NeoPixel implements SVGAndSize<SVGCircleElement> {
         public e: SVGCircleElement;
@@ -136,6 +148,8 @@ namespace pxsim.boardsvg {
     const CANVAS_VIEW_WIDTH = CANVAS_WIDTH;
     const CANVAS_VIEW_HEIGHT = CANVAS_HEIGHT;
     const CANVAS_PADDING = PIN_DIST*2;
+    const CANVAS_LEFT = PIN_DIST;
+    const CANVAS_TOP = PIN_DIST;
     class NeoPixelCanvas {
         public canvas: SVGSVGElement;
         public pin: number;
@@ -195,62 +209,76 @@ namespace pxsim.boardsvg {
         }
     };
 
+    type NeoPixelStrip = {canvas: NeoPixelCanvas, part: SVGAndSize<SVGElement>};
+
     export class NeoPixelSvg implements IBoardComponent<NeoPixelCmp> {
         public style: string = `
             .sim-neopixel-canvas {
-                overflow: hidden;
             }
             .sim-neopixel-background {
-                fill: rgba(255,255,255,0.5);
+                fill: rgba(255,255,255,0.8);
+            }
+            .sim-neopixel-strip {
             }
         `;
         public element: SVGElement;
         public defs: SVGElement[];
         private state: NeoPixelCmp;
-        private canvases: {[pin: number]: NeoPixelCanvas} = {};
-        private canvasGroup: SVGGElement;
+        private strips: {[pin: number]: NeoPixelStrip} = {};
+        private stripsGroup: SVGGElement;
         private lastLocations: Coord[] = [];
 
         public init(bus: EventBus, state: NeoPixelCmp, svgEl: SVGSVGElement): void {
             this.state = state;
 
-            this.canvasGroup = <SVGGElement>svg.elt("g");
-            this.element = this.canvasGroup;
+            this.stripsGroup = <SVGGElement>svg.elt("g");
+            this.element = this.stripsGroup;
         }
-        private getCanvasesList() {
-            let canvs: NeoPixelCanvas[] = [];
-            for (let pinNm in this.canvases) {
+        private getStripsList() {
+            let strips: NeoPixelStrip[] = [];
+            for (let pinNm in this.strips) {
                 let pin = Number(pinNm);
-                canvs.push(this.canvases[pin]);
+                let strip = this.strips[pin];
+                strips.push(strip);
             }
-            return canvs;
+            return strips;
         }
         public setLocations(...xys: Coord[]): void {
             this.lastLocations = xys;
-            this.updateCanvasLocs();
+            this.updateStripLocs();
         }
-        private updateCanvasLocs() {
+        private updateStripLocs() {
             let xys = this.lastLocations;
-            let canvs = this.getCanvasesList();
+            let strips = this.getStripsList();
             xys.forEach((xy, i) => {
-                let c = canvs[i];
-                if (c) {
-                    c.setLoc(xy);
+                let s = strips[i];
+                if (s) {
+                    let [x,y] = xy;
+                    s.canvas.setLoc([x+CANVAS_LEFT, y+CANVAS_TOP]);
+                    svg.hydrate(s.part.e, {transform: `translate(${x} ${y})`});//TODO: update part's l,h, etc.
                 }
             });
         }
-        
+        private mkStrip(pin: DigitalPin) {
+            let part = mkNeoPixelPart();
+            this.stripsGroup.appendChild(part.e);
+            let canvas = new NeoPixelCanvas(pin);
+            this.stripsGroup.appendChild(canvas.canvas);
+            let strip = {canvas: canvas, part: part};
+            this.strips[pin] = strip;
+            this.updateStripLocs();
+            return strip;
+        }
         public updateState(): void {
             //update canvases
             for (let pinStr in this.state.pixelColors) {
                 let pin = Number(pinStr);
                 let colors = this.state.pixelColors[pin];
-                let canvas = this.canvases[pin];
-                if (!canvas) {
-                    canvas = this.canvases[pin] = new NeoPixelCanvas(pin);
-                    this.canvasGroup.appendChild(canvas.canvas);
-                    this.updateCanvasLocs();
+                let strip = this.strips[pin];
+                if (!strip) {
+                    strip = this.mkStrip(pin);
                 }
+                let canvas = strip.canvas;
                 canvas.update(colors);
             }
 

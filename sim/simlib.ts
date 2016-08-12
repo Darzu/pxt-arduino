@@ -361,19 +361,19 @@ namespace pxsim.boardsvg {
                 {start: ["bb", "j28"], end: ["board", "~6"], color: "orange", instructionStep: 7},
                 {start: ["bb", "a30"], end: ["bb", "-25"], color: "blue", instructionStep: 7},
             ]},
-            {type: "neopixel", locations:["h14","h19","h24"], instructionStep: 8, wires: [
+            {type: "neopixel", locations:["h13","h18","h23"], instructionStep: 8, wires: [
                 //strip1
-                {start: ["bb", "j15"], end: ["bb", "-38"], color: "blue", instructionStep: 8},
-                {start: ["bb", "j16"], end: ["bb", "+39"], color: "red", instructionStep: 9},
-                {start: ["bb", "j14"], end: ["board", "~12"], color: "violet", instructionStep: 9},
+                {start: ["bb", "j14"], end: ["bb", "-37"], color: "blue", instructionStep: 8},
+                {start: ["bb", "j15"], end: ["bb", "+38"], color: "red", instructionStep: 9},
+                {start: ["bb", "j16"], end: ["board", "~12"], color: "violet", instructionStep: 9},
                 //strip2
-                {start: ["bb", "j20"], end: ["bb", "-42"], color: "blue", instructionStep: 8},
-                {start: ["bb", "j21"], end: ["bb", "+43"], color: "red", instructionStep: 9},
-                {start: ["bb", "j19"], end: ["board", "~11"], color: "violet", instructionStep: 9},
+                {start: ["bb", "j19"], end: ["bb", "-41"], color: "blue", instructionStep: 8},
+                {start: ["bb", "j20"], end: ["bb", "+42"], color: "red", instructionStep: 9},
+                {start: ["bb", "j21"], end: ["board", "~11"], color: "violet", instructionStep: 9},
                 //strip3
-                {start: ["bb", "j25"], end: ["bb", "-46"], color: "blue", instructionStep: 8},
-                {start: ["bb", "j26"], end: ["bb", "+47"], color: "red", instructionStep: 9},
-                {start: ["bb", "j24"], end: ["board", "~10"], color: "violet", instructionStep: 9},
+                {start: ["bb", "j24"], end: ["bb", "-45"], color: "blue", instructionStep: 8},
+                {start: ["bb", "j25"], end: ["bb", "+46"], color: "red", instructionStep: 9},
+                {start: ["bb", "j26"], end: ["board", "~10"], color: "violet", instructionStep: 9},
             ]},
         ]
     }
