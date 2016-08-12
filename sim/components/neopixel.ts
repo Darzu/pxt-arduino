@@ -30,7 +30,7 @@ namespace pxsim {
 
         public sendBuffer(buffer: Buffer, pin: DigitalPin) {
             this.used = true;
-            
+
             //update buffers
             let buf = <Uint8Array[]>(<any>buffer).data;
             this.buffers[pin] = buf;
@@ -150,7 +150,7 @@ namespace pxsim.boardsvg {
     const CANVAS_HEIGHT = 12*PIN_DIST;
     const CANVAS_VIEW_WIDTH = CANVAS_WIDTH;
     const CANVAS_VIEW_HEIGHT = CANVAS_HEIGHT;
-    const CANVAS_PADDING = PIN_DIST*2;
+    const CANVAS_PADDING = PIN_DIST*4;
     const CANVAS_LEFT = PIN_DIST;
     const CANVAS_TOP = PIN_DIST;
     export class NeoPixelCanvas {
@@ -192,6 +192,7 @@ namespace pxsim.boardsvg {
                 }
                 let color = colors[i];
                 pixel.setRgb(color);
+                svg.hydrate(pixel.e, {title: `offset: ${i}`});
             }
 
             //show the canvas if it's hidden
@@ -226,7 +227,7 @@ namespace pxsim.boardsvg {
                 visibility:hidden;
             }
             .sim-neopixel-background {
-                fill: rgba(255,255,255,0.8);
+                fill: rgba(255,255,255,0.9);
             }
             .sim-neopixel-strip {
             }
