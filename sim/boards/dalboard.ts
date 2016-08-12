@@ -413,6 +413,11 @@ namespace pxsim.boardsvg {
             } else {
                 svg.addClass(this.g, this.getCmpHideClass("buttonpair"))
             }
+            if (this.board.neopixelCmp.used){
+                svg.removeClass(this.g, this.getCmpHideClass("neopixel"))
+            } else {
+                svg.addClass(this.g, this.getCmpHideClass("neopixel"))
+            }
         }
 
         private indexOfMin(vs: number[]): number {

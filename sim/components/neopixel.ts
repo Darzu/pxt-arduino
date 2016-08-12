@@ -22,12 +22,15 @@ namespace pxsim {
         private buffers: {[pin: number]: Uint8Array[]} = {};
         public pixelColors: {[pin: number]: RGBW[]} = {};
         public pinModes: {[pin: number]: NeoPixelMode};
+        public used = false;
 
         constructor(pinModes: {[pin: number]: NeoPixelMode}) {
             this.pinModes = pinModes;
         }
 
         public sendBuffer(buffer: Buffer, pin: DigitalPin) {
+            this.used = true;
+            
             //update buffers
             let buf = <Uint8Array[]>(<any>buffer).data;
             this.buffers[pin] = buf;

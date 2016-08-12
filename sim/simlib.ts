@@ -324,7 +324,7 @@ namespace pxsim.boardsvg {
         components: ComponentDescription[],
     }
     export interface SVGAndSize<T extends SVGElement> {e: T, t: number, l: number, w: number, h: number};
-    const AZ_DISPLAY_COL = 5;
+    const AZ_DISPLAY_COL = 8;
     export const ARDUINO_ZERO: BoardDescription = {
         photo: "arduino-zero-photo-sml.png",
         outlineImg:  "arduino-outline.svg",
@@ -361,28 +361,32 @@ namespace pxsim.boardsvg {
                 {start: ["bb", "j28"], end: ["board", "~6"], color: "orange", instructionStep: 7},
                 {start: ["bb", "a30"], end: ["bb", "-25"], color: "blue", instructionStep: 7},
             ]},
-            {type: "neopixel", locations:["h13","h18","h23"], instructionStep: 8, wires: [
-                //strip1
-                {start: ["bb", "j14"], end: ["bb", "-37"], color: "blue", instructionStep: 9},
-                {start: ["bb", "j15"], end: ["bb", "+38"], color: "red", instructionStep: 11},
-                {start: ["bb", "j16"], end: ["board", "~12"], color: "green", instructionStep: 10},
-                //strip2
-                {start: ["bb", "j19"], end: ["bb", "-41"], color: "blue", instructionStep: 9},
-                {start: ["bb", "j20"], end: ["bb", "+42"], color: "red", instructionStep: 11},
-                {start: ["bb", "j21"], end: ["board", "~11"], color: "green", instructionStep: 10},
-                //strip3
-                {start: ["bb", "j24"], end: ["bb", "-45"], color: "blue", instructionStep: 9},
-                {start: ["bb", "j25"], end: ["bb", "+46"], color: "red", instructionStep: 11},
-                {start: ["bb", "j26"], end: ["board", "~10"], color: "green", instructionStep: 10},
+            // //strip1
+            // {type: "neopixel", locations:["h13"], instructionStep: 8, wires: [
+            //     {start: ["bb", "j14"], end: ["bb", "-37"], color: "blue", instructionStep: 9},
+            //     {start: ["bb", "j15"], end: ["bb", "+38"], color: "red", instructionStep: 11},
+            //     {start: ["bb", "j16"], end: ["board", "~12"], color: "green", instructionStep: 10},
+            // ]},
+            //strip2
+            {type: "neopixel", locations:["h19"], instructionStep: 8, wires: [
+                {start: ["bb", "j20"], end: ["bb", "-41"], color: "blue", instructionStep: 8},
+                {start: ["bb", "j21"], end: ["bb", "+42"], color: "red", instructionStep: 9},
+                {start: ["bb", "j22"], end: ["board", "~11"], color: "green", instructionStep: 9},
             ]},
+            // //strip3
+            // {type: "neopixel", locations:["h23"], instructionStep: 8, wires: [
+            //     {start: ["bb", "j24"], end: ["bb", "-45"], color: "blue", instructionStep: 9},
+            //     {start: ["bb", "j25"], end: ["bb", "+46"], color: "red", instructionStep: 11},
+            //     {start: ["bb", "j26"], end: ["board", "~10"], color: "green", instructionStep: 10},
+            // ]},
         ]
     }
     //TODO: determine this from static analysis
     export const NEOPIXEL_LAYOUT: {[pin: number]: NeoPixelMode} = (() => {
         let map: {[pin: number]: NeoPixelMode} = {};
         map[7/*DigitalPin.P0*/] = NeoPixelMode.RGB;
-        map[8/*DigitalPin.P1*/] = NeoPixelMode.RGBW;
-        map[9/*DigitalPin.P2*/] = NeoPixelMode.RGB;
+        //map[8/*DigitalPin.P1*/] = NeoPixelMode.RGBW;
+        //map[9/*DigitalPin.P2*/] = NeoPixelMode.RGB;
         return map
     })();
 }

@@ -420,6 +420,7 @@ namespace pxsim.instructions {
         //TODO handle in a general way
         board.board.buttonPairState.used = true;
         board.board.displayCmp.used = true;
+        board.board.neopixelCmp.used = true;
         board.updateState();
         
         //set smiley
