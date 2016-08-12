@@ -98,7 +98,7 @@ namespace pxsim.boardsvg {
         const NP_PART_XOFF = -13.5;
         const NP_PART_YOFF = -11;
         const NP_PART_WIDTH = 87.5;
-        const NP_PART_HEIGHT = 370;
+        const NP_PART_HEIGHT = 190;
         const NEOPIXEL_PART_IMG = "neopixel-black-60-vert.svg";
         let [x,y] = xy;
         let l = x + NP_PART_XOFF;
