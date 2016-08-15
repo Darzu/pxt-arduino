@@ -10,7 +10,7 @@ namespace pxsim {
     }
 }
 
-namespace pxsim.boardsvg {
+namespace pxsim.visuals {
     export interface ILightSensorTheme {
         lightLevelOn?: string;
         lightLevelOff?: string;

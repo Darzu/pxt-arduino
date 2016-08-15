@@ -44,9 +44,9 @@ namespace pxsim.instructions {
     const NUM_FONT = 40;
     const NUM_MARGIN = 5;
     const STYLE = `
-            ${boardsvg.BOARD_SYTLE}
-            ${boardsvg.BUTTON_PAIR_STYLE/*TODO: generalize for all components*/}
-            ${boardsvg.LED_MATRIX_STYLE}
+            ${visuals.BOARD_SYTLE}
+            ${visuals.BUTTON_PAIR_STYLE/*TODO: generalize for all components*/}
+            ${visuals.LED_MATRIX_STYLE}
             .instr-panel {
                 margin: ${PANEL_MARGIN}px;
                 padding: ${PANEL_PADDING}px;
@@ -99,7 +99,7 @@ namespace pxsim.instructions {
             `;
 
     function bbLocToCoordStr(loc: string) {
-        let {rowNm, colNm} = boardsvg.BRK_PIN_NM(loc);
+        let {rowNm, colNm} = visuals.BRK_PIN_NM(loc);
         return `(${rowNm},${colNm})`
     }
     function addClass(el: HTMLElement, cls: string) {
@@ -116,7 +116,7 @@ namespace pxsim.instructions {
         el.textContent = txt;
         return el;
     }
-    function mkWireSeg(p1: [number, number], p2: [number, number], clr: string): boardsvg.SVGAndSize<SVGPathElement> {
+    function mkWireSeg(p1: [number, number], p2: [number, number], clr: string): visuals.SVGAndSize<SVGPathElement> {
         const coordStr = (xy: [number, number]):string => {return `${xy[0]}, ${xy[1]}`};
         let [x1, y1] = p1;
         let [x2, y2] = p2
@@ -127,9 +127,9 @@ namespace pxsim.instructions {
         (<any>e).style["stroke"] = clr;
         return {e: e, l: Math.min(x1, x2), t: Math.min(y1, y2), w: Math.abs(x1-x2), h: Math.abs(y1-y2)};
     }
-    function mkWireEnd(p: [number, number], top: boolean, clr: string): boardsvg.SVGAndSize<SVGElement> {
-        const endW = boardsvg.PIN_DIST/4.0;
-        let k = boardsvg.WIRE_WIDTH*.6;
+    function mkWireEnd(p: [number, number], top: boolean, clr: string): visuals.SVGAndSize<SVGElement> {
+        const endW = visuals.PIN_DIST/4.0;
+        let k = visuals.WIRE_WIDTH*.6;
         let [cx, cy] = p; 
         let o = top ? -1 : 1;
         let g = svg.elt('g')
@@ -155,13 +155,13 @@ namespace pxsim.instructions {
         g.appendChild(el);
         return {e: g, l: x1 - endW, t: Math.min(y1, y2), w: w1 + endW*2, h: h1 + h2};
     }
-    function mkWire(cp: [number, number], clr: string): boardsvg.SVGAndSize<SVGGElement> {
+    function mkWire(cp: [number, number], clr: string): visuals.SVGAndSize<SVGGElement> {
         let g = <SVGGElement>svg.elt('g');
         let [cx, cy] = cp;
         let offset = WIRE_CURVE_OFF;
-        let p1: boardsvg.Coord = [cx - offset, cy - WIRE_LENGTH/2];
-        let p2: boardsvg.Coord = [cx + offset, cy + WIRE_LENGTH/2];
-        clr = boardsvg.mapWireColor(clr);
+        let p1: visuals.Coord = [cx - offset, cy - WIRE_LENGTH/2];
+        let p2: visuals.Coord = [cx + offset, cy + WIRE_LENGTH/2];
+        clr = visuals.mapWireColor(clr);
         let e1 = mkWireEnd(p1, true, clr);
         let s = mkWireSeg(p1, p2, clr);
         let e2 = mkWireEnd(p2, false, clr);
@@ -188,7 +188,7 @@ namespace pxsim.instructions {
         cmpHeight?: number,
         cmpScale?: number
     };
-    function mkBoardImgSvg(desc: boardsvg.BoardDescription): boardsvg.SVGAndSize<SVGElement> {
+    function mkBoardImgSvg(desc: visuals.BoardDescription): visuals.SVGAndSize<SVGElement> {
         let img = svg.elt( "image");
         let [l, t] = [0,0];
         let w = desc.width;
@@ -203,13 +203,13 @@ namespace pxsim.instructions {
 
         return {e: img, w: w, h: h, l: l, t};
     }
-    function mkBBSvg(): boardsvg.SVGAndSize<SVGElement> {
-        let w = boardsvg.BB_WIDTH;
-        let h = boardsvg.BB_HEIGHT;
-        let bb = new boardsvg.Breadboard(w, h);
+    function mkBBSvg(): visuals.SVGAndSize<SVGElement> {
+        let w = visuals.BB_WIDTH;
+        let h = visuals.BB_HEIGHT;
+        let bb = new visuals.Breadboard(w, h);
         return bb.getSVGAndSize();
     }
-    function wrapSvg(el: boardsvg.SVGAndSize<SVGElement>, opts: mkCmpDivOpts): HTMLElement { 
+    function wrapSvg(el: visuals.SVGAndSize<SVGElement>, opts: mkCmpDivOpts): HTMLElement { 
         //TODO: Refactor this function; it is too complicated. There is a lot of error-prone math being done
         // to scale and place all elements which could be simplified with more forethought.
         let svgEl = <SVGSVGElement>document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -279,7 +279,7 @@ namespace pxsim.instructions {
             let txtW = size / txtAspectRatio[0];
             let txtH = size / txtAspectRatio[1];
             let [cx, y] = [elDims.l + elDims.w/2, elDims.t - LBL_VERT_PAD - txtH/2];
-            let lbl = boardsvg.mkTxt(cx, y, size, 0, opts.top, xOff, yOff);
+            let lbl = visuals.mkTxt(cx, y, size, 0, opts.top, xOff, yOff);
             svg.addClass(lbl, "cmp-lbl");
             svgEl.appendChild(lbl);
 
@@ -293,7 +293,7 @@ namespace pxsim.instructions {
             let txtW = size / txtAspectRatio[0];
             let txtH = size / txtAspectRatio[1];
             let [cx, y] = [elDims.l + elDims.w/2, elDims.t + elDims.h + LBL_VERT_PAD + txtH/2];
-            let lbl = boardsvg.mkTxt(cx, y, size, 0, opts.bot, xOff, yOff);
+            let lbl = visuals.mkTxt(cx, y, size, 0, opts.bot, xOff, yOff);
             svg.addClass(lbl, "cmp-lbl");
             svgEl.appendChild(lbl);
 
@@ -308,7 +308,7 @@ namespace pxsim.instructions {
             let txtH = size / txtAspectRatio[1];
             let len = txtW*opts.right.length;
             let [cx, cy] = [elDims.l + elDims.w + LBL_RIGHT_PAD + len/2, elDims.t + elDims.h/2];
-            let lbl = boardsvg.mkTxt(cx, cy, size, 0, opts.right, xOff, yOff);
+            let lbl = visuals.mkTxt(cx, cy, size, 0, opts.right, xOff, yOff);
             svg.addClass(lbl, "cmp-lbl");
             svgEl.appendChild(lbl);
 
@@ -322,7 +322,7 @@ namespace pxsim.instructions {
             let txtH = size / txtAspectRatio[1];
             let len = txtW*opts.left.length;
             let [cx, cy] = [elDims.l - LBL_LEFT_PAD - len/2, elDims.t + elDims.h/2];
-            let lbl = boardsvg.mkTxt(cx, cy, size, 0, opts.left, xOff, yOff);
+            let lbl = visuals.mkTxt(cx, cy, size, 0, opts.left, xOff, yOff);
             svg.addClass(lbl, "cmp-lbl");
             svgEl.appendChild(lbl);
 
@@ -342,30 +342,30 @@ namespace pxsim.instructions {
         div.appendChild(svgEl);
         return div;
     }
-    function mkCmpDiv(type: boardsvg.Component | "wire", opts: mkCmpDivOpts): HTMLElement {
-        let el: boardsvg.SVGAndSize<SVGElement>;
+    function mkCmpDiv(type: visuals.Component | "wire", opts: mkCmpDivOpts): HTMLElement {
+        let el: visuals.SVGAndSize<SVGElement>;
         if (type == "wire") {
             el = mkWire([0,0], opts.wireClr || "red");
         } else {
-            el = boardsvg.mkComponent(<boardsvg.Component>type, [0,0]);
+            el = visuals.mkComponent(<visuals.Component>type, [0,0]);
         }
         return wrapSvg(el, opts);
     }
     type BoardProps = {
-        board: boardsvg.BoardDescription,
-        stepToWires: boardsvg.WireDescription[][], 
-        stepToCmps: boardsvg.ComponentDescription[][]
-        allWires: boardsvg.WireDescription[],
-        allCmps: boardsvg.ComponentDescription[],
+        board: visuals.BoardDescription,
+        stepToWires: visuals.WireDescription[][], 
+        stepToCmps: visuals.ComponentDescription[][]
+        allWires: visuals.WireDescription[],
+        allCmps: visuals.ComponentDescription[],
         lastStep: number,
-        colorToWires: Map<boardsvg.WireDescription[]>,
+        colorToWires: Map<visuals.WireDescription[]>,
         allWireColors: string[],
     };
-    function mkBoardProps(desc: boardsvg.BoardDescription) {
+    function mkBoardProps(desc: visuals.BoardDescription) {
         let wireGroups = desc.components.map(c => c.wires)
         wireGroups.push(desc.basicWires || []);
         let allWires = wireGroups.reduce((pre, cur) => pre.concat(cur));
-        let stepToWires: boardsvg.WireDescription[][] = [];
+        let stepToWires: visuals.WireDescription[][] = [];
         allWires.forEach(w => {
             let step = w.instructionStep;
             if (!stepToWires[step]) {
@@ -374,7 +374,7 @@ namespace pxsim.instructions {
              stepToWires[step].push(w);
         })
         let allComponents = desc.components;
-        let stepToCmps: boardsvg.ComponentDescription[][] = [];
+        let stepToCmps: visuals.ComponentDescription[][] = [];
         allComponents.forEach(c => {
             let step = c.instructionStep;
             if (!stepToCmps[step]) {
@@ -383,7 +383,7 @@ namespace pxsim.instructions {
              stepToCmps[step].push(c);
         })
         let lastStep = Math.max(stepToWires.length - 1, stepToCmps.length - 1);
-        let colorToWires: Map<boardsvg.WireDescription[]> = {}
+        let colorToWires: Map<visuals.WireDescription[]> = {}
         let allWireColors: string[] = [];
         allWires.forEach(w => {
             if (!colorToWires[w.color]) {
@@ -397,7 +397,7 @@ namespace pxsim.instructions {
             colorToWires: colorToWires, allWireColors: allWireColors};
     }
     function mkBoard(props: BoardProps, step: number, width: number, buildMode: boolean = false) {
-        let board = new pxsim.boardsvg.DalBoardSvg({
+        let board = new pxsim.visuals.DalBoardSvg({
             theme: pxsim.mkRandomTheme(),
             runtime: pxsim.runtime,
             boardDesc: props.board,
@@ -452,9 +452,9 @@ namespace pxsim.instructions {
                     let cmp = board.addComponent(c)
                     //TODO: don't special case this, find a generalization
                     if (c.type == "neopixel") {
-                        let np = <boardsvg.NeoPixelSvg>cmp;
+                        let np = <visuals.NeoPixelSvg>cmp;
                         //TODO: determine this from static analysis
-                        for (let pinNm in boardsvg.NEOPIXEL_LAYOUT) {
+                        for (let pinNm in visuals.NEOPIXEL_LAYOUT) {
                             let pin = Number(pinNm);
                             np.mkStrip(pin);
                         }
@@ -508,9 +508,9 @@ namespace pxsim.instructions {
                 }
                 //TODO: don't special case this, find a generalization
                 if (c.type == "neopixel") {
-                    let np = <boardsvg.NeoPixelSvg>cmp;
+                    let np = <visuals.NeoPixelSvg>cmp;
                     //TODO: determine this from static analysis
-                    for (let pinNm in boardsvg.NEOPIXEL_LAYOUT) {
+                    for (let pinNm in visuals.NEOPIXEL_LAYOUT) {
                         let pin = Number(pinNm);
                         np.mkStrip(pin);
                     }
@@ -695,7 +695,7 @@ namespace pxsim.instructions {
 
         style.textContent += STYLE;
 
-        let desc = boardsvg.ARDUINO_ZERO;
+        let desc = visuals.ARDUINO_ZERO;
         
         let props = mkBoardProps(desc);
 

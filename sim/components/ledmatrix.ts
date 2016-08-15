@@ -179,7 +179,7 @@ namespace pxsim {
     }
 }
 
-namespace pxsim.boardsvg {
+namespace pxsim.visuals {
     export function mkLedMatrixSvg(xy: Coord, rows: number, cols: number):
             {e: SVGGElement, t: number, l: number, w: number, h: number, leds: SVGElement[], ledsOuter: SVGElement[], background: SVGElement} {
         let result: {e: SVGGElement, t: number, l: number, w: number, h: number, leds: SVGElement[], ledsOuter: SVGElement[], background: SVGElement}

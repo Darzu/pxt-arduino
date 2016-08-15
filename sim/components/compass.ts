@@ -9,7 +9,7 @@ namespace pxsim {
     }
 }
 
-namespace pxsim.boardsvg {
+namespace pxsim.visuals {
     export interface ICompassTheme {
         color: string
     }

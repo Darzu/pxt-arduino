@@ -34,7 +34,7 @@ namespace pxsim {
     }
 }
 
-namespace pxsim.boardsvg {
+namespace pxsim.visuals {
     export interface ISerialTheme {
         systemLedStroke: string,
         systemLedFill: string

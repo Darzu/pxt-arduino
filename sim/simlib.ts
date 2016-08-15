@@ -210,7 +210,7 @@ namespace pxsim {
     export type RGBW = [number, number, number, number];
 }
 
-namespace pxsim.boardsvg {
+namespace pxsim.visuals {
     export interface IPointerEvents {
         up: string,
         down: string,

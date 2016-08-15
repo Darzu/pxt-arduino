@@ -92,7 +92,7 @@ namespace pxsim {
     }
 }
 
-namespace pxsim.boardsvg {
+namespace pxsim.visuals {
     const PIXEL_SPACING = PIN_DIST*3;
     const PIXEL_RADIUS = PIN_DIST;
 

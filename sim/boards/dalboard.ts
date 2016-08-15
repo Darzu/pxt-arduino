@@ -6,12 +6,12 @@
 namespace pxsim {
     const accents = ["#3ADCFE", "#FFD43A", "#3AFFB3", "#FF3A54"];
 
-    export function mkTheme(accent: string): boardsvg.IBoardTheme {
+    export function mkTheme(accent: string): visuals.IBoardTheme {
         return {
             accent: accent,
         }
     }
-    export function mkRandomTheme(): boardsvg.IBoardTheme {
+    export function mkRandomTheme(): visuals.IBoardTheme {
         let accent = accents[Math.floor(Math.random() * accents.length)];
         return mkTheme(accent);
     }
@@ -52,7 +52,7 @@ namespace pxsim {
             this.thermometerCmp = new ThermometerCmp();
             this.lightSensorCmp = new LightSensorCmp();
             this.compassCmp = new CompassCmp();
-            this.neopixelCmp = new NeoPixelCmp(boardsvg.NEOPIXEL_LAYOUT/*TODO don't hardcode*/);
+            this.neopixelCmp = new NeoPixelCmp(visuals.NEOPIXEL_LAYOUT/*TODO don't hardcode*/);
         }
 
         receiveMessage(msg: SimulatorMessage) {
@@ -83,8 +83,8 @@ namespace pxsim {
             let options = (msg.options || {}) as RuntimeOptions;
             let theme = mkRandomTheme();
             
-            let desc = boardsvg.ARDUINO_ZERO;
-            let view = new boardsvg.DalBoardSvg({
+            let desc = visuals.ARDUINO_ZERO;
+            let view = new visuals.DalBoardSvg({
                 boardDesc: desc,
                 theme: theme,
                 runtime: runtime
@@ -98,7 +98,7 @@ namespace pxsim {
     }
 }
 
-namespace pxsim.boardsvg {
+namespace pxsim.visuals {
     const svg = pxsim.svg;
 
     export interface IBoardTheme {

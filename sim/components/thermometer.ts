@@ -11,7 +11,7 @@ namespace pxsim {
     }
 }
 
-namespace pxsim.boardsvg {
+namespace pxsim.visuals {
     export interface IThermometerTheme {
         foreground: string,
         background: string

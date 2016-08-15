@@ -17,7 +17,7 @@ namespace pxsim.input {
     }
 }
 
-namespace pxsim.boardsvg {
+namespace pxsim.visuals {
     export interface IEdgeConnectorTheme {
         pin?: string;
         pinTouched?: string;

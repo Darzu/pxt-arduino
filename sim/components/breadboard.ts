@@ -1,4 +1,4 @@
-namespace pxsim.boardsvg {
+namespace pxsim.visuals {
     const PIN_HOVER_SCALAR = 1.3;
     const LBL_HOVER_SCALAR = 1.3;
 

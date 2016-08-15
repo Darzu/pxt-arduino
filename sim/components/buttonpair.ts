@@ -32,7 +32,7 @@ namespace pxsim.input {
     }
 }
 
-namespace pxsim.boardsvg {
+namespace pxsim.visuals {
     export function mkBtnSvg(xy: Coord): SVGAndSize<SVGGElement> {
         let [innerCls, outerCls] = ["sim-button", "sim-button-outer"];
         const tabSize = PIN_DIST/2.5;
