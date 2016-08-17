@@ -24,9 +24,8 @@ namespace pxsim {
         // the bus
         bus: EventBus;
         
-        // components
-        //TODO(DZ): allow different component selections
-        displayCmp: LedMatrixCmp;
+        // state & update logic for component services
+        ledMatrixCmp: LedMatrixCmp;
         edgeConnectorState: EdgeConnectorCmp;
         serialCmp: SerialCmp;
         accelerometerCmp: AccelerometerCmp;
@@ -43,7 +42,7 @@ namespace pxsim {
             this.bus = new EventBus(runtime);
             
             // components
-            this.displayCmp = new LedMatrixCmp(runtime);
+            this.ledMatrixCmp = new LedMatrixCmp(runtime);
             this.buttonPairState = new ButtonPairCmp();
             this.edgeConnectorState = new EdgeConnectorCmp();
             this.radioCmp = new RadioCmp(runtime);
@@ -83,9 +82,14 @@ namespace pxsim {
             let options = (msg.options || {}) as RuntimeOptions;
             let theme = mkRandomTheme();
             
-            let desc = visuals.ARDUINO_ZERO;
+            let boardDef = ARDUINO_ZERO; //TODO: read from pxt.json/pxttarget.json
+            let cmpsList = HACK_STATIC_ANALYSIS_RESULTS; //TODO: derive from static analysis
+            let cmpDefs = COMPONENT_DEFINITIONS; //TODO: read from pxt.json/pxttarget.json
+
             let view = new visuals.DalBoardSvg({
-                boardDesc: desc,
+                boardDef: boardDef,
+                activeComponents: cmpsList,
+                componentDefinitions: cmpDefs,
                 theme: theme,
                 runtime: runtime
             })
@@ -107,11 +111,12 @@ namespace pxsim.visuals {
 
     export interface IBoardSvgProps {
         runtime: pxsim.Runtime;
-        boardDesc: BoardDescription;
+        boardDef: BoardDefinition;
         theme?: IBoardTheme;
         disableTilt?: boolean;
-        blank?: boolean; //useful for generating instructions
-        labeledPins?: boolean;
+        shouldLabelPins?: boolean;
+        activeComponents: string[];
+        componentDefinitions: Map<ComponentDefinition>;
     }
 
     export const PIN_DIST = 15; //original dist: 15.25
@@ -124,13 +129,20 @@ namespace pxsim.visuals {
     const BOT_MARGIN = 20;
     export const PIN_LBL_SIZE = PIN_DIST * 0.7;
 
-    export type BoardDimensions = {scaleFn: (n: number)=>number, height: number, width: number, xOff: number, yOff: number};
-    export function getBoardDimensions(b: BoardDescription): BoardDimensions {
-        let scaleFn = (n: number) => n * (PIN_DIST / b.pinDist);
-        let width = scaleFn(b.width);
+    export type ComputedBoardDimensions = {
+        scaleFn: (n: number)=>number, 
+        height: number, 
+        width: number, 
+        xOff: number, 
+        yOff: number
+    };
+    export function getBoardDimensions(b: BoardDefinition): ComputedBoardDimensions {
+        let vis = b.visual;
+        let scaleFn = (n: number) => n * (PIN_DIST / vis.pinDist);
+        let width = scaleFn(vis.width);
         return {
             scaleFn: scaleFn,
-            height: scaleFn(b.height),
+            height: scaleFn(vis.height),
             width: width,
             xOff: (BOARD_BASE_WIDTH - width)/2.0,
             yOff: TOP_MARGIN
@@ -276,8 +288,9 @@ namespace pxsim.visuals {
         private components: Map<IBoardComponent<any>>;
         public breadboard: Breadboard;
         private underboard: SVGGElement;
-        private boardDesc: BoardDescription;
-        private boardDim: BoardDimensions;
+        private boardDef: BoardDefinition;
+        private boardDim: ComputedBoardDimensions;
+        private componentDefs: Map<ComponentDefinition>;
         private boardEdges: number[];
         private id: number;
         private labeledPins: boolean;
@@ -290,9 +303,9 @@ namespace pxsim.visuals {
 
         constructor(public props: IBoardSvgProps) {
             this.id = nextBoardId++;
-            this.labeledPins = props.labeledPins;
-            this.boardDesc = props.boardDesc;
-            this.boardDim = getBoardDimensions(this.boardDesc);
+            this.labeledPins = props.shouldLabelPins;
+            this.boardDef = props.boardDef;
+            this.boardDim = getBoardDimensions(this.boardDef);
             this.board = this.props.runtime.board as pxsim.DalBoard;
             this.board.updateView = () => this.updateState();
             this.element = <SVGSVGElement>svg.elt("svg")
@@ -311,15 +324,25 @@ namespace pxsim.visuals {
             this.element.appendChild(this.g);
             this.underboard = <SVGGElement>svg.child(this.g, "g", {class: "sim-underboard"});
             this.components = {};
+            this.componentDefs = props.componentDefinitions;
 
             this.buildDom();
 
             this.updateTheme();
             this.updateState();
 
-            if (!props.blank) {
-                this.boardDesc.basicWires.forEach(w => this.addWire(w));
-                this.boardDesc.components.forEach(c => this.addComponentAndWiring(c));
+            let cmps = props.activeComponents;
+            if (cmps.length > 0) {
+                this.addPowerWires();
+                cmps.forEach(cmpName => {
+                    //TODO
+                    // let cmpDef = props.componentDefinitions[cmpName];
+                    // if (cmpDef) {
+                    //     this.addComponentAndWiring(cmpDef);
+                    // } else {
+                    //     console.log(`No definition for component: ${cmpName}`);
+                    // }
+                });
             }
         }
 
@@ -337,10 +360,78 @@ namespace pxsim.visuals {
             return rect;
         }
 
-        private getCmpClass = (type: Component) => `sim-${type}-cmp`;
-        private getCmpHideClass = (type: Component) => `sim-hide-${type}-cmp`;
+        private getCmpClass = (type: string) => `sim-${type}-cmp`;
+        private getCmpHideClass = (type: string) => `sim-hide-${type}-cmp`;
 
-        public addWire(w: WireDescription, cmp?: Component): {endG: SVGGElement, end1: SVGElement, end2: SVGElement, wires: SVGElement[]} {
+        public addPowerWires() {
+            //TODO
+        }
+        
+        public allocateComponents(cmpNames: string[]) {
+            let cmpDefs = cmpNames.map(nm => this.componentDefs[nm] || null);
+
+            // ----- allocate GPIO pins
+            // determine blocks needed
+            let blockAssignments: {cmpIdx: number, gpioNeeded: number, gpioAssigned: string[]}[] = [];
+            cmpDefs.forEach((def, idx) => {
+                if (def) {
+                    if (typeof def.gpioPinsNeeded === "number") {
+                        //individual pins
+                        for (let i = 0; i < def.gpioPinsNeeded; i++) {
+                            blockAssignments.push({cmpIdx: idx, gpioNeeded: 1, gpioAssigned: []});
+                        }
+                    } else {
+                        //blocks of pins
+                        let blocks = <number[]>def.gpioPinsNeeded;
+                        blocks.forEach(numNeeded => {
+                            blockAssignments.push({cmpIdx: idx, gpioNeeded: numNeeded, gpioAssigned: []});
+                        });
+                    }
+                }
+            });
+            // sort by size of blocks
+            let sortBlockAssignments = () => blockAssignments.sort((a, b) => b.gpioNeeded - a.gpioNeeded); //largest blocks first
+            let sortAvailableGPIOBlocks = () => availableGPIOBlocks.sort((a, b) => b.length - a.length); //largest blocks first
+            // allocate each block
+            let copyDoubleArray = (a: string[][]) => a.map(b => b.map(p => p));
+            let availableGPIOBlocks = copyDoubleArray(this.boardDef.gpioPinBlocks);
+            if (0 < blockAssignments.length && 0 < availableGPIOBlocks.length) {
+                do {
+                    sortBlockAssignments();
+                    sortAvailableGPIOBlocks();
+                    let assignment = blockAssignments[0];
+                    let smallestAvailableBlockThatFits = availableGPIOBlocks[0];
+                    for (let j = 0; j < availableGPIOBlocks.length; j++) {
+                        if (assignment.gpioNeeded <= availableGPIOBlocks[j].length) {
+                            smallestAvailableBlockThatFits = availableGPIOBlocks[j];
+                        }
+                    }
+                    if (smallestAvailableBlockThatFits.length <= 0) {
+                        break; // out of pins
+                    }
+                    while (0 < assignment.gpioNeeded && 0 < smallestAvailableBlockThatFits.length) {
+                        assignment.gpioNeeded--;
+                        assignment.gpioAssigned.push(smallestAvailableBlockThatFits.pop());
+                    }
+                    sortBlockAssignments();
+                } while(0 < blockAssignments[0].gpioNeeded);
+            }
+            if (0 < blockAssignments.length && 0 < blockAssignments[0].gpioNeeded) {
+                //TODO: out of pins
+            }
+
+            // determine breadboard columns space needed
+            //TODO
+            // allocate power pins
+            //TODO
+        }
+        public allocateComponent(cmpDef: ComponentDefinition) {
+            if (typeof cmpDef.gpioPinsNeeded === "number") {
+            } else {
+            }
+            //let gpioCount = cmpDef.gpioPinsNeeded;
+        }
+        public addWire(w: WireDefinition, cmp?: string): {endG: SVGGElement, end1: SVGElement, end2: SVGElement, wires: SVGElement[]} {
             let wireEls = this.drawWire(w.start[1], w.end[1], w.color)
             if (cmp) {
                 let cls = this.getCmpClass(cmp);
@@ -350,7 +441,7 @@ namespace pxsim.visuals {
             return wireEls;
         }
         public addComponent(cmpDesc: ComponentDescription): IBoardComponent<any> {
-            const mkCmp = (type: Component): IBoardComponent<any> => {
+            const mkCmp = (type: ComponentType): IBoardComponent<any> => {
                 let [cnstr, stateFn] = ComponenetToCnstrAndState[cmpDesc.type];
                 let cmp = cnstr();
                 cmp.init(this.board.bus, stateFn(this.board), this.element);
@@ -403,7 +494,7 @@ namespace pxsim.visuals {
 
             //show/hide
             //TODO generalize for all components
-            if (this.board.displayCmp.used){
+            if (this.board.ledMatrixCmp.used){
                 svg.removeClass(this.g, this.getCmpHideClass("display"))
             } else {
                 svg.addClass(this.g, this.getCmpHideClass("display"))
@@ -476,7 +567,7 @@ namespace pxsim.visuals {
             // main board
             this.background = svg.child(this.g, "image", 
                 { class: "sim-board", x: this.boardDim.xOff, y: this.boardDim.yOff, width: this.boardDim.width, height: this.boardDim.height, 
-                    "href": `/images/${this.boardDesc.photo}`});
+                    "href": `/images/${this.boardDef.visual.image}`});
             let backgroundCover = this.mkGrayCover(this.boardDim.xOff, this.boardDim.yOff, this.boardDim.width, this.boardDim.height);
             this.g.appendChild(backgroundCover);
             const mkPinGrid = (l: number, t: number, rs: number, cs: number, getNm: (i: number, j: number) => string) => {
@@ -504,12 +595,12 @@ namespace pxsim.visuals {
                 };
                 return mkGrid(l, t, rs, cs, size, size, props, pinFn);
             }
-            this.boardDesc.pins.forEach(pinDisc => {
-                let l = this.boardDim.xOff + this.boardDim.scaleFn(pinDisc.x) + PIN_DIST/2.0;
-                let t = this.boardDim.yOff + this.boardDim.scaleFn(pinDisc.y) + PIN_DIST/2.0;
+            this.boardDef.visual.pinBlocks.forEach(pinBlock => {
+                let l = this.boardDim.xOff + this.boardDim.scaleFn(pinBlock.x) + PIN_DIST/2.0;
+                let t = this.boardDim.yOff + this.boardDim.scaleFn(pinBlock.y) + PIN_DIST/2.0;
                 let rs = 1;
-                let cs = pinDisc.labels.length;
-                let pins = mkPinGrid(l, t, rs, cs, (i, j) => pinDisc.labels[j]);
+                let cs = pinBlock.labels.length;
+                let pins = mkPinGrid(l, t, rs, cs, (i, j) => pinBlock.labels[j]);
                 svg.addClass(pins, "sim-board-pin-group");
                 this.g.appendChild(pins);
             })
@@ -525,7 +616,8 @@ namespace pxsim.visuals {
             this.breadboard.updateLocation(bbX, bbY);
 
             // wire colors
-            for (let clr in WIRE_COLOR) {
+            //TODO: handle all wire colors even ones not in WIRE_COLOR_MAP
+            for (let clr in WIRE_COLOR_MAP) {
                 this.style.textContent += `
                 .wire-stroke-${clr} {
                     stroke: ${mapWireColor(clr)};
@@ -543,7 +635,7 @@ namespace pxsim.visuals {
             let c1: [number, number] = [p1[0], p2[1]];
             let c2: [number, number] = [p2[0], p1[1]];
             let w = <SVGPathElement>svg.mkPath("sim-bb-wire", `M${coordStr(p1)} C${coordStr(c1)} ${coordStr(c2)} ${coordStr(p2)}`);
-            if (clr in WIRE_COLOR) {
+            if (clr in WIRE_COLOR_MAP) {
                 svg.addClass(w, `wire-stroke-${clr}`);
             } else {
                 (<any>w).style["stroke"] = clr;
@@ -553,7 +645,7 @@ namespace pxsim.visuals {
         private mkWireSeg = (p1: [number, number], p2: [number, number], clr: string): SVGPathElement => {
             const coordStr = (xy: [number, number]):string => {return `${xy[0]}, ${xy[1]}`};
             let w = <SVGPathElement>svg.mkPath("sim-bb-wire", `M${coordStr(p1)} L${coordStr(p2)}`);
-            if (clr in WIRE_COLOR) {
+            if (clr in WIRE_COLOR_MAP) {
                 svg.addClass(w, `wire-stroke-${clr}`);
             } else {
                 (<any>w).style["stroke"] = clr;
@@ -567,7 +659,7 @@ namespace pxsim.visuals {
             let y = p[1];
             let r = WIRE_WIDTH/2 + endW/2;
             svg.hydrate(w, {cx: x, cy: y, r: r, class: "sim-bb-wire-end"});
-            if (clr in WIRE_COLOR) {
+            if (clr in WIRE_COLOR_MAP) {
                 svg.addClass(w, `wire-fill-${clr}`);
             } else {
                 (<any>w).style["fill"] = clr;
@@ -575,10 +667,8 @@ namespace pxsim.visuals {
             (<any>w).style["stroke-width"] = `${endW}px`;
             return w;
         }                
-        private drawWire(pin1: string, pin2: string, clr: string): {endG: SVGGElement, end1: SVGElement, end2: SVGElement, wires: SVGElement[]} {
+        private drawWire(pin1: Coord, pin2: Coord, clr: string): {endG: SVGGElement, end1: SVGElement, end2: SVGElement, wires: SVGElement[]} {
             let wires: SVGElement[] = [];
-            let p1 = this.loc(pin1);
-            let p2 = this.loc(pin2);
             let g = svg.child(this.g, "g", {class: "sim-bb-wire-group"});
             const closestPointOffBoard = (p: [number, number]): [number, number] => {
                 const offset = PIN_DIST/2;
@@ -591,22 +681,22 @@ namespace pxsim.visuals {
                 return [p[0], y];
             }
             let wireId = nextWireId++;
-            let end1 = this.mkWireEnd(p1, clr);
-            let end2 = this.mkWireEnd(p2, clr);
+            let end1 = this.mkWireEnd(pin1, clr);
+            let end2 = this.mkWireEnd(pin2, clr);
             let endG = <SVGGElement>svg.child(g, "g", {class: "sim-bb-wire-ends-g"});
             endG.appendChild(end1);
             endG.appendChild(end2);
-            let edgeIdx1 = this.closestEdgeIdx(p1);
-            let edgeIdx2 = this.closestEdgeIdx(p2);
+            let edgeIdx1 = this.closestEdgeIdx(pin1);
+            let edgeIdx2 = this.closestEdgeIdx(pin2);
             if (edgeIdx1 == edgeIdx2) {
-                let seg = this.mkWireSeg(p1, p2, clr);
+                let seg = this.mkWireSeg(pin1, pin2, clr);
                 g.appendChild(seg);
                 wires.push(seg);
             } else {
-                let offP1 = closestPointOffBoard(p1);
-                let offP2 = closestPointOffBoard(p2);
-                let offSeg1 = this.mkWireSeg(p1, offP1, clr);
-                let offSeg2 = this.mkWireSeg(p2, offP2, clr);
+                let offP1 = closestPointOffBoard(pin1);
+                let offP2 = closestPointOffBoard(pin2);
+                let offSeg1 = this.mkWireSeg(pin1, offP1, clr);
+                let offSeg2 = this.mkWireSeg(pin2, offP2, clr);
                 let midSeg: SVGElement;
                 let midSegHover: SVGElement;
                 let isBetweenMiddleTwoEdges = (edgeIdx1 == 1 || edgeIdx1 == 2) && (edgeIdx2 == 1 || edgeIdx2 == 2);

@@ -4,6 +4,22 @@
 /// <reference path="../../libs/microbit/enums.d.ts"/>
 
 namespace pxsim {
+    export enum NeoPixelMode {RGB, RGBW};
+    export type RGBW = [number, number, number, number];
+}
+
+namespace pxsim.visuals {
+    //TODO: determine this from static analysis
+    export const NEOPIXEL_LAYOUT: {[pin: number]: NeoPixelMode} = (() => {
+        let map: {[pin: number]: NeoPixelMode} = {};
+        map[7/*DigitalPin.P0*/] = pxsim.NeoPixelMode.RGB;
+        //map[8/*DigitalPin.P1*/] = NeoPixelMode.RGBW;
+        //map[9/*DigitalPin.P2*/] = NeoPixelMode.RGB;
+        return map
+    })();
+}
+
+namespace pxsim {
     export function sendBufferAsm(buffer: Buffer, pin: DigitalPin) {
         let b = board();
         if (b) {

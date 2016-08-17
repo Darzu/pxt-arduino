@@ -38,7 +38,7 @@ namespace pxsim {
     export function panic(code: number) {
         console.log("PANIC:", code)
         led.setBrightness(255);
-        let img = board().displayCmp.image;
+        let img = board().ledMatrixCmp.image;
         img.clear();
         img.set(0, 4, 255);
         img.set(1, 3, 255);
@@ -205,11 +205,6 @@ namespace pxsim.bluetooth {
     }
 }
 
-namespace pxsim {
-    export enum NeoPixelMode {RGB, RGBW};
-    export type RGBW = [number, number, number, number];
-}
-
 namespace pxsim.visuals {
     export interface IPointerEvents {
         up: string,
@@ -264,7 +259,9 @@ namespace pxsim.visuals {
         return el;
     }
 
-    export const WIRE_COLOR: Map<string> = {
+    export type WireColor = 
+        "black" | "white" | "gray" | "purple" | "blue" | "green" | "yellow" | "orange" | "red" | "brown";
+    export const WIRE_COLOR_MAP: Map<string> = {
         black: "#514f4d",
         white: "#fcfdfc",
         gray: "#acabab",
@@ -276,53 +273,10 @@ namespace pxsim.visuals {
         red: "#f44f43",
         brown: "#c89764",
     }
-    export function mapWireColor(clr: string) {
-        return WIRE_COLOR[clr] || clr;
+    export function mapWireColor(clr: WireColor | string): string {
+        return WIRE_COLOR_MAP[clr] || clr;
     }
 
-    // board description
-    // arduino zero description
-    export type Component = ("buttonpair" | "display" | "edgeconnector" | "serial" 
-        | "radio" | "thermometer" | "accelerometer" | "compass" | "lightsensor"
-        | "neopixel" );
-    //TODO this type decleration without the last ", any" goofs VS Code's syntax highlighting
-    export type CnstrAndStateFns = [ () => IBoardComponent<any>, (d: DalBoard) => any, any ];
-    export const ComponenetToCnstrAndState: {[key: string]: CnstrAndStateFns} = {
-        "buttonpair": [() => new ButtonPairSvg(), (d: DalBoard) => d.buttonPairState, null],
-        "display": [() => new LedMatrixSvg(), (d: DalBoard) => d.displayCmp, null],
-        "edgeconnector": [() => new EdgeConnectorSvg(), (d: DalBoard) => d.edgeConnectorState, null],
-        "serial": [() => new SerialSvg(), (d: DalBoard) => d.serialCmp, null],
-        "radio": [() => new RadioSvg(), (d: DalBoard) => d.radioCmp, null],
-        "thermometer": [() => new ThermometerSvg(), (d: DalBoard) => d.thermometerCmp, null],
-        "accelerometer": [() => new AccelerometerSvg(), (d: DalBoard) => d.accelerometerCmp, null],
-        "compass": [() => new CompassSvg(), (d: DalBoard) => d.compassCmp, null],
-        "lightsensor": [() => new LightSensorSvg(), (d: DalBoard) => d.lightSensorCmp, null],
-        "neopixel": [() => new NeoPixelSvg(), (d: DalBoard) => d.neopixelCmp, null],
-    }
-    export function mkComponent(type: Component, xy: Coord): SVGAndSize<SVGElement> {
-        if (type == "buttonpair") {
-            return mkBtnSvg(xy);
-        } else if (type == "display") {
-            return mkLedMatrixSvg(xy, 8, 8);
-        } else if (type == "neopixel") {
-            return mkNeoPixelPart(xy);
-        } else {
-            throw `unsupported compoment type: ${type}`;
-        }
-    }
-    export type LocDesc = ["bb" | "board", string]
-    export type WireDescription = {start: LocDesc, end: LocDesc, color: string, instructionStep: number};
-    export type ComponentDescription = {type: Component, locations: string[], instructionStep: number, wires: WireDescription[]} 
-    export interface BoardDescription {
-        photo: string,
-        outlineImg: string,
-        width: number,
-        height: number,
-        pinDist: number,
-        pins: { x: number, y: number, labels: string[] }[],
-        basicWires: WireDescription[], 
-        components: ComponentDescription[],
-    }
     export interface SVGAndSize<T extends SVGElement> {e: T, t: number, l: number, w: number, h: number};
 }
 

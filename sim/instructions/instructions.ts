@@ -342,12 +342,12 @@ namespace pxsim.instructions {
         div.appendChild(svgEl);
         return div;
     }
-    function mkCmpDiv(type: visuals.Component | "wire", opts: mkCmpDivOpts): HTMLElement {
+    function mkCmpDiv(type: visuals.ComponentType | "wire", opts: mkCmpDivOpts): HTMLElement {
         let el: visuals.SVGAndSize<SVGElement>;
         if (type == "wire") {
             el = mkWire([0,0], opts.wireClr || "red");
         } else {
-            el = visuals.mkComponent(<visuals.Component>type, [0,0]);
+            el = visuals.mkComponent(<visuals.ComponentType>type, [0,0]);
         }
         return wrapSvg(el, opts);
     }
@@ -367,7 +367,7 @@ namespace pxsim.instructions {
         let allWires = wireGroups.reduce((pre, cur) => pre.concat(cur));
         let stepToWires: visuals.WireDescription[][] = [];
         allWires.forEach(w => {
-            let step = w.instructionStep;
+            let step = w.assemblyStep;
             if (!stepToWires[step]) {
                 stepToWires[step] = []
             }
@@ -376,7 +376,7 @@ namespace pxsim.instructions {
         let allComponents = desc.components;
         let stepToCmps: visuals.ComponentDescription[][] = [];
         allComponents.forEach(c => {
-            let step = c.instructionStep;
+            let step = c.assemblyStep;
             if (!stepToCmps[step]) {
                 stepToCmps[step] = []
             }
@@ -402,7 +402,7 @@ namespace pxsim.instructions {
             runtime: pxsim.runtime,
             boardDesc: props.board,
             blank: true,
-            labeledPins: buildMode,
+            shouldLabelPins: buildMode,
         })
         svg.hydrate(board.element, {
             "width": width,
@@ -419,7 +419,7 @@ namespace pxsim.instructions {
 
         //TODO handle in a general way
         board.board.buttonPairState.used = true;
-        board.board.displayCmp.used = true;
+        board.board.ledMatrixCmp.used = true;
         board.board.neopixelCmp.used = true;
         board.updateState();
         

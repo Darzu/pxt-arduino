@@ -73,7 +73,7 @@ namespace pxsim {
     }
 
     export function createImageFromString(text: string): Image {
-        let font = board().displayCmp.font;
+        let font = board().ledMatrixCmp.font;
         let w = font.width;
         let sprite = createImage(6 * text.length - 1);
         let k = 0;
@@ -307,8 +307,8 @@ namespace pxsim.visuals {
 
 namespace pxsim {
     export function setUsesDisplay() {
-        if (!board().displayCmp.used) {
-            board().displayCmp.used = true;
+        if (!board().ledMatrixCmp.used) {
+            board().ledMatrixCmp.used = true;
             runtime.queueDisplayUpdate();
         }
     }
@@ -333,7 +333,7 @@ namespace pxsim.ImageMethods {
 
         if (!leds) panic(PanicCode.MICROBIT_NULL_DEREFERENCE);
 
-        leds.copyTo(offset, 5, board().displayCmp.image, 0)
+        leds.copyTo(offset, 5, board().ledMatrixCmp.image, 0)
         runtime.queueDisplayUpdate()
     }
 
@@ -342,7 +342,7 @@ namespace pxsim.ImageMethods {
 
         if (!leds) panic(PanicCode.MICROBIT_NULL_DEREFERENCE);
 
-        leds.copyTo(offset, 5, board().displayCmp.image, 0)
+        leds.copyTo(offset, 5, board().ledMatrixCmp.image, 0)
         runtime.queueDisplayUpdate()
     }
 
@@ -418,9 +418,9 @@ namespace pxsim.ImageMethods {
 
         let cb = getResume();
         let off = stride > 0 ? 0 : leds.width - 1;
-        let display = board().displayCmp.image;
+        let display = board().ledMatrixCmp.image;
 
-        board().displayCmp.animationQ.enqueue({
+        board().ledMatrixCmp.animationQ.enqueue({
             interval: interval,
             frame: () => {
                 if (off >= leds.width || off < 0) return false;
@@ -468,7 +468,7 @@ namespace pxsim.basic {
     export function clearScreen() {
         setUsesDisplay();
         
-        board().displayCmp.image.clear();
+        board().ledMatrixCmp.image.clear();
         runtime.queueDisplayUpdate()
     }
 
@@ -489,46 +489,46 @@ namespace pxsim.led {
     export function plot(x: number, y: number) {
         setUsesDisplay();
         
-        board().displayCmp.image.set(x, y, 255);
+        board().ledMatrixCmp.image.set(x, y, 255);
         runtime.queueDisplayUpdate()
     }
 
     export function unplot(x: number, y: number) {
         setUsesDisplay();
         
-        board().displayCmp.image.set(x, y, 0);
+        board().ledMatrixCmp.image.set(x, y, 0);
         runtime.queueDisplayUpdate()
     }
 
     export function point(x: number, y: number): boolean {
         setUsesDisplay();
         
-        return !!board().displayCmp.image.get(x, y);
+        return !!board().ledMatrixCmp.image.get(x, y);
     }
 
     export function brightness(): number {
         setUsesDisplay();
         
-        return board().displayCmp.brigthness;
+        return board().ledMatrixCmp.brigthness;
     }
 
     export function setBrightness(value: number): void {
         setUsesDisplay();
         
-        board().displayCmp.brigthness = value;
+        board().ledMatrixCmp.brigthness = value;
         runtime.queueDisplayUpdate()
     }
 
     export function stopAnimation(): void {
         setUsesDisplay();
         
-        board().displayCmp.animationQ.cancelAll();
+        board().ledMatrixCmp.animationQ.cancelAll();
     }
 
     export function setDisplayMode(mode: DisplayMode): void {
         setUsesDisplay();
         
-        board().displayCmp.displayMode = mode;
+        board().ledMatrixCmp.displayMode = mode;
         runtime.queueDisplayUpdate()
     }
 
@@ -536,7 +536,7 @@ namespace pxsim.led {
         setUsesDisplay();
         
         let img = createImage(5)
-        board().displayCmp.image.copyTo(0, 5, img, 0);
+        board().ledMatrixCmp.image.copyTo(0, 5, img, 0);
         return img;
     }
 }
