@@ -2,6 +2,7 @@
 /// <reference path="../../libs/microbit/dal.d.ts"/>
 /// <reference path="../../libs/microbit/shims.d.ts"/>
 /// <reference path="../../libs/microbit/enums.d.ts"/>
+/// <reference path="../simlib.ts"/>
 
 namespace pxsim {
     export enum NeoPixelMode {RGB, RGBW};
@@ -40,8 +41,8 @@ namespace pxsim {
         public pinModes: {[pin: number]: NeoPixelMode};
         public used = false;
 
-        constructor(pinModes: {[pin: number]: NeoPixelMode}) {
-            this.pinModes = pinModes;
+        constructor() {
+            this.pinModes = visuals.NEOPIXEL_LAYOUT; //TODO: don't hardcode
         }
 
         public sendBuffer(buffer: Buffer, pin: DigitalPin) {
@@ -111,6 +112,13 @@ namespace pxsim {
 namespace pxsim.visuals {
     const PIXEL_SPACING = PIN_DIST*3;
     const PIXEL_RADIUS = PIN_DIST;
+    const CANVAS_WIDTH = 1.2*PIN_DIST;
+    const CANVAS_HEIGHT = 12*PIN_DIST;
+    const CANVAS_VIEW_WIDTH = CANVAS_WIDTH;
+    const CANVAS_VIEW_HEIGHT = CANVAS_HEIGHT;
+    const CANVAS_VIEW_PADDING = PIN_DIST*4;
+    const CANVAS_LEFT = 1.4*PIN_DIST;
+    const CANVAS_TOP = PIN_DIST;
 
     // For the instructions parts list
     export function mkNeoPixelPart(xy: Coord = [0,0]): SVGAndSize<SVGElement> {
@@ -161,14 +169,6 @@ namespace pxsim.visuals {
         }
     }
 
-
-    const CANVAS_WIDTH = 1.2*PIN_DIST;
-    const CANVAS_HEIGHT = 12*PIN_DIST;
-    const CANVAS_VIEW_WIDTH = CANVAS_WIDTH;
-    const CANVAS_VIEW_HEIGHT = CANVAS_HEIGHT;
-    const CANVAS_VIEW_PADDING = PIN_DIST*4;
-    const CANVAS_LEFT = 1.4*PIN_DIST;
-    const CANVAS_TOP = PIN_DIST;
     export class NeoPixelCanvas {
         public canvas: SVGSVGElement;
         public pin: number;
@@ -274,8 +274,11 @@ namespace pxsim.visuals {
             }
             return strips;
         }
-        public setLocations(...xys: Coord[]): void {
-            this.lastLocations = xys;
+        public moveToCoord(xy: Coord): void {
+            let topPad = PIN_DIST*2;
+            let [x,y] = xy;
+            let loc: Coord = [x, y+topPad];
+            this.lastLocations = [loc];//TODO: support multiple strips
             this.updateStripLocs();
         }
         private updateStripLocs() {

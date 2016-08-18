@@ -205,6 +205,15 @@ namespace pxsim.bluetooth {
     }
 }
 
+namespace pxsim {
+    export function mkRange(a: number, b: number): number[] {
+        let res: number[] = [];
+        for (; a < b; a++)
+            res.push(a);
+        return res;
+    }
+}
+
 namespace pxsim.visuals {
     export interface IPointerEvents {
         up: string,
@@ -231,13 +240,25 @@ namespace pxsim.visuals {
     }
 
     export type Coord = [number, number];
+    export function findDistSqrd(a: Coord, b: Coord): number {
+        let x = a[0] - b[0];
+        let y = a[1] - b[1];
+        return x*x + y*y;
+    }
+    export function findClosestCoordIdx(a: Coord, bs: Coord[]): number {
+        let dists = bs.map(b => findDistSqrd(a, b));
+        let minIdx = dists.reduce((prevIdx, currDist, currIdx, arr) => {
+            return currDist < arr[prevIdx] ? currIdx : prevIdx;
+        }, 0);
+        return minIdx;
+    }
 
     export interface IBoardComponent<T> {
         style: string,
         element: SVGElement,
         defs: SVGElement[],
         init(bus: EventBus, state: T, svgEl: SVGSVGElement): void, //NOTE: constructors not supported in interfaces
-        setLocations(...xys: Coord[]): void,
+        moveToCoord(xy: Coord): void,
         updateState(): void,
         updateTheme(): void,
     }
@@ -278,6 +299,8 @@ namespace pxsim.visuals {
     }
 
     export interface SVGAndSize<T extends SVGElement> {e: T, t: number, l: number, w: number, h: number};
+
+    export const PIN_DIST = 15;
 }
 
 namespace pxsim {

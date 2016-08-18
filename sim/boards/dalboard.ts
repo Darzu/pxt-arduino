@@ -51,7 +51,7 @@ namespace pxsim {
             this.thermometerCmp = new ThermometerCmp();
             this.lightSensorCmp = new LightSensorCmp();
             this.compassCmp = new CompassCmp();
-            this.neopixelCmp = new NeoPixelCmp(visuals.NEOPIXEL_LAYOUT/*TODO don't hardcode*/);
+            this.neopixelCmp = new NeoPixelCmp();
         }
 
         receiveMessage(msg: SimulatorMessage) {
@@ -119,7 +119,6 @@ namespace pxsim.visuals {
         componentDefinitions: Map<ComponentDefinition>;
     }
 
-    export const PIN_DIST = 15; //original dist: 15.25
     export const BOARD_BASE_WIDTH = 498;
     export const BOARD_BASE_HEIGHT = 725;
     export const BB_WIDTH = BOARD_BASE_WIDTH - 2;
@@ -128,6 +127,8 @@ namespace pxsim.visuals {
     const MID_MARGIN = 40;
     const BOT_MARGIN = 20;
     export const PIN_LBL_SIZE = PIN_DIST * 0.7;
+    export const BREADBOARD_COLUMN_COUNT = 30;
+    export const BREADBOARD_ROW_COUNT = 12;
 
     export type ComputedBoardDimensions = {
         scaleFn: (n: number)=>number, 
@@ -300,6 +301,16 @@ namespace pxsim.visuals {
         private allLbls: BBLbl[] = [];
         private pinNmToLbl: Map<BBLbl> = {};
         private nameToLoc: Map<[number, number]> = {};
+        private availablePowerPins = {
+            top: {
+                threeVolt: mkRange(26,51).map(n => `-${n}`),
+                ground: mkRange(26,51).map(n => `+${n}`),
+            },
+            bottom: {
+                threeVolt: mkRange(1,26).map(n => `-${n}`),
+                ground: mkRange(1,26).map(n => `+${n}`),
+            },
+        };
 
         constructor(public props: IBoardSvgProps) {
             this.id = nextBoardId++;
@@ -332,16 +343,17 @@ namespace pxsim.visuals {
             this.updateState();
 
             let cmps = props.activeComponents;
+
+            //TODO
             if (cmps.length > 0) {
-                this.addPowerWires();
-                cmps.forEach(cmpName => {
-                    //TODO
-                    // let cmpDef = props.componentDefinitions[cmpName];
-                    // if (cmpDef) {
-                    //     this.addComponentAndWiring(cmpDef);
-                    // } else {
-                    //     console.log(`No definition for component: ${cmpName}`);
-                    // }
+                this.addBasicWires();
+                let cmpDefs = cmps.map(c => this.componentDefs[c] || null);
+                let cmpsAndWires = this.allocateComponentsAndWiring(cmpDefs);
+                cmpsAndWires.forEach((cAndWs, idx) => {                    
+                    let [cmpDef, wireDefs] = cAndWs;
+                    let cmpNm = cmps[idx];
+                    wireDefs.forEach(w => this.addWire(w, cmpNm));
+                    this.addComponent(cmpDef, cmpNm);
                 });
             }
         }
@@ -363,28 +375,128 @@ namespace pxsim.visuals {
         private getCmpClass = (type: string) => `sim-${type}-cmp`;
         private getCmpHideClass = (type: string) => `sim-hide-${type}-cmp`;
 
-        public addPowerWires() {
-            //TODO
+        private allocateLocation(location: LocationDefinition, 
+            opts: {
+                nearestPin?: string,
+                startColumn?: number,
+                availableGPIOPins?: string[],
+            }): LocationInstance 
+        {
+            if (location === "ground" || location === "threeVolt") {
+                U.assert(!!opts.nearestPin);
+                let nearestCoord = this.loc(opts.nearestPin);
+                let firstTopAndBot = [
+                    this.availablePowerPins.top.ground[0] || this.availablePowerPins.top.threeVolt[0], 
+                    this.availablePowerPins.bottom.ground[0] || this.availablePowerPins.bottom.threeVolt[0]
+                ].map(l => this.loc(l)); 
+                if (!firstTopAndBot[0] || !firstTopAndBot[1]) {
+                    console.debug(`No more available "${location}" locations!`);
+                    //TODO
+                }
+                let nearTop = findClosestCoordIdx(nearestCoord, firstTopAndBot) == 0;
+                let pins: string[];
+                if (nearTop) {
+                    if (location === "ground") {
+                        pins = this.availablePowerPins.top.ground;
+                    } else if (location === "threeVolt") {
+                        pins = this.availablePowerPins.top.threeVolt;
+                    }
+                } else {
+                    if (location === "ground") {
+                        pins = this.availablePowerPins.bottom.ground;
+                    } else if (location === "threeVolt") {
+                        pins = this.availablePowerPins.bottom.threeVolt;
+                    }
+                }
+                let pinCoords = pins.map(p => this.loc(p));
+                let pinIdx = findClosestCoordIdx(nearestCoord, pinCoords);
+                let pin = pins[pinIdx];
+                if (nearTop) {
+                    this.availablePowerPins.top.ground.splice(pinIdx, 1);
+                    this.availablePowerPins.top.threeVolt.splice(pinIdx, 1);
+                } else {
+                    this.availablePowerPins.bottom.ground.splice(pinIdx, 1);
+                    this.availablePowerPins.bottom.threeVolt.splice(pinIdx, 1);
+                }
+                return ["breadboard", pin];
+            } else if (location[0] === "breadboard") {
+                U.assert(!!opts.startColumn);
+                let row = <string>location[1];
+                let col = (<number>location[2] + opts.startColumn);
+                return ["breadboard", `${row}${col}`]
+            } else if (location[0] === "GPIO") {
+                U.assert(!!opts.availableGPIOPins);
+                let idx = <number>location[1];
+                let pin = opts.availableGPIOPins[idx];
+                return ["dalboard", pin];
+            } else {
+                //TODO
+                U.assert(false);
+                return null;
+            }
         }
-        
-        public allocateComponents(cmpNames: string[]) {
-            let cmpDefs = cmpNames.map(nm => this.componentDefs[nm] || null);
-
-            // ----- allocate GPIO pins
+        public allocateBasicWires(): WireInstance[] {
+            let boardGround = this.boardDef.groundPins[0] || null;
+            if (!boardGround) {
+                console.log("No available ground pin on board!");
+                //TODO
+            }
+            let threeVoltPin = this.boardDef.threeVoltPins[0] || null;
+            if (!threeVoltPin) {
+                console.log("No available 3.3V pin on board!");
+                //TODO
+            }
+            let topLeft = "-26";
+            let botLeft = "-1";
+            const wires: WireInstance[] = [
+                {start: this.allocateLocation("ground", {nearestPin: topLeft}), 
+                 end: this.allocateLocation("ground", {nearestPin: botLeft}), 
+                 color: "blue", assemblyStep: 0},
+                {start: this.allocateLocation("ground", {nearestPin: topLeft}), 
+                 end: ["dalboard", boardGround], 
+                color: "blue", assemblyStep: 0},
+                {start: this.allocateLocation("threeVolt", {nearestPin: topLeft}), 
+                 end: this.allocateLocation("threeVolt", {nearestPin: botLeft}), 
+                 color: "red", assemblyStep: 1},
+                {start: this.allocateLocation("threeVolt", {nearestPin: topLeft}), 
+                 end: ["dalboard", threeVoltPin], 
+                color: "red", assemblyStep: 1},
+            ];
+            return wires;
+        }
+        public allocateWire(wireDef: WireDefinition,
+            opts: {
+                startColumn: number,
+                availableGPIOPins: string[],
+            }): WireInstance
+        {
+            let ends = [wireDef.start, wireDef.end];
+            let endIsPower = ends.map(e => e === "ground" || e === "threeVolt");
+            let endInsts = ends.map((e, idx) => !endIsPower[idx] ? this.allocateLocation(e, opts) : null)
+            endInsts = endInsts.map((e, idx) => e ? e : this.allocateLocation(ends[idx], {
+                    nearestPin: endInsts[1 - idx][1],
+                    startColumn: opts.startColumn,
+                    availableGPIOPins: opts.availableGPIOPins
+                })); 
+            return {start: endInsts[0], end: endInsts[1], color: wireDef.color, assemblyStep: wireDef.assemblyStep};
+        }
+        private allocateGPIOPins(cmpDefs: ComponentDefinition[]): string[][][] {
             // determine blocks needed
-            let blockAssignments: {cmpIdx: number, gpioNeeded: number, gpioAssigned: string[]}[] = [];
+            let blockAssignments: {cmpIdx: number, blkIdx: number, gpioNeeded: number, gpioAssigned: string[]}[] = [];
             cmpDefs.forEach((def, idx) => {
                 if (def) {
                     if (typeof def.gpioPinsNeeded === "number") {
                         //individual pins
                         for (let i = 0; i < def.gpioPinsNeeded; i++) {
-                            blockAssignments.push({cmpIdx: idx, gpioNeeded: 1, gpioAssigned: []});
+                            blockAssignments.push(
+                                {cmpIdx: idx, blkIdx: 0, gpioNeeded: 1, gpioAssigned: []});
                         }
                     } else {
                         //blocks of pins
                         let blocks = <number[]>def.gpioPinsNeeded;
-                        blocks.forEach(numNeeded => {
-                            blockAssignments.push({cmpIdx: idx, gpioNeeded: numNeeded, gpioAssigned: []});
+                        blocks.forEach((numNeeded, blkIdx) => {
+                            blockAssignments.push(
+                                {cmpIdx: idx, blkIdx: blkIdx, gpioNeeded: numNeeded, gpioAssigned: []});
                         });
                     }
                 }
@@ -411,28 +523,93 @@ namespace pxsim.visuals {
                     }
                     while (0 < assignment.gpioNeeded && 0 < smallestAvailableBlockThatFits.length) {
                         assignment.gpioNeeded--;
-                        assignment.gpioAssigned.push(smallestAvailableBlockThatFits.pop());
+                        let pin = smallestAvailableBlockThatFits[0];
+                        smallestAvailableBlockThatFits.splice(0,1);
+                        assignment.gpioAssigned.push(pin);
                     }
                     sortBlockAssignments();
                 } while(0 < blockAssignments[0].gpioNeeded);
             }
             if (0 < blockAssignments.length && 0 < blockAssignments[0].gpioNeeded) {
                 //TODO: out of pins
+                console.debug("Not enough GPIO pins!");
+                return null;
             }
+            let cmpGPIOPins: string[][][] = cmpDefs.map((def, cmpIdx) => {
+                if (!def)
+                    return null;
+                let assignments = blockAssignments.filter(a => a.cmpIdx === cmpIdx);
+                let gpioPins: string[][] = [];
+                for (let i = 0; i < assignments.length; i++) {
+                    let a = assignments[i];
+                    let blk = gpioPins[a.blkIdx] || (gpioPins[a.blkIdx] = []);
+                    a.gpioAssigned.forEach(p => blk.push(p));
+                }
+                return gpioPins;
+            });
+            return cmpGPIOPins;
+        }
+        private allocateColumns(cmpDefs: ComponentDefinition[]): number[] {
+            let componentsCount = cmpDefs.length;
+            let totalAvailableSpace = BREADBOARD_COLUMN_COUNT;//TODO allow multiple breadboards
+            let totalSpaceNeeded = cmpDefs.map(d => d.breadboardColumnsNeeded).reduce((p, n) => p + n, 0);
+            let extraSpace = totalAvailableSpace - totalSpaceNeeded;
+            if (extraSpace <= 0) {
+                console.log("Not enough breadboard space!");
+                //TODO
+            }
+            let padding = Math.floor(extraSpace/(componentsCount-1+2));
+            let componentSpacing = padding;//Math.floor(extraSpace/(componentsCount-1));
+            let totalCmpPadding = extraSpace - componentSpacing*(componentsCount-1);
+            let leftPadding = Math.floor(totalCmpPadding/2);
+            let rightPadding = Math.ceil(totalCmpPadding/2);
+            let nextAvailableCol = 1 + leftPadding;
+            let cmpStartCol = cmpDefs.map(cmp => {
+                let col = nextAvailableCol;
+                nextAvailableCol += cmp.breadboardColumnsNeeded + componentSpacing;
+                return col;
+            });
+            return cmpStartCol;
+        }
+        private allocatePowerPins(cmpDefs: ComponentDefinition[]): {ground: string[], threeVolt: string[]} {
+            let ground: string[] = [];
+            let threeVolt: string[] = []; 
+            
+            let cmpWires = cmpDefs.map(d => d.wires);
+            //let groundWires = 
+            //TODO
 
-            // determine breadboard columns space needed
-            //TODO
-            // allocate power pins
-            //TODO
+            return {ground: ground, threeVolt: threeVolt};
         }
-        public allocateComponent(cmpDef: ComponentDefinition) {
-            if (typeof cmpDef.gpioPinsNeeded === "number") {
-            } else {
-            }
-            //let gpioCount = cmpDef.gpioPinsNeeded;
+        public allocateComponent(cmpDef: ComponentDefinition, startColumn: number): ComponentInstance {
+            return {
+                breadboardStartColumn: startColumn,
+                assemblyStep: cmpDef.assemblyStep,
+            };
         }
-        public addWire(w: WireDefinition, cmp?: string): {endG: SVGGElement, end1: SVGElement, end2: SVGElement, wires: SVGElement[]} {
-            let wireEls = this.drawWire(w.start[1], w.end[1], w.color)
+        public allocateComponentsAndWiring(cmpDefs: ComponentDefinition[]): [ComponentInstance, WireInstance[]][] {
+            let cmpGPIOPinBlocks = this.allocateGPIOPins(cmpDefs);
+            let availableGPIOPins = cmpGPIOPinBlocks.map(blks => blks.reduce((p, n) => p.concat(n), []));
+            let cmpStartCol = this.allocateColumns(cmpDefs);            
+            let wires = cmpDefs.map((c, idx) => c.wires.map(d => this.allocateWire(d, {
+                availableGPIOPins: availableGPIOPins[idx],
+                startColumn: cmpStartCol[idx],
+            })));
+            let cmps = cmpDefs.map((c, idx) => this.allocateComponent(c, cmpStartCol[idx]));
+            let cmpsAndWires = cmps.map((c, idx) => <[ComponentInstance, WireInstance[]]>[c, wires[idx]]);
+            return cmpsAndWires;
+        }
+
+        public addBasicWires() {
+            let wires = this.allocateBasicWires();
+            console.log("basic wires:");
+            console.dir(wires);
+            wires.forEach(w => this.addWire(w));
+        }
+        public addWire(w: WireInstance, cmp?: string): {endG: SVGGElement, end1: SVGElement, end2: SVGElement, wires: SVGElement[]} {
+            let startLoc = this.loc(w.start[1]);
+            let endLoc = this.loc(w.end[1]);
+            let wireEls = this.drawWire(startLoc, endLoc, w.color)
             if (cmp) {
                 let cls = this.getCmpClass(cmp);
                 svg.addClass(wireEls.endG, cls)
@@ -440,25 +617,27 @@ namespace pxsim.visuals {
             }
             return wireEls;
         }
-        public addComponent(cmpDesc: ComponentDescription): IBoardComponent<any> {
-            const mkCmp = (type: ComponentType): IBoardComponent<any> => {
-                let [cnstr, stateFn] = ComponenetToCnstrAndState[cmpDesc.type];
+        public addComponent(cmpDesc: ComponentInstance, name: string): IBoardComponent<any> {
+            const mkCmp = (type: string): IBoardComponent<any> => {
+                let cnstr = builtinComponentSimVisual[type];
+                let stateFn = builtinComponentSimState[type];
                 let cmp = cnstr();
                 cmp.init(this.board.bus, stateFn(this.board), this.element);
                 return cmp;
             }
-            let cmp = mkCmp(cmpDesc.type);
-            this.components[cmpDesc.type] = cmp;
+            let cmp = mkCmp(name);
+            this.components[name] = cmp;
             this.g.appendChild(cmp.element);
             if (cmp.defs)
                 cmp.defs.forEach(d => this.defs.appendChild(d));
             this.style.textContent += cmp.style || "";
-            let locCoords = (cmpDesc.locations || []).map(locStr => this.loc(locStr));
-            cmp.setLocations(...locCoords);
-            let cls = this.getCmpClass(cmpDesc.type);
+            let loc = `j${cmpDesc.breadboardStartColumn}`;
+            let coord = this.loc(loc);
+            cmp.moveToCoord(coord);
+            let cls = this.getCmpClass(name);
             svg.addClass(cmp.element, cls);
             svg.addClass(cmp.element, "sim-cmp");
-            let hideCls = this.getCmpHideClass(cmpDesc.type);
+            let hideCls = this.getCmpHideClass(name);
             this.style.textContent += `
                 .${hideCls} .${cls} {
                     display: none;
@@ -466,10 +645,6 @@ namespace pxsim.visuals {
             cmp.updateTheme();
             cmp.updateState();
             return cmp;
-        }
-        public addComponentAndWiring(cmpDesc: ComponentDescription) {
-            cmpDesc.wires.forEach(w => this.addWire(w, cmpDesc.type));
-            this.addComponent(cmpDesc);
         }
 
         private updateTheme() {

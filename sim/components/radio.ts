@@ -124,7 +124,7 @@ namespace pxsim.visuals {
             this.attachEvents();
         }   
 
-        public setLocations(...xys: Coord[]) {
+        public moveToCoord(xy: Coord) {
             //TODO
         }
 

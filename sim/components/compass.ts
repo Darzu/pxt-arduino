@@ -45,7 +45,7 @@ namespace pxsim.visuals {
             els.forEach(e => (<any>e).style.visibility = "hidden")
         }
 
-        public setLocations(...xys: Coord[]) {
+        public moveToCoord(xy: Coord) {
             //TODO
         }
 

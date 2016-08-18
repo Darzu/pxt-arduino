@@ -50,7 +50,7 @@ namespace pxsim.visuals {
             this.element = this.buildDom();
         }
 
-        public setLocations(...xys: Coord[]){
+        public moveToCoord(xy: Coord) {
             //TODO
         }
         

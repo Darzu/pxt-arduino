@@ -436,7 +436,7 @@ namespace pxsim.visuals {
             return g;
         }
 
-        public setLocations(...xys: Coord[]) {
+        public moveToCoord(xy: Coord) {
             //TODO
         }
 

@@ -141,11 +141,13 @@ namespace pxsim.visuals {
             this.attachEvents();
         }
 
-        public setLocations(...xys: [number, number][]) {
-            xys.forEach((xy, i) => {
-                let el = [this.aBtn, this.bBtn, this.abBtn][i];
-                translateEl(el, xy)
-            })
+        public moveToCoord(xy: Coord) {
+            let topPad = PIN_DIST*4;
+            let btnWidth = PIN_DIST*3; 
+            let [x,y] = xy;
+            translateEl(this.aBtn, [x, y + topPad])
+            translateEl(this.bBtn, [x + btnWidth, y + topPad])
+            translateEl(this.abBtn, [x + PIN_DIST*1.5, y + topPad + PIN_DIST*4])
         }
 
         public updateState() {

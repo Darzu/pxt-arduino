@@ -205,9 +205,9 @@ namespace pxsim.visuals {
             const barRatio = 0.16666666;
             const barH = height*barRatio;
 
-            const midCols = 30;
+            const midCols = BREADBOARD_COLUMN_COUNT;
             const midGridW = (midCols-1) * PIN_DIST;
-            const midRows = 12;
+            const midRows = BREADBOARD_ROW_COUNT;
             const midGridH = (midRows-1) * PIN_DIST;
             const midGridX = (width - midGridW)/2;
             const midGridY = barH + (midH - midGridH)/2;
@@ -454,14 +454,8 @@ namespace pxsim.visuals {
             return {e: this.bb, t: 0, l: 0, w: this.width, h: this.height};
         }
 
-
-        private distSqrd(a: Coord, b: Coord): number {
-            let x = a[0] - b[0];
-            let y = a[1] - b[1];
-            return x*x + y*y;
-        }
         private getClosestPointIdx(xy: Coord, points: Coord[]) {
-            let dists = points.map(p => this.distSqrd(xy, p));
+            let dists = points.map(p => findDistSqrd(xy, p));
             let minIdx = 0;
             let minDist = dists[0];
             dists.forEach((d, i) => {

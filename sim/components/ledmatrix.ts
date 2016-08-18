@@ -268,8 +268,10 @@ namespace pxsim.visuals {
             this.element = this.buildDom();
         }
 
-        public setLocations(...xys: Coord[]) {
-            translateEl(this.element, xys[0]);
+        public moveToCoord(xy: Coord) {
+            let topPad = PIN_DIST*2;
+            let [x,y] = xy;
+            translateEl(this.element, [x, y+topPad]);
         }
 
         public updateTheme() {

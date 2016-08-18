@@ -104,7 +104,7 @@ namespace pxsim.visuals {
             if (v) svg.setGradientValue(this.pinGradients[index], v);
         }
 
-        public setLocations(...xys: Coord[]) {
+        public moveToCoord(xy: Coord) {
             //TODO
         }
 
