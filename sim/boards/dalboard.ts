@@ -304,12 +304,12 @@ namespace pxsim.visuals {
         private nameToLoc: Map<[number, number]> = {};
         private availablePowerPins = {
             top: {
-                threeVolt: mkRange(26,51).map(n => `-${n}`),
-                ground: mkRange(26,51).map(n => `+${n}`),
+                threeVolt: mkRange(26,51).map(n => `+${n}`),
+                ground: mkRange(26,51).map(n => `-${n}`),
             },
             bottom: {
-                threeVolt: mkRange(1,26).map(n => `-${n}`),
-                ground: mkRange(1,26).map(n => `+${n}`),
+                threeVolt: mkRange(1,26).map(n => `+${n}`),
+                ground: mkRange(1,26).map(n => `-${n}`),
             },
         };
 
@@ -448,19 +448,21 @@ namespace pxsim.visuals {
             }
             let topLeft = "-26";
             let botLeft = "-1";
+            const GROUND_COLOR = "blue";
+            const POWER_COLOR = "red";
             const wires: WireInstance[] = [
                 {start: this.allocateLocation("ground", {nearestPin: topLeft}), 
                  end: this.allocateLocation("ground", {nearestPin: botLeft}), 
-                 color: "blue", assemblyStep: 0},
+                 color: GROUND_COLOR, assemblyStep: 0},
                 {start: this.allocateLocation("ground", {nearestPin: topLeft}), 
                  end: ["dalboard", boardGround], 
-                color: "blue", assemblyStep: 0},
+                color: GROUND_COLOR, assemblyStep: 0},
                 {start: this.allocateLocation("threeVolt", {nearestPin: topLeft}), 
                  end: this.allocateLocation("threeVolt", {nearestPin: botLeft}), 
-                 color: "red", assemblyStep: 1},
+                 color: POWER_COLOR, assemblyStep: 1},
                 {start: this.allocateLocation("threeVolt", {nearestPin: topLeft}), 
                  end: ["dalboard", threeVoltPin], 
-                color: "red", assemblyStep: 1},
+                color: POWER_COLOR, assemblyStep: 1},
             ];
             return wires;
         }
