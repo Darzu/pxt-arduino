@@ -39,15 +39,12 @@ namespace pxsim {
         private buffers: {[pin: number]: Uint8Array[]} = {};
         public pixelColors: {[pin: number]: RGBW[]} = {};
         public pinModes: {[pin: number]: NeoPixelMode};
-        public used = false;
 
         constructor() {
             this.pinModes = visuals.NEOPIXEL_LAYOUT; //TODO: don't hardcode
         }
 
         public sendBuffer(buffer: Buffer, pin: DigitalPin) {
-            this.used = true;
-
             //update buffers
             let buf = <Uint8Array[]>(<any>buffer).data;
             this.buffers[pin] = buf;
@@ -264,6 +261,8 @@ namespace pxsim.visuals {
 
             this.stripsGroup = <SVGGElement>svg.elt("g");
             this.element = this.stripsGroup;
+
+            this.mkStrip(7);//TODO: don't hardcode this
         }
         private getStripsList() {
             let strips: NeoPixelStrip[] = [];

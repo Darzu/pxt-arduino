@@ -13,7 +13,6 @@ namespace pxsim {
         brigthness = 255;
         displayMode = DisplayMode.bw;
         font: Image = createFont();
-        used = false;
 
         animationQ: AnimationQueue;
 
@@ -307,114 +306,77 @@ namespace pxsim.visuals {
     }
 }
 
-namespace pxsim {
-    export function setUsesDisplay() {
-        if (!board().ledMatrixCmp.used) {
-            board().ledMatrixCmp.used = true;
-            runtime.queueDisplayUpdate();
-        }
-    }
-}
-
 namespace pxsim.images {
-    export function createImage(img: Image) { 
-        setUsesDisplay();
-        
+    export function createImage(img: Image) {                 
         return img 
     }
-    export function createBigImage(img: Image) { 
-        setUsesDisplay();
-
+    export function createBigImage(img: Image) {         
         return img 
     }
 }
 
 namespace pxsim.ImageMethods {
-    export function showImage(leds: Image, offset: number) {
-        setUsesDisplay();
-
+    export function showImage(leds: Image, offset: number) {        
         if (!leds) panic(PanicCode.MICROBIT_NULL_DEREFERENCE);
 
         leds.copyTo(offset, 5, board().ledMatrixCmp.image, 0)
         runtime.queueDisplayUpdate()
     }
 
-    export function plotImage(leds: Image, offset: number): void {
-        setUsesDisplay();
-
+    export function plotImage(leds: Image, offset: number): void {        
         if (!leds) panic(PanicCode.MICROBIT_NULL_DEREFERENCE);
 
         leds.copyTo(offset, 5, board().ledMatrixCmp.image, 0)
         runtime.queueDisplayUpdate()
     }
 
-    export function height(leds: Image): number {
-        setUsesDisplay();
-        
+    export function height(leds: Image): number {                
         if (!leds) panic(PanicCode.MICROBIT_NULL_DEREFERENCE);
         return Image.height;
     }
 
-    export function width(leds: Image): number {
-        setUsesDisplay();
-        
+    export function width(leds: Image): number {                
         if (!leds) panic(PanicCode.MICROBIT_NULL_DEREFERENCE);
         return leds.width;
     }
 
-    export function plotFrame(leds: Image, frame: number) {
-        setUsesDisplay();
-        
+    export function plotFrame(leds: Image, frame: number) {                
         ImageMethods.plotImage(leds, frame * Image.height);
     }
 
-    export function showFrame(leds: Image, frame: number) {
-        setUsesDisplay();
-        
+    export function showFrame(leds: Image, frame: number) {                
         ImageMethods.showImage(leds, frame * Image.height);
     }
 
-    export function pixel(leds: Image, x: number, y: number): number {
-        setUsesDisplay();
-        
+    export function pixel(leds: Image, x: number, y: number): number {                
         if (!leds) panic(PanicCode.MICROBIT_NULL_DEREFERENCE);
         return leds.get(x, y);
     }
 
-    export function setPixel(leds: Image, x: number, y: number, v: number) {
-        setUsesDisplay();
-        
+    export function setPixel(leds: Image, x: number, y: number, v: number) {                
         if (!leds) panic(PanicCode.MICROBIT_NULL_DEREFERENCE);
         leds.set(x, y, v);
     }
 
-    export function clear(leds: Image) {
-        setUsesDisplay();
-        
+    export function clear(leds: Image) {                
         if (!leds) panic(PanicCode.MICROBIT_NULL_DEREFERENCE);
 
         leds.clear();
     }
 
-    export function setPixelBrightness(i: Image, x: number, y: number, b: number) {
-        setUsesDisplay();
-        
+    export function setPixelBrightness(i: Image, x: number, y: number, b: number) {                
         if (!i) panic(PanicCode.MICROBIT_NULL_DEREFERENCE);
 
         i.set(x, y, b);
     }
 
-    export function pixelBrightness(i: Image, x: number, y: number): number {
-        setUsesDisplay();
-        
+    export function pixelBrightness(i: Image, x: number, y: number): number {                
         if (!i) panic(PanicCode.MICROBIT_NULL_DEREFERENCE);
 
         return i.get(x, y);
     }
 
-    export function scrollImage(leds: Image, stride: number, interval: number): void {
-        setUsesDisplay();
-        
+    export function scrollImage(leds: Image, stride: number, interval: number): void {                
         if (!leds) panic(PanicCode.MICROBIT_NULL_DEREFERENCE);
         if (stride == 0) stride = 1;
 
@@ -438,9 +400,7 @@ namespace pxsim.ImageMethods {
 }
 
 namespace pxsim.basic {
-    export function showNumber(x: number, interval: number) {
-        setUsesDisplay();
-        
+    export function showNumber(x: number, interval: number) {                
         if (interval < 0) return;
 
         let leds = createImageFromString(x.toString());
@@ -448,9 +408,7 @@ namespace pxsim.basic {
         else showLeds(leds, interval * 5);
     }
 
-    export function showString(s: string, interval: number) {
-        setUsesDisplay();
-        
+    export function showString(s: string, interval: number) {                
         if (interval < 0) return;
         if (s.length == 0) {
             clearScreen();
@@ -461,82 +419,58 @@ namespace pxsim.basic {
         }
     }
 
-    export function showLeds(leds: Image, delay: number): void {
-        setUsesDisplay();
-        
+    export function showLeds(leds: Image, delay: number): void {                
         showAnimation(leds, delay);
     }
 
-    export function clearScreen() {
-        setUsesDisplay();
-        
+    export function clearScreen() {                
         board().ledMatrixCmp.image.clear();
         runtime.queueDisplayUpdate()
     }
 
-    export function showAnimation(leds: Image, interval: number): void {
-        setUsesDisplay();
-        
+    export function showAnimation(leds: Image, interval: number): void {                
         ImageMethods.scrollImage(leds, 5, interval);
     }
 
-    export function plotLeds(leds: Image): void {
-        setUsesDisplay();
-        
+    export function plotLeds(leds: Image): void {                
         ImageMethods.plotImage(leds, 0);
     }
 }
 
 namespace pxsim.led {
-    export function plot(x: number, y: number) {
-        setUsesDisplay();
-        
+    export function plot(x: number, y: number) {                
         board().ledMatrixCmp.image.set(x, y, 255);
         runtime.queueDisplayUpdate()
     }
 
-    export function unplot(x: number, y: number) {
-        setUsesDisplay();
-        
+    export function unplot(x: number, y: number) {                
         board().ledMatrixCmp.image.set(x, y, 0);
         runtime.queueDisplayUpdate()
     }
 
-    export function point(x: number, y: number): boolean {
-        setUsesDisplay();
-        
+    export function point(x: number, y: number): boolean {                
         return !!board().ledMatrixCmp.image.get(x, y);
     }
 
-    export function brightness(): number {
-        setUsesDisplay();
-        
+    export function brightness(): number {                
         return board().ledMatrixCmp.brigthness;
     }
 
-    export function setBrightness(value: number): void {
-        setUsesDisplay();
-        
+    export function setBrightness(value: number): void {                
         board().ledMatrixCmp.brigthness = value;
         runtime.queueDisplayUpdate()
     }
 
-    export function stopAnimation(): void {
-        setUsesDisplay();
-        
+    export function stopAnimation(): void {                
         board().ledMatrixCmp.animationQ.cancelAll();
     }
 
-    export function setDisplayMode(mode: DisplayMode): void {
-        setUsesDisplay();
-        
+    export function setDisplayMode(mode: DisplayMode): void {                
         board().ledMatrixCmp.displayMode = mode;
         runtime.queueDisplayUpdate()
     }
 
-    export function screenshot(): Image {
-        setUsesDisplay();
-        
+    export function screenshot(): Image {                
         let img = createImage(5)
         board().ledMatrixCmp.image.copyTo(0, 5, img, 0);
         return img;

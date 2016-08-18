@@ -12,6 +12,7 @@ declare namespace bluetooth {
      */
     //% help=bluetooth/start-io-pin-service
     //% blockId=bluetooth_start_io_pin_service block="bluetooth io pin service" blockGap=8 shim=bluetooth::startIOPinService
+    //% part="bluetooth"
     function startIOPinService(): void;
 
     /**
@@ -19,6 +20,7 @@ declare namespace bluetooth {
      */
     //% help=bluetooth/start-led-service
     //% blockId=bluetooth_start_led_service block="bluetooth led service" blockGap=8 shim=bluetooth::startLEDService
+    //% part="bluetooth"
     function startLEDService(): void;
 
     /**
@@ -26,6 +28,7 @@ declare namespace bluetooth {
      */
     //% help=bluetooth/start-temperature-service
     //% blockId=bluetooth_start_temperature_service block="bluetooth temperature service" blockGap=8 shim=bluetooth::startTemperatureService
+    //% part="bluetooth"
     function startTemperatureService(): void;
 
     /**
@@ -33,6 +36,7 @@ declare namespace bluetooth {
      */
     //% help=bluetooth/start-magnetometer-service
     //% blockId=bluetooth_start_magnetometer_service block="bluetooth magnetometer service" blockGap=8 shim=bluetooth::startMagnetometerService
+    //% part="bluetooth"
     function startMagnetometerService(): void;
 
     /**
@@ -40,6 +44,7 @@ declare namespace bluetooth {
      */
     //% help=bluetooth/start-accelerometer-service
     //% blockId=bluetooth_start_accelerometer_service block="bluetooth accelerometer service" blockGap=8 shim=bluetooth::startAccelerometerService
+    //% part="bluetooth"
     function startAccelerometerService(): void;
 
     /**

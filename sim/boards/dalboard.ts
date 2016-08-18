@@ -83,7 +83,8 @@ namespace pxsim {
             let theme = mkRandomTheme();
             
             let boardDef = ARDUINO_ZERO; //TODO: read from pxt.json/pxttarget.json
-            let cmpsList = HACK_STATIC_ANALYSIS_RESULTS; //TODO: derive from static analysis
+            let cmpsList = msg.parts;
+            cmpsList.sort();
             let cmpDefs = COMPONENT_DEFINITIONS; //TODO: read from pxt.json/pxttarget.json
 
             let view = new visuals.DalBoardSvg({
@@ -373,7 +374,6 @@ namespace pxsim.visuals {
         }
 
         private getCmpClass = (type: string) => `sim-${type}-cmp`;
-        private getCmpHideClass = (type: string) => `sim-hide-${type}-cmp`;
 
         private allocateLocation(location: LocationDefinition, 
             opts: {
@@ -602,8 +602,6 @@ namespace pxsim.visuals {
 
         public addBasicWires() {
             let wires = this.allocateBasicWires();
-            console.log("basic wires:");
-            console.dir(wires);
             wires.forEach(w => this.addWire(w));
         }
         public addWire(w: WireInstance, cmp?: string): {endG: SVGGElement, end1: SVGElement, end2: SVGElement, wires: SVGElement[]} {
@@ -637,11 +635,6 @@ namespace pxsim.visuals {
             let cls = this.getCmpClass(name);
             svg.addClass(cmp.element, cls);
             svg.addClass(cmp.element, "sim-cmp");
-            let hideCls = this.getCmpHideClass(name);
-            this.style.textContent += `
-                .${hideCls} .${cls} {
-                    display: none;
-                }`
             cmp.updateTheme();
             cmp.updateState();
             return cmp;
@@ -666,24 +659,6 @@ namespace pxsim.visuals {
 
             if (!runtime || runtime.dead) svg.addClass(this.element, "grayscale");
             else svg.removeClass(this.element, "grayscale");
-
-            //show/hide
-            //TODO generalize for all components
-            if (this.board.ledMatrixCmp.used){
-                svg.removeClass(this.g, this.getCmpHideClass("display"))
-            } else {
-                svg.addClass(this.g, this.getCmpHideClass("display"))
-            }
-            if (this.board.buttonPairState.used){
-                svg.removeClass(this.g, this.getCmpHideClass("buttonpair"))
-            } else {
-                svg.addClass(this.g, this.getCmpHideClass("buttonpair"))
-            }
-            if (this.board.neopixelCmp.used){
-                svg.removeClass(this.g, this.getCmpHideClass("neopixel"))
-            } else {
-                svg.addClass(this.g, this.getCmpHideClass("neopixel"))
-            }
         }
 
         private indexOfMin(vs: number[]): number {

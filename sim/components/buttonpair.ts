@@ -9,10 +9,6 @@ namespace pxsim.input {
             b.usesButtonAB = true;
             runtime.queueDisplayUpdate();
         }
-        if (!b.used) {
-            b.used = true;
-            runtime.queueDisplayUpdate();
-        }
         pxt.registerWithDal(button, DAL.MICROBIT_BUTTON_EVT_CLICK, handler);
     }
 
@@ -20,10 +16,6 @@ namespace pxsim.input {
         let b = board().buttonPairState;
         if (button == DAL.MICROBIT_ID_BUTTON_AB && !b.usesButtonAB) {
             b.usesButtonAB = true;
-            runtime.queueDisplayUpdate();
-        }
-        if (!b.used) {
-            b.used = true;
             runtime.queueDisplayUpdate();
         }
         if (button == DAL.MICROBIT_ID_BUTTON_A) return b.aBtn.pressed;
@@ -240,7 +232,6 @@ namespace pxsim {
 
     export class ButtonPairCmp {
         usesButtonAB: boolean = false;
-        used = false;
         aBtn: Button;
         bBtn: Button;
         abBtn: Button;
