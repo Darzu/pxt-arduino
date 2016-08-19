@@ -287,7 +287,7 @@ namespace pxsim.visuals {
         private g: SVGElement;
         public board: pxsim.DalBoard;
         public background: SVGElement;
-        private components: Map<IBoardComponent<any>>;
+        private components: IBoardComponent<any>[];
         public breadboard: Breadboard;
         private underboard: SVGGElement;
         private boardDef: BoardDefinition;
@@ -335,7 +335,7 @@ namespace pxsim.visuals {
             this.g = svg.elt("g");
             this.element.appendChild(this.g);
             this.underboard = <SVGGElement>svg.child(this.g, "g", {class: "sim-underboard"});
-            this.components = {};
+            this.components = [];
             this.componentDefs = props.componentDefinitions;
 
             this.buildDom();
@@ -345,16 +345,15 @@ namespace pxsim.visuals {
 
             let cmps = props.activeComponents;
 
-            //TODO
             if (cmps.length > 0) {
-                this.addBasicWires();
+                let wires = this.allocateBasicWires();
+                wires.forEach(w => this.addWire(w));
                 let cmpDefs = cmps.map(c => this.componentDefs[c] || null);
                 let cmpsAndWires = this.allocateComponentsAndWiring(cmpDefs);
                 cmpsAndWires.forEach((cAndWs, idx) => {                    
                     let [cmpDef, wireDefs] = cAndWs;
-                    let cmpNm = cmps[idx];
-                    wireDefs.forEach(w => this.addWire(w, cmpNm));
-                    this.addComponent(cmpDef, cmpNm);
+                    wireDefs.forEach(w => this.addWire(w));
+                    this.addComponent(cmpDef);
                 });
             }
         }
@@ -573,20 +572,14 @@ namespace pxsim.visuals {
             });
             return cmpStartCol;
         }
-        private allocatePowerPins(cmpDefs: ComponentDefinition[]): {ground: string[], threeVolt: string[]} {
-            let ground: string[] = [];
-            let threeVolt: string[] = []; 
-            
-            let cmpWires = cmpDefs.map(d => d.wires);
-            //let groundWires = 
-            //TODO
-
-            return {ground: ground, threeVolt: threeVolt};
-        }
         public allocateComponent(cmpDef: ComponentDefinition, startColumn: number): ComponentInstance {
             return {
                 breadboardStartColumn: startColumn,
+                breadboardStartRow: cmpDef.breadboardStartRow,
                 assemblyStep: cmpDef.assemblyStep,
+                builtinPartVisual: cmpDef.builtinPartVisual,
+                builtinSimSate: cmpDef.builtinSimSate,
+                builtinSimVisual: cmpDef.builtinSimVisual,
             };
         }
         public allocateComponentsAndWiring(cmpDefs: ComponentDefinition[]): [ComponentInstance, WireInstance[]][] {
@@ -602,31 +595,18 @@ namespace pxsim.visuals {
             return cmpsAndWires;
         }
 
-        public addBasicWires() {
-            let wires = this.allocateBasicWires();
-            wires.forEach(w => this.addWire(w));
-        }
-        public addWire(w: WireInstance, cmp?: string): {endG: SVGGElement, end1: SVGElement, end2: SVGElement, wires: SVGElement[]} {
+        public addWire(w: WireInstance): {endG: SVGGElement, end1: SVGElement, end2: SVGElement, wires: SVGElement[]} {
             let startLoc = this.loc(w.start[1]);
             let endLoc = this.loc(w.end[1]);
             let wireEls = this.drawWire(startLoc, endLoc, w.color)
-            if (cmp) {
-                let cls = this.getCmpClass(cmp);
-                svg.addClass(wireEls.endG, cls)
-                wireEls.wires.forEach(e => svg.addClass(e, cls));
-            }
             return wireEls;
         }
-        public addComponent(cmpDesc: ComponentInstance, name: string): IBoardComponent<any> {
-            const mkCmp = (type: string): IBoardComponent<any> => {
-                let cnstr = builtinComponentSimVisual[type];
-                let stateFn = builtinComponentSimState[type];
-                let cmp = cnstr();
-                cmp.init(this.board.bus, stateFn(this.board), this.element);
-                return cmp;
-            }
-            let cmp = mkCmp(name);
-            this.components[name] = cmp;
+        public addComponent(cmpDesc: ComponentInstance): IBoardComponent<any> {
+            let cnstr = builtinComponentSimVisual[cmpDesc.builtinSimVisual];
+            let stateFn = builtinComponentSimState[cmpDesc.builtinSimSate];
+            let cmp = cnstr();
+            cmp.init(this.board.bus, stateFn(this.board), this.element);
+            this.components.push(cmp);
             this.g.appendChild(cmp.element);
             if (cmp.defs)
                 cmp.defs.forEach(d => this.defs.appendChild(d));
@@ -645,9 +625,7 @@ namespace pxsim.visuals {
         private updateTheme() {
             let theme = this.props.theme;
 
-            for (let nm in this.components) {
-                this.components[nm].updateTheme();
-            }
+            this.components.forEach(c => c.updateTheme());
         }
 
         public updateState() {
@@ -655,9 +633,7 @@ namespace pxsim.visuals {
             if (!state) return;
             let theme = this.props.theme;
 
-            for (let nm in this.components) {
-                this.components[nm].updateState();
-            }
+            this.components.forEach(c => c.updateState());
 
             if (!runtime || runtime.dead) svg.addClass(this.element, "grayscale");
             else svg.removeClass(this.element, "grayscale");
