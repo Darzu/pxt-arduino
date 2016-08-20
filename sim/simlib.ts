@@ -212,6 +212,11 @@ namespace pxsim {
             res.push(a);
         return res;
     }
+
+    export function bbLocToCoordStr(loc: string) {
+        let {rowNm, colNm} = visuals.BRK_PIN_NM(loc);
+        return `(${rowNm},${colNm})`
+    }
 }
 
 namespace pxsim.visuals {

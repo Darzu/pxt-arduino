@@ -115,7 +115,6 @@ namespace pxsim.visuals {
         boardDef: BoardDefinition;
         theme?: IBoardTheme;
         disableTilt?: boolean;
-        shouldLabelPins?: boolean;
         activeComponents: string[];
         componentDefinitions: Map<ComponentDefinition>;
     }
@@ -247,6 +246,38 @@ namespace pxsim.visuals {
         .sim-board-pin-hover:hover {
             visibility: visible;
         }
+        .sim-board-pin-lbl {
+            visibility: hidden;
+        }
+        .sim-board-outline .sim-board-pin-lbl {
+            visibility: visible;
+        }
+        .sim-board-pin-lbl {
+            fill: #555;
+        }
+        .sim-board-pin-lbl-hover {
+            fill: red;
+        }
+        .sim-board-outline .sim-board-pin-lbl-hover {
+            fill: black;
+        }
+        .sim-board-pin-lbl,
+        .sim-board-pin-lbl-hover {
+            font-family:"Lucida Console", Monaco, monospace;
+            pointer-events: all;
+            stroke-width: 0;
+        }
+        .sim-board-pin-lbl-hover {
+            visibility: hidden;
+        }
+        .sim-board-pin-hover:hover + .sim-board-pin-lbl,
+        .sim-board-pin-lbl.highlight {
+            visibility: hidden;
+        }
+        .sim-board-pin-hover:hover + * + .sim-board-pin-lbl-hover,
+        .sim-board-pin-lbl-hover.highlight {
+            visibility: visible;
+        }
         /* Graying out */
         .grayed .sim-bb-wire-end:not(.notgrayed) {
             stroke: #777;
@@ -295,12 +326,13 @@ namespace pxsim.visuals {
         public componentDefs: Map<ComponentDefinition>;
         private boardEdges: number[];
         private id: number;
-        private labeledPins: boolean;
         public bbX: number;
         public bbY: number;
         private allPins: BBPin[] = [];
         private allLbls: BBLbl[] = [];
         private pinNmToLbl: Map<BBLbl> = {};
+        private allHoverLbls: BBLbl[] = [];
+        private pinNmToHoverLbl: Map<BBLbl> = {};
         private nameToLoc: Map<[number, number]> = {};
         private availablePowerPins = {
             top: {
@@ -315,7 +347,6 @@ namespace pxsim.visuals {
 
         constructor(public props: IBoardSvgProps) {
             this.id = nextBoardId++;
-            this.labeledPins = props.shouldLabelPins;
             this.boardDef = props.boardDef;
             this.boardDim = getBoardDimensions(this.boardDef);
             this.board = this.props.runtime.board as pxsim.DalBoard;
@@ -610,6 +641,8 @@ namespace pxsim.visuals {
             let startLoc = this.loc(w.start[1]);
             let endLoc = this.loc(w.end[1]);
             let wireEls = this.drawWire(startLoc, endLoc, w.color)
+            let tooltip = `${bbLocToCoordStr(w.start[1])} -> ${bbLocToCoordStr(w.end[1])}`
+            wireEls.wires.forEach(w => svg.hydrate(w, {title: tooltip}));
             return wireEls;
         }
         public addComponent(cmpDesc: ComponentInstance): IBoardComponent<any> {
@@ -684,7 +717,6 @@ namespace pxsim.visuals {
                 lblX = x;
             }
             resetTxt(lbl, lblX, lblY, size, 270, name);
-            svg.addClass(lbl, "sim-board-pin-lbl");
         }
 
         private buildDom() {
@@ -713,26 +745,36 @@ namespace pxsim.visuals {
                 const size = PIN_DIST*0.66666;
                 const hoverSize = PIN_DIST*0.66666 + PIN_DIST/3.0;
                 let props = { class: "sim-board-pin" }
-                let pinFn = (p: SVGRectElement, i: number, j: number, x: number, y: number, overP: SVGRectElement) => {
+                let pinFn = (p: SVGRectElement, i: number, j: number, x: number, y: number, overP: SVGRectElement, grid: SVGGElement) => {
                     let name = getNm(i, j);
                     this.nameToLoc[name] = [x, y];
                     svg.hydrate(p, {title: name});
                     let pin: BBPin = {p: p, x: x, y: y, rowNm: name, colNm: name, pinNm: name};
                     this.allPins.push(pin);
                     //label
-                    if (this.labeledPins) {
-                        let lbl = <SVGTextElement>svg.elt("text");    
-                        this.resetLbl(lbl, x, y, PIN_LBL_SIZE, name);
-                        let bbLbl: BBLbl = {l: lbl, cx: x, cy: y, size: PIN_LBL_SIZE, rot: 270, nm: name, nearestPin: pin};
-                        this.g.appendChild(lbl);
-                        this.allLbls.push(bbLbl);
-                        this.pinNmToLbl[name] = bbLbl;
-                    }
+                    let lbl = <SVGTextElement>svg.elt("text");    
+                    this.resetLbl(lbl, x, y, PIN_LBL_SIZE, name);
+                    svg.addClass(lbl, "sim-board-pin-lbl");
+                    grid.appendChild(lbl);
+                    let bbLbl: BBLbl = {l: lbl, cx: x, cy: y, size: PIN_LBL_SIZE, rot: 270, nm: name, nearestPin: pin};
+                    this.allLbls.push(bbLbl);
+                    this.pinNmToLbl[name] = bbLbl;
+                    //hover labl
+                    let hoverLbl = <SVGTextElement>svg.elt("text");   
+                    const SIZE_SCALAR = 1.5; 
+                    this.resetLbl(hoverLbl, x, y, PIN_LBL_SIZE*SIZE_SCALAR, name);
+                    svg.addClass(hoverLbl, "sim-board-pin-lbl-hover");
+                    grid.appendChild(hoverLbl);
+                    let bbHoverLbl: BBLbl = {l: hoverLbl, cx: x, cy: y, size: PIN_LBL_SIZE*SIZE_SCALAR, rot: 270, nm: name, nearestPin: pin};
+                    this.allHoverLbls.push(bbHoverLbl);
+                    this.pinNmToHoverLbl[name] = bbHoverLbl;
                     //hover
                     svg.addClass(overP, "sim-board-pin-hover");
                     svg.hydrate(overP, {title: name});
                 };
-                return mkGrid(l, t, rs, cs, size, size, props, pinFn);
+                let grid = mkGrid(l, t, rs, cs, size, size, props, pinFn);
+
+                return grid;
             }
             this.boardDef.visual.pinBlocks.forEach(pinBlock => {
                 let l = this.boardDim.xOff + this.boardDim.scaleFn(pinBlock.x) + PIN_DIST/2.0;
@@ -873,12 +915,11 @@ namespace pxsim.visuals {
 
         public highlightLoc(pinNm: string) {
             let lbl = this.pinNmToLbl[pinNm];
-            if (lbl) {
+            let hoverLbl = this.pinNmToHoverLbl[pinNm];
+            if (lbl && hoverLbl) {
                 svg.addClass(lbl.l, "highlight");
-                const SIZE_SCALAR = 1.3;
-                this.resetLbl(lbl.l, lbl.cx, lbl.cy, lbl.size * SIZE_SCALAR, lbl.nm);
+                svg.addClass(hoverLbl.l, "highlight");
                 svg.addClass(lbl.nearestPin.p, "highlight");
-                this.element.appendChild(lbl.l);
             }
         }
     }

@@ -45,8 +45,6 @@ namespace pxsim.instructions {
     const NUM_MARGIN = 5;
     const STYLE = `
             ${visuals.BOARD_SYTLE}
-            ${visuals.BUTTON_PAIR_STYLE/*TODO: generalize for all components*/}
-            ${visuals.LED_MATRIX_STYLE}
             .instr-panel {
                 margin: ${PANEL_MARGIN}px;
                 padding: ${PANEL_PADDING}px;
@@ -98,10 +96,6 @@ namespace pxsim.instructions {
             }
             `;
 
-    function bbLocToCoordStr(loc: string) {
-        let {rowNm, colNm} = visuals.BRK_PIN_NM(loc);
-        return `(${rowNm},${colNm})`
-    }
     function addClass(el: HTMLElement, cls: string) {
         //TODO move to library
         if (el.classList) el.classList.add(cls);
@@ -421,7 +415,6 @@ namespace pxsim.instructions {
             boardDef: boardDef,
             activeComponents: [],
             componentDefinitions: cmpDefs,
-            shouldLabelPins: buildMode,
         })
         svg.hydrate(board.element, {
             "width": width,
@@ -431,6 +424,7 @@ namespace pxsim.instructions {
             svg.hydrate(board.background, {
                 "href": `/images/${boardDef.visual.outlineImage}`
             })
+            svg.addClass(board.element, "sim-board-outline")
             let bb = board.breadboard.bb;
             svg.addClass(bb, "sim-bb-outline")
             let style = <SVGStyleElement>svg.child(bb, "style", {});

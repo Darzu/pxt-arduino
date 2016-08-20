@@ -2,7 +2,7 @@ namespace pxsim.visuals {
     const PIN_HOVER_SCALAR = 1.3;
     const LBL_HOVER_SCALAR = 1.3;
 
-    export declare type PinFn = (p: SVGRectElement, i: number, j: number, x: number, y: number, overPin: SVGRectElement)=>void;
+    export declare type PinFn = (p: SVGRectElement, i: number, j: number, x: number, y: number, overPin: SVGRectElement, grid: SVGGElement)=>void;
 
     export const mkGrid = (l: number, t: number, rs: number, cs: number, size: number, overSize: number, props: any, pinFn: PinFn): SVGGElement => {
         const x = l - size/2;
@@ -26,7 +26,7 @@ namespace pxsim.visuals {
                 let overPin = mkPin(overX, overY, overSize);
                 grid.appendChild(pin);
                 grid.appendChild(overPin);
-                pinFn(pin, i, j, pinX+size/2, pinY+size/2, overPin);
+                pinFn(pin, i, j, pinX+size/2, pinY+size/2, overPin, grid);
             }
         }
         return grid;
