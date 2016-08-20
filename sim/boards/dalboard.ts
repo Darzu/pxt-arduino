@@ -270,11 +270,11 @@ namespace pxsim.visuals {
         .sim-board-pin-lbl-hover {
             visibility: hidden;
         }
-        .sim-board-pin-hover:hover + .sim-board-pin-lbl,
+        .sim-board-outline .sim-board-pin-hover:hover + .sim-board-pin-lbl,
         .sim-board-pin-lbl.highlight {
             visibility: hidden;
         }
-        .sim-board-pin-hover:hover + * + .sim-board-pin-lbl-hover,
+        .sim-board-outline .sim-board-pin-hover:hover + * + .sim-board-pin-lbl-hover,
         .sim-board-pin-lbl-hover.highlight {
             visibility: visible;
         }
