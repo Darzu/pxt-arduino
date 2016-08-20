@@ -290,9 +290,9 @@ namespace pxsim.visuals {
         private components: IBoardComponent<any>[];
         public breadboard: Breadboard;
         private underboard: SVGGElement;
-        private boardDef: BoardDefinition;
+        public boardDef: BoardDefinition;
         private boardDim: ComputedBoardDimensions;
-        private componentDefs: Map<ComponentDefinition>;
+        public componentDefs: Map<ComponentDefinition>;
         private boardEdges: number[];
         private id: number;
         private labeledPins: boolean;
@@ -344,17 +344,9 @@ namespace pxsim.visuals {
             this.updateState();
 
             let cmps = props.activeComponents;
-
-            if (cmps.length > 0) {
-                let wires = this.allocateBasicWires();
-                wires.forEach(w => this.addWire(w));
-                let cmpDefs = cmps.map(c => this.componentDefs[c] || null);
-                let cmpsAndWires = this.allocateComponentsAndWiring(cmpDefs);
-                cmpsAndWires.forEach((cAndWs, idx) => {                    
-                    let [cmpDef, wireDefs] = cAndWs;
-                    wireDefs.forEach(w => this.addWire(w));
-                    this.addComponent(cmpDef);
-                });
+            if (cmps.length) {
+                let alloc = this.allocateAll(cmps);
+                this.addAll(alloc);
             }
         }
 
@@ -593,6 +585,25 @@ namespace pxsim.visuals {
             let cmps = cmpDefs.map((c, idx) => this.allocateComponent(c, cmpStartCol[idx]));
             let cmpsAndWires = cmps.map((c, idx) => <[ComponentInstance, WireInstance[]]>[c, wires[idx]]);
             return cmpsAndWires;
+        }
+        public allocateAll(cmps: string[]): [WireInstance[], [ComponentInstance, WireInstance[]][]] {
+            let basicWires: WireInstance[] = [];
+            let cmpsAndWires: [ComponentInstance, WireInstance[]][] = [];
+            if (cmps.length > 0) {
+                basicWires = this.allocateBasicWires();
+                let cmpDefs = cmps.map(c => this.componentDefs[c] || null);
+                cmpsAndWires = this.allocateComponentsAndWiring(cmpDefs);
+            }
+            return [basicWires, cmpsAndWires];
+        }
+        public addAll(basicWiresAndCmpsAndWires: [WireInstance[], [ComponentInstance, WireInstance[]][]]) {
+            let [basicWires, cmpsAndWires] = basicWiresAndCmpsAndWires;
+            basicWires.forEach(w => this.addWire(w));
+            cmpsAndWires.forEach((cAndWs, idx) => {                    
+                let [cmpDef, wireDefs] = cAndWs;
+                wireDefs.forEach(w => this.addWire(w));
+                this.addComponent(cmpDef);
+            });
         }
 
         public addWire(w: WireInstance): {endG: SVGGElement, end1: SVGElement, end2: SVGElement, wires: SVGElement[]} {
