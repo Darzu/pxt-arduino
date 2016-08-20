@@ -500,6 +500,11 @@ namespace pxsim.instructions {
                     //last step
                     if (i === step) {
                         board.breadboard.highlightLoc(locLbl);
+                        if (cmpInst.builtinPartVisual === "buttonpair") {
+                            //TODO: don't specialize this
+                            let locLbl2 = `${cmpInst.breadboardStartRow}${cmpInst.breadboardStartColumn+3}`
+                            board.breadboard.highlightLoc(locLbl2);
+                        }
                         svg.addClass(cmp.element, "notgrayed");
                     }
                 });
