@@ -15,7 +15,7 @@
      * @param value current value to plot
      * @param high maximum value. If 0, maximum value adjusted automatically, eg: 0
      */
-    //% help=/led/plot-bar-graph weight=20
+    //% help=led/plot-bar-graph weight=20
     //% blockId=device_plot_bar_graph block="plot bar graph of %value |up to %high" icon="\uf080" blockExternalInputs=true
     //% parts="ledmatrix"
     export function plotBarGraph(value: number, high: number): void {
@@ -52,7 +52,9 @@
      * @param x TODO
      * @param y TODO
      */
-    //% help=led/toggle
+    //% help=led/toggle weight=77
+    //% blockId=device_led_toggle block="toggle|x %x|y %y" icon="\uf204" blockGap=8
+    //% parts="ledmatrix"
     export function toggle(x: number, y: number): void {
         if (led.point(x, y)) {
             led.unplot(x, y);
@@ -65,6 +67,7 @@
      * Turns all LEDS on
      */
     //% help=led/plot-all
+    //% parts="ledmatrix"
     export function plotAll(): void {
         for (let i = 0; i < 5; i++) {
             for (let j = 0; j < 5; j++) {
@@ -77,6 +80,7 @@
      * Inverts the current LED display
      */
     //% help=led/toggle-all
+    //% parts="ledmatrix"
     export function toggleAll(): void {
         for (let i = 0; i < 5; i++) {
             for (let j = 0; j < 5; j++) {
@@ -90,6 +94,7 @@
      * @param ms TODO
      */
     //% help=led/fade-in
+    //% parts="ledmatrix"
     export function fadeIn(ms: number = 700): void {
         if (ms < 20) {
             led.setBrightness(255);
@@ -112,6 +117,7 @@
      * @param ms TODO
      */
     //% help=led/fade-out
+    //% parts="ledmatrix"
     export function fadeOut(ms: number = 700): void {
         if (ms < 20) {
             led.setBrightness(0);

@@ -136,13 +136,13 @@ namespace input {
         registerWithDal(MICROBIT_ID_GESTURE, (int)gesture, body);
     }
 
-    /**
-     * Do something when a pin(``P0``, ``P1`` or both ``P2``) is pressed.
-     * @param name TODO
-     * @param body TODO
+     /**
+     * Do something when a pin is pressed.
+     * @param name the pin that needs to be pressed
+     * @param body the code to run when the pin is pressed
      */
     //% help=input/on-pin-pressed weight=83
-    //% blockId=device_pin_event block="on pin|%NAME|pressed" icon="\uf094"
+    //% blockId=device_pin_event block="on pin %NAME|pressed" icon="\uf094"
     void onPinPressed(TouchPin name, Action body) {
         auto pin = getPin((int)name);
         if (!pin) return;
@@ -150,6 +150,22 @@ namespace input {
         // Forces the PIN to switch to makey-makey style detection.
         pin->isTouched();
         registerWithDal((int)name, MICROBIT_BUTTON_EVT_CLICK, body);
+    }
+
+    /**
+     * Do something when a pin is released.
+     * @param name the pin that needs to be released
+     * @param body the code to run when the pin is released
+     */
+    //% help=input/on-pin-released weight=6 blockGap=8
+    //% blockId=device_pin_released block="on pin %NAME|released" icon="\uf094"
+    void onPinReleased(TouchPin name, Action body) {
+        auto pin = getPin((int)name);
+        if (!pin) return;
+
+        // Forces the PIN to switch to makey-makey style detection.
+        pin->isTouched();
+        registerWithDal((int)name, MICROBIT_BUTTON_EVT_UP, body);
     }
 
     /**
@@ -244,7 +260,7 @@ namespace input {
      * The pitch of the device, rotation along the ``x-axis``, in degrees.
      * @param kind TODO
      */
-    //% help=/input/rotation weight=52
+    //% help=input/rotation weight=52
     //% blockId=device_get_rotation block="rotation (°)|%NAME" blockGap=8 icon="\uf197"
     //% parts="accelerometer"
     int rotation(Rotation kind) {

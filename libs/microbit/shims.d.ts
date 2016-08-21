@@ -233,13 +233,22 @@ declare namespace input {
     function onGesture(gesture: Gesture, body: () => void): void;
 
     /**
-     * Do something when a pin(``P0``, ``P1`` or both ``P2``) is pressed.
-     * @param name TODO
-     * @param body TODO
+     * Do something when a pin is pressed.
+     * @param name the pin that needs to be pressed
+     * @param body the code to run when the pin is pressed
      */
     //% help=input/on-pin-pressed weight=83
-    //% blockId=device_pin_event block="on pin|%NAME|pressed" icon="\uf094" shim=input::onPinPressed
+    //% blockId=device_pin_event block="on pin %NAME|pressed" icon="\uf094" shim=input::onPinPressed
     function onPinPressed(name: TouchPin, body: () => void): void;
+
+    /**
+     * Do something when a pin is released.
+     * @param name the pin that needs to be released
+     * @param body the code to run when the pin is released
+     */
+    //% help=input/on-pin-released weight=6 blockGap=8
+    //% blockId=device_pin_released block="on pin %NAME|released" icon="\uf094" shim=input::onPinReleased
+    function onPinReleased(name: TouchPin, body: () => void): void;
 
     /**
      * Get the button state (pressed or not) for ``A`` and ``B``.
@@ -299,7 +308,7 @@ declare namespace input {
      * The pitch of the device, rotation along the ``x-axis``, in degrees.
      * @param kind TODO
      */
-    //% help=/input/rotation weight=52
+    //% help=input/rotation weight=52
     //% blockId=device_get_rotation block="rotation (°)|%NAME" blockGap=8 icon="\uf197"
     //% parts="accelerometer" shim=input::rotation
     function rotation(kind: Rotation): number;
@@ -352,9 +361,17 @@ declare namespace control {
     /**
      * Resets the BBC micro:bit.
      */
-    //% weight=30 async help=control/reset
+    //% weight=30 async help=control/reset blockGap=8
     //% blockId="control_reset" block="reset" shim=control::reset
     function reset(): void;
+
+    /**
+     * Blocks the current fiber for the given microseconds
+     * @param micros number of micro-seconds to wait. eg: 4
+     */
+    //% help=control/wait-micros weight=29
+    //% blockId="control_wait_us" block="wait (µs)%micros" shim=control::waitMicros
+    function waitMicros(micros: number): void;
 
     /**
      * Raises an event in the event bus.
@@ -464,7 +481,7 @@ declare namespace led {
      * Sets the display mode between black and white and greyscale for rendering LEDs.
      * @param mode TODO
      */
-    //% weight=1 help=/led/set-display-mode
+    //% weight=1 help=led/set-display-mode
     //% parts="ledmatrix" shim=led::setDisplayMode
     function setDisplayMode(mode: DisplayMode): void;
 
@@ -475,10 +492,6 @@ declare namespace led {
     //% parts="ledmatrix" shim=led::screenshot
     function screenshot(): Image;
 }
-
-
-
-    //% color=351 weight=30
 declare namespace pins {
 
     /**
@@ -537,8 +550,18 @@ declare namespace pins {
      */
     //% help=pins/pulse-duration
     //% blockId=pins_pulse_duration block="pulse duration (µs)"
-    //% weight=21 shim=pins::pulseDuration
+    //% weight=21 blockGap=8 shim=pins::pulseDuration
     function pulseDuration(): number;
+
+    /**
+     * Returns the duration of a pulse in microseconds
+     * @param name the pin which measures the pulse
+     * @param value the value of the pulse (default high)
+     * @param maximum duration in micro-seconds
+     */
+    //% blockId="pins_pulse_in" block="pulse in (µs)|pin %name|pulsed %value"
+    //% weight=20 maxDuration.defl=2000000 shim=pins::pulseIn
+    function pulseIn(name: DigitalPin, value: PulseValue, maxDuration?: number): number;
 
     /**
      * Writes a value to the servo, controlling the shaft accordingly. On a standard servo, this will set the angle of the shaft (in degrees), moving the shaft to that orientation. On a continuous rotation servo, this will set the speed of the servo (with ``0`` being full-speed in one direction, ``180`` being full speed in the other, and a value near ``90`` being no movement).
@@ -554,7 +577,7 @@ declare namespace pins {
      * @param name pin name
      * @param micros pulse duration in micro seconds, eg:1500
      */
-    //% help=pins/serial-set-pulse weight=19
+    //% help=pins/servo-set-pulse weight=19
     //% blockId=device_set_servo_pulse block="servo set pulse|pin %value|to (µs) %micros" shim=pins::servoSetPulse
     function servoSetPulse(name: AnalogPin, micros: number): void;
 
@@ -600,6 +623,14 @@ declare namespace pins {
      */
     //% repeat.defl=0 shim=pins::i2cWriteBuffer
     function i2cWriteBuffer(address: number, buf: Buffer, repeat?: boolean): void;
+
+    /**
+     * Write to the SPI slave and return the response
+     * @param value Data to be sent to the SPI slave
+     */
+    //% help=pins/spi-write weight=5
+    //% blockId=spi_write block="spi write %value" shim=pins::spiWrite
+    function spiWrite(value: number): number;
 }
 
 

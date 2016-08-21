@@ -90,8 +90,8 @@ namespace bluetooth {
     /**
     *  Starts the Bluetooth UART service
     */
-    // help=bluetooth/start-uart-service
-    // blockId=bluetooth_start_uart_service block="bluetooth uart service" blockGap=8
+    //% help=bluetooth/start-uart-service
+    //% blockId=bluetooth_start_uart_service block="bluetooth uart service" blockGap=8
     //% parts="bluetooth"
     void startUartService() {
         if (uart) return;

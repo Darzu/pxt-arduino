@@ -11,7 +11,7 @@ namespace pins {
      * @param toLow the lower bound of the value's target range
      * @param toHigh the upper bound of the value's target range, eg: 4
      */
-    //% help=pins/map weight=22
+    //% help=pins/map weight=23
     //% blockId=math_map block="map %value|from low %fromLow|from high %fromHigh|to low %toLow|to high %toHigh"
     export function map(value: number, fromLow: number, fromHigh: number, toLow: number, toHigh: number): number {
         return ((value - fromLow) * (toHigh - toLow)) / (fromHigh - fromLow) + toLow;
@@ -30,7 +30,7 @@ namespace pins {
     /**
      * Write one number to a 7-bit I2C address.
      */
-    //% help=pins/i2c-write-number
+    //% help=pins/i2c-write-number blockGap=8
     //% blockId=i2c_writenumber block="i2c write number|at address %address|with value %value|of format %format=i2c_sizeof" weight=6
     export function i2cWriteNumber(address: number, value: number, format: NumberFormat): void {
         let buf = createBuffer(pins.sizeOf(format))

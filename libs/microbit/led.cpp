@@ -83,7 +83,7 @@ namespace led {
      * Sets the display mode between black and white and greyscale for rendering LEDs.
      * @param mode TODO
      */
-    //% weight=1 help=/led/set-display-mode
+    //% weight=1 help=led/set-display-mode
     //% parts="ledmatrix"
     void setDisplayMode(DisplayMode_ mode) { 
         uBit.display.setDisplayMode((DisplayMode)mode);

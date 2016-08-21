@@ -135,7 +135,6 @@ namespace devices {
      */
     //% weight=30 help=devices/tell-camera-to
     //% blockId=devices_camera icon="\uf030" block="tell camera to|%property" blockGap=8
-    //% parts="phone"
     void tellCameraTo(MesCameraEvent event) { 
         genEvent(MES_CAMERA_ID, (int)event);
     }
@@ -146,7 +145,6 @@ namespace devices {
      */
     //% weight=29 help=devices/tell-remote-control-to
     //% blockId=devices_remote_control block="tell remote control to|%property" blockGap=14 icon="\uf144"
-    //% parts="phone"
     void tellRemoteControlTo(MesRemoteControlEvent event) { 
         genEvent(MES_REMOTE_CONTROL_ID, (int)event);
     }
@@ -157,7 +155,6 @@ namespace devices {
      */
     //% weight=27 help=devices/raise-alert-to
     //% blockId=devices_alert block="raise alert to|%property" icon="\uf0f3"
-    //% parts="phone"
     void raiseAlertTo(MesAlertEvent event) { 
         genEvent(MES_ALERTS_ID, (int)event);
     }
@@ -169,7 +166,6 @@ namespace devices {
      */
     //% help=devices/on-notified weight=26
     //% blockId=devices_device_info_event block="on notified|%event" icon="\uf10a"
-    //% parts="phone"
     void onNotified(MesDeviceInfo event, Action body) {
         registerWithDal(MES_DEVICE_INFO_ID, (int)event, body);
     }
@@ -182,7 +178,6 @@ namespace devices {
     //% help=devices/on-gamepad-button weight=40
     //% weight=25
     //% blockId=devices_gamepad_event block="on gamepad button|%NAME" icon="\uf11b"
-    //% parts="phone"
     void onGamepadButton(MesDpadButtonInfo name, Action body) {
         registerWithDal(MES_DPAD_CONTROLLER_ID, (int)name, body);
     }
@@ -204,7 +199,6 @@ namespace devices {
      */
     //% help=devices/signal-strength weight=24
     //% blockId=devices_signal_strength block="signal strength" blockGap=14 icon="\uf012" blockGap=14
-    //% parts="phone"
     int signalStrength() {
         initSignalStrength();
         return _signalStrength;
@@ -216,7 +210,6 @@ namespace devices {
      */
     //% weight=23 help=devices/on-signal-strength-changed
     //% blockId=devices_signal_strength_changed_event block="on signal strength changed" icon="\uf012"
-    //% parts="phone"
     void onSignalStrengthChanged(Action body) {
         initSignalStrength();    
         registerWithDal(MES_SIGNAL_STRENGTH_ID, MICROBIT_EVT_ANY, body);

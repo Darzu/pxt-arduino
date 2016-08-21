@@ -71,7 +71,6 @@ MicroBitPin *getPin(int id) {
 }
 
 
-//% color=351 weight=30
 namespace pins {
     #define PINOP(op) \
       MicroBitPin *pin = getPin((int)name); \
@@ -161,9 +160,38 @@ namespace pins {
     */
     //% help=pins/pulse-duration
     //% blockId=pins_pulse_duration block="pulse duration (µs)"
-    //% weight=21
+    //% weight=21 blockGap=8
     int pulseDuration() {
         return pxt::lastEvent.timestamp;
+    }
+
+    /**
+    * Returns the duration of a pulse in microseconds
+    * @param name the pin which measures the pulse
+    * @param value the value of the pulse (default high)
+    * @param maximum duration in micro-seconds
+    */    
+    //% blockId="pins_pulse_in" block="pulse in (µs)|pin %name|pulsed %value"
+    //% weight=20
+    int pulseIn(DigitalPin name, PulseValue value, int maxDuration = 2000000) {
+        MicroBitPin* pin = getPin((int)name);
+        if (!pin) return 0;
+
+        int pulse = value == PulseValue::High ? 1 : 0;
+        uint64_t tick =  system_timer_current_time_us(); 
+        uint64_t maxd = (uint64_t)maxDuration;      
+        while(pin->getDigitalValue() != pulse) {
+            if(system_timer_current_time_us() - tick > maxd)
+                return 0;            
+        }
+
+        uint64_t start =  system_timer_current_time_us();       
+        while(pin->getDigitalValue() == pulse) {
+            if(system_timer_current_time_us() - tick > maxd)
+                return 0;            
+        }        
+        uint64_t end =  system_timer_current_time_us();       
+        return end - start;         
     }
 
     /**
@@ -182,7 +210,7 @@ namespace pins {
      * @param name pin name
      * @param micros pulse duration in micro seconds, eg:1500
      */
-    //% help=pins/serial-set-pulse weight=19
+    //% help=pins/servo-set-pulse weight=19
     //% blockId=device_set_servo_pulse block="servo set pulse|pin %value|to (µs) %micros"
     void servoSetPulse(AnalogPin name, int micros) { 
         PINOP(setServoPulseUs(micros));
@@ -268,4 +296,23 @@ namespace pins {
     {
       uBit.i2c.write(address << 1, (char*)buf->payload, buf->length, repeat);
     }
+
+    SPI* spi = NULL;
+    SPI* allocSPI() {
+        if (spi == NULL)
+            spi = new SPI(MOSI, MISO, SCK);
+        return spi;
+    }
+
+    /**
+    * Write to the SPI slave and return the response
+    * @param value Data to be sent to the SPI slave
+    */
+    //% help=pins/spi-write weight=5
+    //% blockId=spi_write block="spi write %value"
+    int spiWrite(int value) {
+        auto p = allocSPI();
+        return p->write(value);
+    }
+    
 }

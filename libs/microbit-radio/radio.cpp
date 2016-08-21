@@ -114,19 +114,19 @@ namespace radio {
         uBit.serial.send("{");
         if (length >= 4) {
             memcpy(&value, bytes, 4);
-            uBit.serial.send("v:"); uBit.serial.send(value);
+            uBit.serial.send("\"v\":"); uBit.serial.send(value);
             if(length >= 8) {
                 memcpy(&value, bytes + 4, 4);
-                uBit.serial.send(",t:"); uBit.serial.send(value);                
+                uBit.serial.send(",\"t\":"); uBit.serial.send(value);                
                 if (length >= 12) {
                     memcpy(&value, bytes + 8, 4);
-                    uBit.serial.send(",s:"); uBit.serial.send(value);                                    
+                    uBit.serial.send(",\"s\":"); uBit.serial.send(value);                                    
                     if (length >= 13) {
                         char name[MAX_FIELD_NAME_LENGTH+1];
                         uint8_t len = min(MAX_FIELD_NAME_LENGTH, bytes[12]);
                         memcpy(name, bytes + 13, len);
                         name[len] = 0;
-                        uBit.serial.send(",n:\""); uBit.serial.send(name); uBit.serial.send("\"");                                    
+                        uBit.serial.send(",\"n\":\""); uBit.serial.send(name); uBit.serial.send("\"");                                    
                     }
                 }
             }
@@ -134,16 +134,6 @@ namespace radio {
         uBit.serial.send("}\r\n");
     }
 
-    /**
-     * Registers code to run when a packet is received over radio.
-     */
-    //% help=radio/on-data-received
-    //% weight=50
-    //% blockId=radio_datagram_received_event block="radio on data received" blockGap=8
-    void onDataReceived(Action body) {
-        if (radioEnable() != MICROBIT_OK) return;
-        registerWithDal(MICROBIT_ID_RADIO, MICROBIT_RADIO_EVT_DATAGRAM, body);    
-    }
 
     /**
      * Reads a number at a given index, between ``0`` and ``3``, from the packet received by ``receive number``. Not supported in simulator.
@@ -162,7 +152,7 @@ namespace radio {
         }
         return 0;
     }
-
+    
     /**
      * Reads the next packet as a number from the radio queue.
      */
@@ -175,6 +165,20 @@ namespace radio {
         packet = uBit.radio.datagram.recv();
         return receivedNumberAt(0);
     }
+
+    /**
+     * Registers code to run when a packet is received over radio.
+     */
+    //% help=radio/on-data-received
+    //% weight=50
+    //% blockId=radio_datagram_received_event block="radio on data received" blockGap=8
+    void onDataReceived(Action body) {
+        if (radioEnable() != MICROBIT_OK) return;
+        registerWithDal(MICROBIT_ID_RADIO, MICROBIT_RADIO_EVT_DATAGRAM, body);    
+        // make the the receive buffer has a free spot
+        receiveNumber();
+    }
+
     
     /**
     * Reads the next packet as a string and returns it.
@@ -231,6 +235,7 @@ namespace radio {
     //% weight=8 blockGap=8
     //% blockId=radio_set_transmit_serial_number block="radio set transmit serial number %transmit"
     void setTransmitSerialNumber(bool transmit) {
+        if (radioEnable() != MICROBIT_OK) return;
         transmitSerialNumber = transmit;
     }
 }
