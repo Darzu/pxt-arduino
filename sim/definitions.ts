@@ -54,8 +54,8 @@ namespace pxsim {
 
     export const ARDUINO_ZERO: BoardDefinition = {
         visual: {
-            image: "arduino-zero-photo-sml.png",
-            outlineImage: "arduino-zero-outline.svg",
+            image: "/static/arduino/arduino-zero-photo-sml.png",
+            outlineImage: "/static/arduino/arduino-zero-outline.svg",
             width: 1000,
             height: 762,
             pinDist: 35.5,

@@ -738,7 +738,7 @@ namespace pxsim.visuals {
             // main board
             this.background = svg.child(this.g, "image", 
                 { class: "sim-board", x: this.boardDim.xOff, y: this.boardDim.yOff, width: this.boardDim.width, height: this.boardDim.height, 
-                    "href": `/images/${this.boardDef.visual.image}`});
+                    "href": `${this.boardDef.visual.image}`});
             let backgroundCover = this.mkGrayCover(this.boardDim.xOff, this.boardDim.yOff, this.boardDim.width, this.boardDim.height);
             this.g.appendChild(backgroundCover);
             const mkPinGrid = (l: number, t: number, rs: number, cs: number, getNm: (i: number, j: number) => string) => {

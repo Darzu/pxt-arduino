@@ -193,7 +193,7 @@ namespace pxsim.instructions {
             y: t, 
             width: def.visual.width, 
             height: def.visual.height, 
-            "href": `/images/${def.visual.image}`});
+            "href": `${def.visual.image}`});
 
         return {e: img, w: w, h: h, l: l, t};
     }
@@ -422,7 +422,7 @@ namespace pxsim.instructions {
         svg.addClass(board.element, "board-svg");
         if (buildMode){
             svg.hydrate(board.background, {
-                "href": `/images/${boardDef.visual.outlineImage}`
+                "href": `${boardDef.visual.outlineImage}`
             })
             svg.addClass(board.element, "sim-board-outline")
             let bb = board.breadboard.bb;
