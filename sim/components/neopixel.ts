@@ -131,7 +131,7 @@ namespace pxsim.visuals {
         let h = NP_PART_HEIGHT;
         let img = <SVGImageElement>svg.elt("image");
         svg.hydrate(img, {class: "sim-neopixel-strip", x: l, y: t, width: w, height: h,
-            href: `/images/${NEOPIXEL_PART_IMG}`});
+            href: `/static/arduino/${NEOPIXEL_PART_IMG}`});
         return {e: img, l: l, t: t, w: w, h: h};
     }
     export class NeoPixel implements SVGAndSize<SVGCircleElement> {
