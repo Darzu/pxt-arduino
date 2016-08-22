@@ -682,6 +682,10 @@ namespace pxsim.instructions {
                 });
         }
 
+        //parts list
+        let parts = (getQsVal("parts") || "").split(" ");
+        parts.sort();
+
         //init runtime
         const COMP_CODE = "";
         if (!pxsim.initCurrentRuntime)
@@ -698,11 +702,8 @@ namespace pxsim.instructions {
         let boardDef = ARDUINO_ZERO;
         let cmpDefs = COMPONENT_DEFINITIONS;
 
-        let CMPS = ["ledmatrix", "buttonpair", "neopixel"];//TODO: pass through query string
-        CMPS.sort();
-
         //front page
-        let [frontPanel, props] = updateFrontPanel(boardDef, cmpDefs, CMPS);
+        let [frontPanel, props] = updateFrontPanel(boardDef, cmpDefs, parts);
 
         //all required parts
         let partsPanel = mkPartsPanel(props);
