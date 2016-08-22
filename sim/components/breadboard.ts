@@ -22,7 +22,7 @@ namespace pxsim.visuals {
         }
         .sim-bb-group-wire {
             stroke: #999;
-            stroke-width: ${pinDist / 3.5}px;
+            stroke-width: ${pinDist / 4}px;
             visibility: hidden;
         }
         .sim-bb-pin-group {
