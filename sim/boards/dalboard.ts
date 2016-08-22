@@ -622,7 +622,7 @@ namespace pxsim.visuals {
             let cmpsAndWires: [ComponentInstance, WireInstance[]][] = [];
             if (cmps.length > 0) {
                 basicWires = this.allocateBasicWires();
-                let cmpDefs = cmps.map(c => this.componentDefs[c] || null);
+                let cmpDefs = cmps.map(c => this.componentDefs[c] || null).filter(d => !!d);
                 cmpsAndWires = this.allocateComponentsAndWiring(cmpDefs);
             }
             return [basicWires, cmpsAndWires];
