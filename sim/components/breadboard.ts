@@ -1,10 +1,113 @@
 namespace pxsim.visuals {
+    const BREADBOARD_CSS = (pinDist: number) => `
+        /* bread board */
+        .sim-bb-background {
+            fill:#E0E0E0;
+        }
+        .sim-bb-channel {
+        }
+        .sim-bb-pin {
+            fill:#999;
+        }
+        .sim-bb-pin-hover {
+            visibility: hidden;
+            pointer-events: all;
+            stroke-width: ${pinDist / 2}px;
+            stroke: transparent;
+            fill: #777;
+        }
+        .sim-bb-pin-hover:hover {
+            visibility: visible;
+            fill:#444;
+        }
+        .sim-bb-group-wire {
+            stroke: #999;
+            stroke-width: ${pinDist / 3.5}px;
+            visibility: hidden;
+        }
+        .sim-bb-pin-group {
+            pointer-events: all;
+        }
+        .sim-bb-label,
+        .sim-bb-label-hover {
+            font-family:"Lucida Console", Monaco, monospace;
+            fill:#555;
+            pointer-events: all;
+            stroke-width: 0;
+        }
+        .sim-bb-label-hover {
+            visibility: hidden;
+            fill:#000;
+            font-weight: bold;
+        }
+        .sim-bb-pin-group:hover .sim-bb-label:not(.highlight) {
+            visibility: hidden;
+        }
+        .sim-bb-bar {
+            stroke-width: 0;
+        }
+        .sim-bb-blue {
+            fill:#1AA5D7;
+            stroke:#1AA5D7
+        }
+        .sim-bb-red {
+            fill:#DD4BA0;
+            stroke:#DD4BA0;
+        }
+        .sim-bb-pin-group:hover .sim-bb-pin-hover,
+        .sim-bb-pin-group:hover .sim-bb-group-wire,
+        .sim-bb-pin-group:hover .sim-bb-label-hover {
+            visibility: visible;
+        }
+        /*Outline mode*/
+        .sim-bb-outline .sim-bb-background {
+            stroke-width: ${pinDist / 7}px;
+            fill: #FFF;
+            stroke: #000;
+        }
+        .sim-bb-outline .sim-bb-mid-channel {
+            fill: #FFF;
+            stroke: #888;
+            stroke-width: 1px;
+        }
+        /*Grayed out*/
+        .grayed .sim-bb-red,
+        .grayed .sim-bb-blue {
+            fill: #BBB;
+        }
+        .grayed .sim-bb-pin {
+            fill: #BBB;
+        }
+        .grayed .sim-bb-label {
+            fill: #BBB;
+        }
+        .grayed .sim-bb-background {
+            stroke: #BBB;
+        }
+        .grayed .sim-bb-group-wire {
+            stroke: #DDD;
+        }
+        /*Highlighted*/
+        .sim-bb-label.highlight {
+            visibility: hidden;
+        }
+        .sim-bb-label-hover.highlight {
+            visibility: visible;
+        }
+        .sim-bb-blue.highlight {
+            fill:#1AA5D7;
+        }
+        .sim-bb-red.highlight {
+            fill:#DD4BA0;
+        }
+        `
     const PIN_HOVER_SCALAR = 1.3;
-    const LBL_HOVER_SCALAR = 1.3;
+    const LABEL_HOVER_SCALAR = 1.3;
+
 
     export declare type PinFn = (p: SVGRectElement, i: number, j: number, x: number, y: number, overPin: SVGRectElement, grid: SVGGElement)=>void;
 
-    export const mkGrid = (l: number, t: number, rs: number, cs: number, size: number, overSize: number, props: any, pinFn: PinFn): SVGGElement => {
+    export function mkGrid(l: number, t: number, rs: number, cs: number, size: number, hoverSize: number, props: any, pinFn: PinFn): SVGGElement {
         const x = l - size/2;
         const y = t - size/2;
 
@@ -20,10 +123,10 @@ namespace pxsim.visuals {
                 let pinX = x+j*PIN_DIST;
                 let pinY = y+i*PIN_DIST;
                 let pin = mkPin(pinX, pinY, size);
-                let sizeDiff = overSize - size;
+                let sizeDiff = hoverSize - size;
                 let overX = pinX - sizeDiff/2;
                 let overY = pinY - sizeDiff/2;
-                let overPin = mkPin(overX, overY, overSize);
+                let overPin = mkPin(overX, overY, hoverSize);
                 grid.appendChild(pin);
                 grid.appendChild(overPin);
                 pinFn(pin, i, j, pinX+size/2, pinY+size/2, overPin, grid);
@@ -32,8 +135,30 @@ namespace pxsim.visuals {
         return grid;
     }
 
-    export type BBPin = {p: SVGRectElement, x: number, y: number, rowNm: string, colNm: string, pinNm: string, overPin?: SVGRectElement, grpNm?: string};
-    export type BBLbl = {l: SVGTextElement, cx: number, cy: number, size: number, rot: number, nm: string, nearestPin: BBPin, overLbl?: SVGTextElement};
+    export interface BreadboardOptions {
+        pinDistance: number
+    };
+
+    export type BBPin = {
+        p: SVGRectElement, 
+        x: number, 
+        y: number, 
+        rowNm: string, 
+        colNm: string, 
+        pinNm: string, 
+        overPin?: SVGRectElement, 
+        grpNm?: string
+    };
+    export type BBLbl = {
+        l: SVGTextElement, 
+        cx: number, 
+        cy: number, 
+        size: number, 
+        rot: number, 
+        nm: string, 
+        nearestPin: BBPin, 
+        overLbl?: SVGTextElement
+    };
     type NegPosBar = {e: SVGRectElement, nm: string};
 
     export const MK_PIN_NM = (rowNm: string, colNm: string) => rowNm + colNm;
@@ -44,125 +169,35 @@ namespace pxsim.visuals {
         public bb: SVGGElement;
         private styleEl: SVGStyleElement;
         private id: number;
+        private opts: BreadboardOptions;
         private width: number;
         private height: number;
-        
-        private allPins: BBPin[] = [];
-        private pinNmToPin: Map<BBPin> = {};
-        private pinNmToLoc: Map<Coord> = {};
+
+        //truth
+        public allPins: BBPin[] = [];
         private allLbls: BBLbl[] = [];
-        private lblNmToLbls: Map<BBLbl[]> = {};
+
+        //quick lookup map
+        private pinNmToPin: Map<BBPin> = {};
         private pinNmToLbls: Map<BBLbl[]> = {};
+        private lblNmToLbls: Map<BBLbl[]> = {};
         private barNmToBar: Map<NegPosBar> = {};
-
         public defs: SVGElement[] = [];
+        public style: string;
+        public rowColToCoord: Map<Coord[]> = {};
 
-        //TODO relate font size to PIN_DIST 
-        public style = `
-            /* bread board */
-            .sim-bb-background {
-                fill:#E0E0E0;
-            }
-            .sim-bb-channel {
-            }
-            .sim-bb-pin {
-                fill:#999;
-            }
-            .sim-bb-pin-hover {
-                visibility: hidden;
-                pointer-events: all;
-                stroke-width: ${PIN_DIST/2}px;
-                stroke: transparent;
-                fill: #777;
-            }
-            .sim-bb-pin-hover:hover {
-                visibility: visible;
-                fill:#444;
-            }
-            .sim-bb-group-wire {
-                stroke: #999;
-                stroke-width: ${PIN_DIST/3.5}px;
-                visibility: hidden;
-            }
-            .sim-bb-pin-group {
-                pointer-events: all;
-            }
-            .sim-bb-label,
-            .sim-bb-label-hover {
-                font-family:"Lucida Console", Monaco, monospace;
-                fill:#555;
-                pointer-events: all;
-                stroke-width: 0;
-            }
-            .sim-bb-label-hover {
-                visibility: hidden;
-                fill:#000;
-                font-weight: bold;
-            }
-            .sim-bb-pin-group:hover .sim-bb-label:not(.highlight) {
-                visibility: hidden;
-            }
-            .sim-bb-bar {
-                stroke-width: 0;
-            }
-            .sim-bb-blue {
-                fill:#1AA5D7;
-                stroke:#1AA5D7
-            }
-            .sim-bb-red {
-                fill:#DD4BA0;
-                stroke:#DD4BA0;
-            }
-            .sim-bb-pin-group:hover .sim-bb-pin-hover,
-            .sim-bb-pin-group:hover .sim-bb-group-wire,
-            .sim-bb-pin-group:hover .sim-bb-label-hover {
-                visibility: visible;
-            }
-            /*Outline mode*/
-            .sim-bb-outline .sim-bb-background {
-                stroke-width: 2px;
-                fill: #FFF;
-                stroke: #000;
-            }
-            .sim-bb-outline .sim-bb-mid-channel {
-                fill: #FFF;
-                stroke: #888;
-                stroke-width: 1px;
-            }
-            /*Grayed out*/
-            .grayed .sim-bb-red,
-            .grayed .sim-bb-blue {
-                fill: #BBB;
-            }
-            .grayed .sim-bb-pin {
-                fill: #BBB;
-            }
-            .grayed .sim-bb-label {
-                fill: #BBB;
-            }
-            .grayed .sim-bb-background {
-                stroke: #BBB;
-            }
-            .grayed .sim-bb-group-wire {
-                stroke: #DDD;
-            }
-            /*Highlighted*/
-            .sim-bb-label.highlight {
-                fill: #000;
-                font-weight: bold;
-            }
-            .sim-bb-blue.highlight {
-                fill:#1AA5D7;
-            }
-            .sim-bb-red.highlight {
-                fill:#DD4BA0;
-            }
-            `
-        constructor(width: number, height: number, addLoc?: (nm: string, xy: [number, number])=>void) {
+        private recordCoord(row: string, col: number, xy: Coord) {
+            let column = this.rowColToCoord[row] || (this.rowColToCoord[row] = []);
+            column[col] = xy;
+        }
+
+        constructor(opts: BreadboardOptions) {
             this.id = bbId++;
-            this.width = width;
-            this.height = height;
-            this.buildDom(addLoc);
+            this.opts = opts;
+            this.width = this.opts.pinDistance * 33;
+            this.height = this.opts.pinDistance * 21.5;
+            this.style = BREADBOARD_CSS(this.opts.pinDistance);
+            this.buildDom();
         }
 
         public updateLocation(x: number, y: number) {
@@ -178,7 +213,7 @@ namespace pxsim.visuals {
             this.bb.appendChild(el);
 
             //hover lbl
-            let hoverEl = mkTxt(cx, cy, size*LBL_HOVER_SCALAR, rot, txt);
+            let hoverEl = mkTxt(cx, cy, size*LABEL_HOVER_SCALAR, rot, txt);
             svg.addClass(hoverEl, "sim-bb-label-hover");
             if (cls)
                 cls.forEach(c => svg.addClass(hoverEl, c));
@@ -197,13 +232,13 @@ namespace pxsim.visuals {
             return el;
         }
         
-        private buildDom(addLoc?: (nm: string, xy: [number, number])=>void) 
+        private buildDom() 
         {
             const [width, height] = [this.width, this.height];
             const midRatio = 0.66666666;
-            const midH = height*midRatio;
-            const barRatio = 0.16666666;
-            const barH = height*barRatio;
+            const midH = height * midRatio;
+            const barRatio = (1.0 - midRatio) / 2.0;
+            const barH = height * barRatio;
 
             const midCols = BREADBOARD_COLUMN_COUNT;
             const midGridW = (midCols-1) * PIN_DIST;
@@ -314,9 +349,9 @@ namespace pxsim.visuals {
             this.allPins.forEach(pin => {
                 let {p, x, y, rowNm, colNm, pinNm} = pin
                 this.pinNmToPin[pinNm] = pin;
-                this.pinNmToLoc[pinNm] = [x, y];
+                this.recordCoord(rowNm, Number(colNm), [x, y]);
             })
-            
+
             //labels
             const drawLblAtPin = (pinName: string, label: string, xOff: number, yOff: number, r: number, s: number): SVGTextElement => {
                 let pin = this.pinNmToPin[pinName];
@@ -441,13 +476,6 @@ namespace pxsim.visuals {
             //add id
             this.styleEl = <SVGStyleElement>svg.child(this.bb, "style");
             svg.addClass(this.bb, `sim-bb-id-${this.id}`)
-
-            //report locations
-            if (addLoc) {
-                for (let nm in this.pinNmToLoc) {
-                    addLoc(nm, this.pinNmToLoc[nm]);
-                }
-            }
         }
 
         public getSVGAndSize(): SVGAndSize<SVGElement> {
@@ -472,7 +500,6 @@ namespace pxsim.visuals {
             const highlightLbl = (lbl: BBLbl) => {
                 svg.addClass(lbl.l, "highlight");
                 svg.addClass(lbl.overLbl, "highlight");
-                resetTxt(lbl.l, lbl.cx, lbl.cy, lbl.size * LBL_HOVER_SCALAR, lbl.rot, lbl.nm);
             };
             if (rowNm == "-" || rowNm == "+") {
                 //+/- sign

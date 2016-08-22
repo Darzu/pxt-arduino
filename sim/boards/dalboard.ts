@@ -121,8 +121,6 @@ namespace pxsim.visuals {
 
     export const BOARD_BASE_WIDTH = 498;
     export const BOARD_BASE_HEIGHT = 725;
-    export const BB_WIDTH = BOARD_BASE_WIDTH - 2;
-    export const BB_HEIGHT = 323; //TODO: relate to PIN_DIST
     const TOP_MARGIN = 20;
     const MID_MARGIN = 40;
     const BOT_MARGIN = 20;
@@ -720,13 +718,28 @@ namespace pxsim.visuals {
         }
 
         private buildDom() {
-            const bbX = (BOARD_BASE_WIDTH - BB_WIDTH)/2;              
-            this.bbX = bbX;          
+            // breadboard
+            this.breadboard = new Breadboard({pinDistance: PIN_DIST})
+            this.g.appendChild(this.breadboard.bb);
+            this.breadboard.defs.forEach(d => this.defs.appendChild(d));
+            this.style.textContent += this.breadboard.style;
+            let bbSize = this.breadboard.getSVGAndSize();
+            let [bbWidth, bbHeight] = [bbSize.w, bbSize.h];
+            const bbX = (BOARD_BASE_WIDTH - bbWidth)/2;
+            this.bbX = bbX;
             const bbY = TOP_MARGIN + this.boardDim.height + MID_MARGIN;
             this.bbY = bbY;
+            this.breadboard.updateLocation(bbX, bbY);
+            const addBBLoc = (name: string, relativeXY: [number, number]): void => {
+                this.nameToLoc[name] = [bbX + relativeXY[0], bbY + relativeXY[1]];
+            }
+            for (let pinIdx in this.breadboard.allPins) {
+                let pin = this.breadboard.allPins[pinIdx];
+                addBBLoc(pin.pinNm, [pin.x, pin.y]);
+            }
 
             // edges
-            this.boardEdges = [TOP_MARGIN, TOP_MARGIN+this.boardDim.height, bbY, bbY+BB_HEIGHT]
+            this.boardEdges = [TOP_MARGIN, TOP_MARGIN+this.boardDim.height, bbY, bbY+bbHeight]
 
             // filters
             let glow = svg.child(this.defs, "filter", { id: "filterglow", x: "-5%", y: "-5%", width: "120%", height: "120%" });
@@ -785,16 +798,6 @@ namespace pxsim.visuals {
                 svg.addClass(pins, "sim-board-pin-group");
                 this.g.appendChild(pins);
             })
-
-            // breadboard
-            const addBBLoc = (name: string, relativeXY: [number, number]): void => {
-                this.nameToLoc[name] = [bbX + relativeXY[0], bbY + relativeXY[1]];
-            }
-            this.breadboard = new Breadboard(BB_WIDTH, BB_HEIGHT, addBBLoc)
-            this.g.appendChild(this.breadboard.bb);
-            this.breadboard.defs.forEach(d => this.defs.appendChild(d));
-            this.style.textContent += this.breadboard.style;
-            this.breadboard.updateLocation(bbX, bbY);
 
             // wire colors
             //TODO: handle all wire colors even ones not in WIRE_COLOR_MAP
