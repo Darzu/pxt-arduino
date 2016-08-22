@@ -329,6 +329,7 @@ namespace pxsim.visuals {
         private allPins: BBPin[] = [];
         private allLbls: BBLbl[] = [];
         private pinNmToLbl: Map<BBLbl> = {};
+        private pinNmToPin: Map<BBPin> = {};
         private nameToLoc: Map<[number, number]> = {};
         private availablePowerPins = {
             top: {
@@ -763,6 +764,7 @@ namespace pxsim.visuals {
                     svg.hydrate(p, {title: name});
                     let pin: BBPin = {el: p, cx: x, cy: y, row: name, col: 0, hoverEl: overP, group: name};
                     this.allPins.push(pin);
+                    this.pinNmToPin[name] = pin;
                     //label
                     let lbl = <SVGTextElement>svg.elt("text");    
                     this.resetLbl(lbl, x, y, PIN_LBL_SIZE, name);
@@ -773,7 +775,7 @@ namespace pxsim.visuals {
                     this.resetLbl(hoverLbl, x, y, PIN_LBL_SIZE*SIZE_SCALAR, name);
                     svg.addClass(hoverLbl, "sim-board-pin-lbl-hover");
                     grid.appendChild(hoverLbl);
-                    let bbLbl: BBLbl = {el: lbl, cx: x, cy: y, size: PIN_LBL_SIZE, rot: 270, txt: name, nearestPin: pin, hoverEl: hoverLbl};
+                    let bbLbl: BBLbl = {el: lbl, cx: x, cy: y, size: PIN_LBL_SIZE, rotation: 270, txt: name, hoverEl: hoverLbl};
                     this.allLbls.push(bbLbl);
                     this.pinNmToLbl[name] = bbLbl;
                     //hover
@@ -913,10 +915,12 @@ namespace pxsim.visuals {
 
         public highlightLoc(pinNm: string) {
             let lbl = this.pinNmToLbl[pinNm];
-            if (lbl) {
+            let pin = this.pinNmToPin[pinNm];
+            if (lbl && pin) {
                 svg.addClass(lbl.el, "highlight");
                 svg.addClass(lbl.hoverEl, "highlight");
-                svg.addClass(lbl.nearestPin.el, "highlight");
+                svg.addClass(pin.el, "highlight");
+                svg.addClass(pin.hoverEl, "highlight");
             }
         }
     }

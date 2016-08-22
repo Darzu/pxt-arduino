@@ -104,6 +104,7 @@ namespace pxsim.visuals {
     const PIN_HOVER_SCALAR = 1.3;
     const LABEL_HOVER_SCALAR = 1.3;
     const BB_MID_RATIO = 0.66666666;
+    const PINS_PER_BAR_ROW = 5 * 5;
 
     export declare type PinFn = (p: SVGRectElement, i: number, j: number, x: number, y: number, overPin: SVGRectElement, grid: SVGGElement)=>void;
 
@@ -146,7 +147,7 @@ namespace pxsim.visuals {
         cy: number,
         row: string,
         col: number,
-        group: string
+        group?: string
     };
     export type BBLbl = {
         el: SVGTextElement, 
@@ -154,13 +155,13 @@ namespace pxsim.visuals {
         cx: number, 
         cy: number, 
         size: number, 
-        rot: number, 
+        rotation: number, 
         txt: string, 
-        nearestPin: BBPin, 
+        group?: string,
     };
     type BBBar = {
         e: SVGRectElement, 
-        group: string
+        group?: string
     };
 
     export const MK_PIN_NM = (rowNm: string, colNm: number) => `${rowNm}${colNm}`;
@@ -174,6 +175,8 @@ namespace pxsim.visuals {
         private opts: BreadboardOptions;
         private width: number;
         private height: number;
+        public defs: SVGElement[] = [];
+        public style: string;
 
         //truth
         public allPins: BBPin[] = [];
@@ -184,8 +187,6 @@ namespace pxsim.visuals {
         private pinNmToLbls: Map<BBLbl[]> = {};
         private lblNmToLbls: Map<BBLbl[]> = {};
         private barNmToBar: Map<BBBar> = {};
-        public defs: SVGElement[] = [];
-        public style: string;
         public rowColToCoord: Map<Coord[]> = {};
 
         private recordCoord(row: string, col: number, xy: Coord) {
@@ -206,7 +207,7 @@ namespace pxsim.visuals {
             translateEl(this.bb, [x, y]);
         }
 
-        private drawLbl = (cx: number, cy: number, size: number, rot: number, txt: string, nearestPin: BBPin | string, cls?: string[]): SVGTextElement => {
+        private drawLbl = (cx: number, cy: number, size: number, rot: number, txt: string, group: string, cls?: string[]): SVGTextElement => {
             //lbl
             let el = mkTxt(cx, cy, size, rot, txt);
             svg.addClass(el, "sim-bb-label");
@@ -221,16 +222,8 @@ namespace pxsim.visuals {
                 cls.forEach(c => svg.addClass(hoverEl, c));
             this.bb.appendChild(hoverEl);
 
-            //find nearest pin
-            let nP: BBPin;
-            if (typeof nearestPin === "string") {
-                nP = this.pinNmToPin[nearestPin];
-            } else {
-                nP = nearestPin;
-            }
-
             //record
-            this.allLbls.push({el: el, cx: cx, cy: cy, size: size, rot: rot, txt: txt, nearestPin: nP, hoverEl: hoverEl});
+            this.allLbls.push({el: el, cx: cx, cy: cy, size: size, rotation: rot, txt: txt, group: group, hoverEl: hoverEl});
             return el;
         }
         
@@ -250,7 +243,7 @@ namespace pxsim.visuals {
 
             const barRows = 2;
             const barGridH = (barRows-1) * PIN_DIST;
-            const barCols = 5 * 5 + 4;
+            const barCols = PINS_PER_BAR_ROW + 4/*spacers*/;
             const barGridW = (barCols-1) * PIN_DIST;
             const topBarGridX = (width - barGridW)/2;
             const topBarGridY = (barH - barGridH)/2;
@@ -293,7 +286,7 @@ namespace pxsim.visuals {
             //pins
             let getGrpNm = (rowNm: string, colNm: number) => {
                 if (mp.indexOf(rowNm) >= 0) {
-                    return `${rowNm}${colNm <= 25 ? "b" : "t"}`
+                    return `${rowNm}${colNm <= PINS_PER_BAR_ROW ? "b" : "t"}`
                 } else if (ae.indexOf(rowNm) >= 0) {
                     return `b${colNm}`
                 } else {
@@ -353,17 +346,19 @@ namespace pxsim.visuals {
             })
 
             //labels
-            const drawLblAtPin = (pinName: string, label: string, xOff: number, yOff: number, r: number, s: number): SVGTextElement => {
+            const drawLblAtPin = (pinName: string, label: string, xOff: number, yOff: number, r: number, s: number, group?: string): SVGTextElement => {
                 let pin = this.pinNmToPin[pinName];
                 let loc = [pin.cx, pin.cy];
-                let t = this.drawLbl(loc[0] + xOff, loc[1] + yOff, s, r, label, pin);
+                let t = this.drawLbl(loc[0] + xOff, loc[1] + yOff, s, r, label, group);
                 return t;
             }
 
+            //columns
             for (let n = 1; n <= 30; n++)
-                drawLblAtPin("j"+n, ""+n, 0, -PIN_DIST, -90, PIN_LBL_SIZE);
+                drawLblAtPin("j"+n, `${n}`, 0, -PIN_DIST, -90, PIN_LBL_SIZE, `t${n}`);
             for (let n = 1; n <= 30; n++)
-                drawLblAtPin("a"+n, ""+n, 0, PIN_DIST, -90, PIN_LBL_SIZE);
+                drawLblAtPin("a"+n, `${n}`, 0, PIN_DIST, -90, PIN_LBL_SIZE, `b${n}`);
+            //rows
             ae.forEach(a => drawLblAtPin(a+"1", a, -PIN_DIST, 0, -90, PIN_LBL_SIZE))
             fj.forEach(a => drawLblAtPin(a+"1", a, -PIN_DIST, 0, -90, PIN_LBL_SIZE))
             ae.forEach(a => drawLblAtPin(a+"30", a, PIN_DIST, 0, -90, PIN_LBL_SIZE))
@@ -375,17 +370,17 @@ namespace pxsim.visuals {
             const mpLblOff = PIN_DIST * 0.8;
             const mXOff = PIN_DIST*0.07;
             //TL
-            this.drawLbl(0 + mpLblOff + mXOff, 0 + mpLblOff, mLblSize, -90, `-`, "-26", [`sim-bb-blue`]);
-            this.drawLbl(0 + mpLblOff, barH - mpLblOff, pLblSize, -90, `+`, "+26", [`sim-bb-red`]);
+            this.drawLbl(0 + mpLblOff + mXOff, 0 + mpLblOff, mLblSize, -90, `-`, "-t", [`sim-bb-blue`]);
+            this.drawLbl(0 + mpLblOff, barH - mpLblOff, pLblSize, -90, `+`, "+t", [`sim-bb-red`]);
             //TR
-            this.drawLbl(width - mpLblOff + mXOff, 0 + mpLblOff, mLblSize, -90, `-`, "-50", [`sim-bb-blue`]);
-            this.drawLbl(width - mpLblOff, barH - mpLblOff, pLblSize, -90, `+`, "+50", [`sim-bb-red`]);
+            this.drawLbl(width - mpLblOff + mXOff, 0 + mpLblOff, mLblSize, -90, `-`, "-t", [`sim-bb-blue`]);
+            this.drawLbl(width - mpLblOff, barH - mpLblOff, pLblSize, -90, `+`, "+t", [`sim-bb-red`]);
             //BL
-            this.drawLbl(0 + mpLblOff + mXOff, barH + midH + mpLblOff, mLblSize, -90, `-`, "-1", [`sim-bb-blue`]);
-            this.drawLbl(0 + mpLblOff, barH + midH + barH - mpLblOff, pLblSize, -90, `+`, "+1", [`sim-bb-red`]);
+            this.drawLbl(0 + mpLblOff + mXOff, barH + midH + mpLblOff, mLblSize, -90, `-`, "-b", [`sim-bb-blue`]);
+            this.drawLbl(0 + mpLblOff, barH + midH + barH - mpLblOff, pLblSize, -90, `+`, "+b", [`sim-bb-red`]);
             //BR
-            this.drawLbl(width - mpLblOff + mXOff, barH + midH + mpLblOff, mLblSize, -90, `-`, "-25", [`sim-bb-blue`]);
-            this.drawLbl(width - mpLblOff, barH + midH + barH - mpLblOff, pLblSize, -90, `+`, "+25", [`sim-bb-red`]);
+            this.drawLbl(width - mpLblOff + mXOff, barH + midH + mpLblOff, mLblSize, -90, `-`, "-b", [`sim-bb-blue`]);
+            this.drawLbl(width - mpLblOff, barH + midH + barH - mpLblOff, pLblSize, -90, `+`, "+b", [`sim-bb-red`]);
         
             //catalog lbls
             this.allLbls.forEach(lbl => {
@@ -458,8 +453,8 @@ namespace pxsim.visuals {
             //group lbls
             let otherLblGroup = svg.child(bb, "g", {class: "group-misc"})
             this.allLbls.forEach(l => {
-                if (ae.indexOf(l.txt) < 0 && fj.indexOf(l.txt) < 0 && l.nearestPin){//don't include a-j lbls
-                    let g = grpNmToGroup[l.nearestPin.group];
+                if (ae.indexOf(l.txt) < 0 && fj.indexOf(l.txt) < 0 && l.group){//don't include a-j lbls
+                    let g = grpNmToGroup[l.group];
                     g.appendChild(l.el);
                     g.appendChild(l.hoverEl);
                 } else {
@@ -512,7 +507,7 @@ namespace pxsim.visuals {
 
                 //bar
                 let colNumber = Number(col);
-                let barNm = row + (colNumber <= 25 ? "b" : "t")
+                let barNm = row + (colNumber <= PINS_PER_BAR_ROW ? "b" : "t")
                 let bar = this.barNmToBar[barNm];
                 svg.addClass(bar.e, "highlight");
             } else {
