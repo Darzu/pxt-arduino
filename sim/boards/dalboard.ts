@@ -23,7 +23,7 @@ namespace pxsim {
 
         // the bus
         bus: EventBus;
-        
+
         // state & update logic for component services
         ledMatrixCmp: LedMatrixCmp;
         edgeConnectorState: EdgeConnectorCmp;
@@ -329,8 +329,6 @@ namespace pxsim.visuals {
         private allPins: BBPin[] = [];
         private allLbls: BBLbl[] = [];
         private pinNmToLbl: Map<BBLbl> = {};
-        private allHoverLbls: BBLbl[] = [];
-        private pinNmToHoverLbl: Map<BBLbl> = {};
         private nameToLoc: Map<[number, number]> = {};
         private availablePowerPins = {
             top: {
@@ -735,7 +733,8 @@ namespace pxsim.visuals {
             }
             for (let pinIdx in this.breadboard.allPins) {
                 let pin = this.breadboard.allPins[pinIdx];
-                addBBLoc(pin.pinNm, [pin.x, pin.y]);
+                let pinNm = MK_PIN_NM(pin.row, pin.col);
+                addBBLoc(pinNm, [pin.cx, pin.cy]);
             }
 
             // edges
@@ -762,25 +761,21 @@ namespace pxsim.visuals {
                     let name = getNm(i, j);
                     this.nameToLoc[name] = [x, y];
                     svg.hydrate(p, {title: name});
-                    let pin: BBPin = {p: p, x: x, y: y, rowNm: name, colNm: name, pinNm: name};
+                    let pin: BBPin = {el: p, cx: x, cy: y, row: name, col: 0, hoverEl: overP, group: name};
                     this.allPins.push(pin);
                     //label
                     let lbl = <SVGTextElement>svg.elt("text");    
                     this.resetLbl(lbl, x, y, PIN_LBL_SIZE, name);
                     svg.addClass(lbl, "sim-board-pin-lbl");
                     grid.appendChild(lbl);
-                    let bbLbl: BBLbl = {l: lbl, cx: x, cy: y, size: PIN_LBL_SIZE, rot: 270, nm: name, nearestPin: pin};
-                    this.allLbls.push(bbLbl);
-                    this.pinNmToLbl[name] = bbLbl;
-                    //hover labl
                     let hoverLbl = <SVGTextElement>svg.elt("text");   
                     const SIZE_SCALAR = 1.5; 
                     this.resetLbl(hoverLbl, x, y, PIN_LBL_SIZE*SIZE_SCALAR, name);
                     svg.addClass(hoverLbl, "sim-board-pin-lbl-hover");
                     grid.appendChild(hoverLbl);
-                    let bbHoverLbl: BBLbl = {l: hoverLbl, cx: x, cy: y, size: PIN_LBL_SIZE*SIZE_SCALAR, rot: 270, nm: name, nearestPin: pin};
-                    this.allHoverLbls.push(bbHoverLbl);
-                    this.pinNmToHoverLbl[name] = bbHoverLbl;
+                    let bbLbl: BBLbl = {el: lbl, cx: x, cy: y, size: PIN_LBL_SIZE, rot: 270, txt: name, nearestPin: pin, hoverEl: hoverLbl};
+                    this.allLbls.push(bbLbl);
+                    this.pinNmToLbl[name] = bbLbl;
                     //hover
                     svg.addClass(overP, "sim-board-pin-hover");
                     svg.hydrate(overP, {title: name});
@@ -918,11 +913,10 @@ namespace pxsim.visuals {
 
         public highlightLoc(pinNm: string) {
             let lbl = this.pinNmToLbl[pinNm];
-            let hoverLbl = this.pinNmToHoverLbl[pinNm];
-            if (lbl && hoverLbl) {
-                svg.addClass(lbl.l, "highlight");
-                svg.addClass(hoverLbl.l, "highlight");
-                svg.addClass(lbl.nearestPin.p, "highlight");
+            if (lbl) {
+                svg.addClass(lbl.el, "highlight");
+                svg.addClass(lbl.hoverEl, "highlight");
+                svg.addClass(lbl.nearestPin.el, "highlight");
             }
         }
     }

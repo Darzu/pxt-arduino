@@ -103,7 +103,7 @@ namespace pxsim.visuals {
         `
     const PIN_HOVER_SCALAR = 1.3;
     const LABEL_HOVER_SCALAR = 1.3;
-
+    const BB_MID_RATIO = 0.66666666;
 
     export declare type PinFn = (p: SVGRectElement, i: number, j: number, x: number, y: number, overPin: SVGRectElement, grid: SVGGElement)=>void;
 
@@ -140,29 +140,31 @@ namespace pxsim.visuals {
     };
 
     export type BBPin = {
-        p: SVGRectElement, 
-        x: number, 
-        y: number, 
-        rowNm: string, 
-        colNm: string, 
-        pinNm: string, 
-        overPin?: SVGRectElement, 
-        grpNm?: string
+        el: SVGRectElement,
+        hoverEl: SVGRectElement,
+        cx: number,
+        cy: number,
+        row: string,
+        col: number,
+        group: string
     };
     export type BBLbl = {
-        l: SVGTextElement, 
+        el: SVGTextElement, 
+        hoverEl: SVGTextElement
         cx: number, 
         cy: number, 
         size: number, 
         rot: number, 
-        nm: string, 
+        txt: string, 
         nearestPin: BBPin, 
-        overLbl?: SVGTextElement
     };
-    type NegPosBar = {e: SVGRectElement, nm: string};
+    type BBBar = {
+        e: SVGRectElement, 
+        group: string
+    };
 
-    export const MK_PIN_NM = (rowNm: string, colNm: string) => rowNm + colNm;
-    export const BRK_PIN_NM = (pinNm: string) => {return {rowNm: pinNm[0], colNm: pinNm[1] + (pinNm[2] || "") + (pinNm[3] || "")}};
+    export const MK_PIN_NM = (rowNm: string, colNm: number) => `${rowNm}${colNm}`;
+    export const BRK_PIN_NM = (pinNm: string) => {return {rowNm: pinNm[0], colNm: Number(pinNm[1] + (pinNm[2] || "") + (pinNm[3] || ""))}};
 
     let bbId = 0;
     export class Breadboard {
@@ -181,7 +183,7 @@ namespace pxsim.visuals {
         private pinNmToPin: Map<BBPin> = {};
         private pinNmToLbls: Map<BBLbl[]> = {};
         private lblNmToLbls: Map<BBLbl[]> = {};
-        private barNmToBar: Map<NegPosBar> = {};
+        private barNmToBar: Map<BBBar> = {};
         public defs: SVGElement[] = [];
         public style: string;
         public rowColToCoord: Map<Coord[]> = {};
@@ -228,16 +230,15 @@ namespace pxsim.visuals {
             }
 
             //record
-            this.allLbls.push({l: el, cx: cx, cy: cy, size: size, rot: rot, nm: txt, nearestPin: nP, overLbl: hoverEl});
+            this.allLbls.push({el: el, cx: cx, cy: cy, size: size, rot: rot, txt: txt, nearestPin: nP, hoverEl: hoverEl});
             return el;
         }
         
         private buildDom() 
         {
             const [width, height] = [this.width, this.height];
-            const midRatio = 0.66666666;
-            const midH = height * midRatio;
-            const barRatio = (1.0 - midRatio) / 2.0;
+            const midH = height * BB_MID_RATIO;
+            const barRatio = (1.0 - BB_MID_RATIO) / 2.0;
             const barH = height * barRatio;
 
             const midCols = BREADBOARD_COLUMN_COUNT;
@@ -249,7 +250,7 @@ namespace pxsim.visuals {
 
             const barRows = 2;
             const barGridH = (barRows-1) * PIN_DIST;
-            const barCols = 5*5+4
+            const barCols = 5 * 5 + 4;
             const barGridW = (barCols-1) * PIN_DIST;
             const topBarGridX = (width - barGridW)/2;
             const topBarGridY = (barH - barGridH)/2;
@@ -290,26 +291,24 @@ namespace pxsim.visuals {
             mkChannel(barH+midH, smlChannelH);
 
             //pins
-            let getGrpNm = (rowNm: string, colNm: string) => {
+            let getGrpNm = (rowNm: string, colNm: number) => {
                 if (mp.indexOf(rowNm) >= 0) {
-                    let colNumber = Number(colNm);
-                    return `${rowNm}${colNumber <= 25 ? "b" : "t"}`
+                    return `${rowNm}${colNm <= 25 ? "b" : "t"}`
                 } else if (ae.indexOf(rowNm) >= 0) {
                     return `b${colNm}`
                 } else {
                     return `t${colNm}`
                 }
             }
-            const mkPinGrid = (l: number, t: number, rs: number, cs: number, rowNm: (i: number) => string, colNm: (i: number) => string) => {
+            const mkPinGrid = (l: number, t: number, rs: number, cs: number, rowNm: (i: number) => string, colNm: (i: number) => number) => {
                 const size = PIN_DIST/2.5;
                 const rounding = size/3;
                 let props = { class: "sim-bb-pin", rx: rounding, ry: rounding }
                 let pinFn: PinFn = (p, i, j, x, y, overP) => {
                     let rNm = rowNm(i);
                     let cNm = colNm(j);
-                    let pNm = MK_PIN_NM(rNm, cNm);
                     let gNm = getGrpNm(rNm, cNm);
-                    this.allPins.push({p: p, x: x, y: y, rowNm: rNm, colNm: cNm, pinNm: pNm, overPin: overP, grpNm: gNm});
+                    this.allPins.push({el: p, cx: x, cy: y, row: rNm, col: cNm, hoverEl: overP, group: gNm});
                     svg.addClass(overP, "sim-bb-pin-hover");
                     bb.appendChild(p);
                     bb.appendChild(overP);
@@ -317,7 +316,7 @@ namespace pxsim.visuals {
                 return mkGrid(l, t, rs, cs, size, size * PIN_HOVER_SCALAR, props, pinFn);
             }
 
-            const mkBar = (x: number, y: number, rowNm: (i: number) => string, colNm: (i: number) => string) => {
+            const mkBar = (x: number, y: number, rowNm: (i: number) => string, colNm: (i: number) => number) => {
                 return [
                         mkPinGrid(x + 0*PIN_DIST, y, 2, 5, rowNm, j => colNm(j+0)),
                         mkPinGrid(x + 6*PIN_DIST, y, 2, 5, rowNm, j => colNm(j+5)),
@@ -330,7 +329,7 @@ namespace pxsim.visuals {
             let ae = ["e", "d", "c", "b", "a", ];
             let fj = ["j", "i", "h", "g", "f", ];
             let mp = ["-", "+"];
-            const jStr = (j: number):string => {return (j+1)+""};
+            const jStr = (j: number):number => j+1;
 
             mkPinGrid(midGridX,midGridY,5,30, i => fj[i], jStr);
             mkPinGrid(midGridX,midGridY+7*PIN_DIST,5,30, i => ae[i], jStr);
@@ -339,23 +338,24 @@ namespace pxsim.visuals {
 
             //tooltip
             this.allPins.forEach(pin => {
-                let {p, rowNm, colNm, overPin} = pin
-                let title = `(${rowNm}, ${colNm})`;
-                svg.hydrate(p, {title: title});
-                svg.hydrate(overPin, {title: title});
+                let {el, row, col, hoverEl} = pin
+                let title = `(${row}, ${col})`;
+                svg.hydrate(el, {title: title});
+                svg.hydrate(hoverEl, {title: title});
             })
 
             //catalog pins
             this.allPins.forEach(pin => {
-                let {p, x, y, rowNm, colNm, pinNm} = pin
+                let {el, cx, cy, row, col} = pin
+                let pinNm = MK_PIN_NM(row, col);
                 this.pinNmToPin[pinNm] = pin;
-                this.recordCoord(rowNm, Number(colNm), [x, y]);
+                this.recordCoord(row, Number(col), [cx, cy]);
             })
 
             //labels
             const drawLblAtPin = (pinName: string, label: string, xOff: number, yOff: number, r: number, s: number): SVGTextElement => {
                 let pin = this.pinNmToPin[pinName];
-                let loc = [pin.x, pin.y];
+                let loc = [pin.cx, pin.cy];
                 let t = this.drawLbl(loc[0] + xOff, loc[1] + yOff, s, r, label, pin);
                 return t;
             }
@@ -389,15 +389,16 @@ namespace pxsim.visuals {
         
             //catalog lbls
             this.allLbls.forEach(lbl => {
-                let {l, nm} = lbl;
-                (this.lblNmToLbls[nm] = this.lblNmToLbls[nm] || []).push(lbl);
+                let {el, txt} = lbl;
+                (this.lblNmToLbls[txt] = this.lblNmToLbls[txt] || []).push(lbl);
             });
             this.allPins.forEach(pin => {
-                let {rowNm, colNm, pinNm} = pin;
-                let rowLbls = this.lblNmToLbls[rowNm];
+                let {row, col} = pin;
+                let pinNm = MK_PIN_NM(row, col);
+                let rowLbls = this.lblNmToLbls[row];
                 let colLbls: BBLbl[] = [];
-                if (rowNm != "-" && rowNm != "+")
-                    colLbls = this.lblNmToLbls[colNm];
+                if (row != "-" && row != "+")
+                    colLbls = this.lblNmToLbls[col];
                 this.pinNmToLbls[pinNm] = (this.pinNmToLbls[pinNm] || []).concat(rowLbls, colLbls);
             })
 
@@ -409,7 +410,7 @@ namespace pxsim.visuals {
             let barGrpNms: string[] = [];
             const drawLn = (x: number, y: number, nm: string, cls: string) => {
                 let ln = <SVGRectElement>svg.child(bb, "rect", { class: cls, x: x, y: y - lnThickness/2, width: lnLen, height: lnThickness});
-                this.barNmToBar[nm] = {e: ln, nm: nm};
+                this.barNmToBar[nm] = {e: ln, group: nm};
                 barGrpNms.push(nm);
             }
             drawLn(topBarGridX - lnXOff, topBarGridY - lnYOff, "-t", "sim-bb-blue sim-bb-bar");
@@ -418,10 +419,10 @@ namespace pxsim.visuals {
             drawLn(botBarGridX - lnXOff, botBarGridY + PIN_DIST + lnYOff, "+b", "sim-bb-red sim-bb-bar");
 
             //electrically connected groups
-            let allGrpNms = this.allPins.map(p => p.grpNm).filter((g, i, a) => a.indexOf(g) == i);
+            let allGrpNms = this.allPins.map(p => p.group).filter((g, i, a) => a.indexOf(g) == i);
             let grpNmToPins: Map<BBPin[]> = {};
             this.allPins.forEach((p, i) => {
-                let g = p.grpNm;
+                let g = p.group;
                 (grpNmToPins[g] = grpNmToPins[g] || []).push(p);
             });
             let groups: SVGGElement[] = allGrpNms.map(grpNm => {
@@ -436,7 +437,7 @@ namespace pxsim.visuals {
             //connecting wire
             allGrpNms.forEach(grpNm => {
                 let pins = grpNmToPins[grpNm];
-                let [xs, ys] = [pins.map(p => p.x), pins.map(p => p.y)];
+                let [xs, ys] = [pins.map(p => p.cx), pins.map(p => p.cy)];
                 let minFn = (arr: number[]) => arr.reduce((a, b) => a < b ? a : b);
                 let maxFn = (arr: number[]) => arr.reduce((a, b) => a > b ? a : b);
                 let [minX, maxX, minY, maxY] = [minFn(xs), maxFn(xs), minFn(ys), maxFn(ys)];
@@ -450,20 +451,20 @@ namespace pxsim.visuals {
             });
             //group pins
             this.allPins.forEach(p => {
-                let g = grpNmToGroup[p.grpNm];
-                g.appendChild(p.p);
-                g.appendChild(p.overPin);
+                let g = grpNmToGroup[p.group];
+                g.appendChild(p.el);
+                g.appendChild(p.hoverEl);
             })
             //group lbls
             let otherLblGroup = svg.child(bb, "g", {class: "group-misc"})
             this.allLbls.forEach(l => {
-                if (ae.indexOf(l.nm) < 0 && fj.indexOf(l.nm) < 0 && l.nearestPin){//don't include a-j lbls
-                    let g = grpNmToGroup[l.nearestPin.grpNm];
-                    g.appendChild(l.l);
-                    g.appendChild(l.overLbl);
+                if (ae.indexOf(l.txt) < 0 && fj.indexOf(l.txt) < 0 && l.nearestPin){//don't include a-j lbls
+                    let g = grpNmToGroup[l.nearestPin.group];
+                    g.appendChild(l.el);
+                    g.appendChild(l.hoverEl);
                 } else {
-                    otherLblGroup.appendChild(l.l);
-                    otherLblGroup.appendChild(l.overLbl);
+                    otherLblGroup.appendChild(l.el);
+                    otherLblGroup.appendChild(l.hoverEl);
                 }
             })
             //group bars
@@ -495,23 +496,23 @@ namespace pxsim.visuals {
             return minIdx;
         }  
         public highlightLoc(pinNm: string): BBLbl[] {
-            let {rowNm, colNm, x, y} = this.pinNmToPin[pinNm];
+            let {row, col, cx, cy} = this.pinNmToPin[pinNm];
             let lbls = this.pinNmToLbls[pinNm];
             const highlightLbl = (lbl: BBLbl) => {
-                svg.addClass(lbl.l, "highlight");
-                svg.addClass(lbl.overLbl, "highlight");
+                svg.addClass(lbl.el, "highlight");
+                svg.addClass(lbl.hoverEl, "highlight");
             };
-            if (rowNm == "-" || rowNm == "+") {
+            if (row == "-" || row == "+") {
                 //+/- sign
                 let lblCoords = lbls.map((l):Coord => [l.cx, l.cy]);
-                let lblIdx = this.getClosestPointIdx([x, y], lblCoords);
+                let lblIdx = this.getClosestPointIdx([cx, cy], lblCoords);
                 let lbl = lbls[lblIdx];
                 lbls = [lbl]
                 highlightLbl(lbl);
 
                 //bar
-                let colNumber = Number(colNm);
-                let barNm = rowNm + (colNumber <= 25 ? "b" : "t")
+                let colNumber = Number(col);
+                let barNm = row + (colNumber <= 25 ? "b" : "t")
                 let bar = this.barNmToBar[barNm];
                 svg.addClass(bar.e, "highlight");
             } else {
