@@ -1,4 +1,6 @@
 namespace pxsim.visuals {
+    const BB_BLUE = "#1AA5D7";
+    const BB_RED = "#DD4BA0";
     const BREADBOARD_CSS = (pinDist: number) => `
         /* bread board */
         .sim-bb-background {
@@ -40,19 +42,16 @@ namespace pxsim.visuals {
             fill:#000;
             font-weight: bold;
         }
-        .sim-bb-pin-group:hover .sim-bb-label:not(.highlight) {
-            visibility: hidden;
-        }
         .sim-bb-bar {
             stroke-width: 0;
         }
         .sim-bb-blue {
-            fill:#1AA5D7;
-            stroke:#1AA5D7
+            fill:${BB_BLUE};
+            stroke:${BB_BLUE}
         }
         .sim-bb-red {
-            fill:#DD4BA0;
-            stroke:#DD4BA0;
+            fill:${BB_RED};
+            stroke:${BB_RED};
         }
         .sim-bb-pin-group:hover .sim-bb-pin-hover,
         .sim-bb-pin-group:hover .sim-bb-group-wire,
@@ -95,10 +94,10 @@ namespace pxsim.visuals {
             visibility: visible;
         }
         .sim-bb-blue.highlight {
-            fill:#1AA5D7;
+            fill:${BB_BLUE};
         }
         .sim-bb-red.highlight {
-            fill:#DD4BA0;
+            fill:${BB_RED};
         }
         `
     const PIN_HOVER_SCALAR = 1.3;
