@@ -147,8 +147,8 @@ namespace pxsim.visuals {
         getRowName: (rowIdx: number) => string,
         getColName: (colIdx: number) => string,
         getGroupName?: (rowIdx: number, colIdx: number) => string,
-        gapAfterRowIndices?: number[],
-        gapAfterColIndices?: number[],
+        rowIdxsWithGap?: number[],
+        colIdxsWithGap?: number[],
     };
     export interface GridResult {
         g: SVGGElement,
@@ -159,16 +159,28 @@ namespace pxsim.visuals {
         let yOff = opts.yOffset || 0;
         let allPins: GridPin[] = [];
         let grid = <SVGGElement>svg.elt("g");
-        let rowGaps = 0;
-        let colGaps = 0;
         let colIdxOffset = opts.colStartIdx || 0;
         let rowIdxOffset = opts.rowStartIdx || 0;
-        for (let rowIdx = 0; rowIdx < opts.rowCount; rowIdx++) {
-            let cy = yOff + rowIdx * opts.pinDist + rowGaps * opts.pinDist;
-            let userRowIdx = rowIdx + rowIdxOffset;
-            for (let colIdx = 0; colIdx < opts.colCount; colIdx++) {
-                let cx = xOff + colIdx * opts.pinDist + colGaps * opts.pinDist;
-                let userColIdx = colIdx + colIdxOffset;
+        let copyArr = <T>(arr: T[]): T[] => arr ? arr.slice(0, arr.length) : [];
+        let removeAll = <T>(arr: T[], e: T): number => {
+            let res = 0;
+            let idx: number;
+            while (0 <= (idx = arr.indexOf(e))) {
+                arr.splice(idx, 1);
+                res += 1;
+            }
+            return res;
+        };
+        let rowGaps = 0;
+        let rowIdxsWithGap = copyArr(opts.rowIdxsWithGap)
+        for (let i = 0; i < opts.rowCount; i++) {
+            let colGaps = 0;
+            let colIdxsWithGap = copyArr(opts.colIdxsWithGap)
+            let cy = yOff + i * opts.pinDist + rowGaps * opts.pinDist;
+            let rowIdx = i + rowIdxOffset;
+            for (let j = 0; j < opts.colCount; j++) {
+                let cx = xOff + j * opts.pinDist + colGaps * opts.pinDist;
+                let colIdx = j + colIdxOffset;
                 const addEl = (pin: SVGElAndSize) => {
                     let pinX = cx - pin.w * 0.5;
                     let pinY = cy - pin.h * 0.5;
@@ -178,24 +190,16 @@ namespace pxsim.visuals {
                 }
                 let el = addEl(opts.mkPin());
                 let hoverEl = addEl(opts.mkHoverPin());
-                let row = opts.getRowName(userRowIdx);
-                let col = opts.getColName(userColIdx);
-                let group = opts.getGroupName ? opts.getGroupName(userRowIdx, userColIdx) : null;
+                let row = opts.getRowName(rowIdx);
+                let col = opts.getColName(colIdx);
+                let group = opts.getGroupName ? opts.getGroupName(rowIdx, colIdx) : null;
                 let gridPin: GridPin = {el: el, hoverEl: hoverEl, cx: cx, cy: cy, row: row, col: col, group: group};
                 allPins.push(gridPin);
                 //column gaps
-                let colGapIdx = opts.gapAfterColIndices ? opts.gapAfterColIndices.indexOf(userColIdx) :  - 1;
-                if (0 <= colGapIdx) {
-                    opts.gapAfterColIndices = opts.gapAfterColIndices.splice(colGapIdx, 1);
-                    colGaps += 1;
-                }
+                colGaps += removeAll(colIdxsWithGap, colIdx);
             }
             //row gaps
-            let rowGapIdx = opts.gapAfterRowIndices ? opts.gapAfterRowIndices.indexOf(userRowIdx) :  - 1;
-            if (0 <= rowGapIdx) {
-                opts.gapAfterRowIndices = opts.gapAfterRowIndices.splice(rowGapIdx, 1);
-                rowGaps += 1;
-            }
+            rowGaps += removeAll(rowIdxsWithGap, rowIdx);
         }
         return {g: grid, allPins: allPins};
     }
@@ -380,7 +384,7 @@ namespace pxsim.visuals {
                 getRowName: getMidRowName,
                 getColName: getColName,
                 getGroupName: getMidGroupName,
-                gapAfterRowIndices: BB_MID_ROW_GAPS,
+                rowIdxsWithGap: BB_MID_ROW_GAPS,
             });
             let midGridG = midGridRes.g;
             this.allPins = this.allPins.concat(midGridRes.allPins);
@@ -397,7 +401,7 @@ namespace pxsim.visuals {
                 getRowName: getBarRowName,
                 getColName: getColName,
                 getGroupName: getBarGroupName,
-                gapAfterColIndices: BB_BOT_BAR_COL_GAPS,
+                colIdxsWithGap: BB_BOT_BAR_COL_GAPS,
             });
             let botBarGridG = botBarGridRes.g;
             this.allPins = this.allPins.concat(botBarGridRes.allPins);
@@ -415,7 +419,7 @@ namespace pxsim.visuals {
                 getRowName: getBarRowName,
                 getColName: getColName,
                 getGroupName: getBarGroupName,
-                gapAfterColIndices: BB_TOP_BAR_COL_GAPS,
+                colIdxsWithGap: BB_TOP_BAR_COL_GAPS,
             });
             let topBarGridG = topBarGridRes.g;
             this.allPins = this.allPins.concat(topBarGridRes.allPins);
@@ -472,7 +476,7 @@ namespace pxsim.visuals {
                 this.allLabels.push(lblT);
                 //top
                 let colBIdx = BB_MID_COLS - 1;
-                let colBNm = getColName(colTIdx);
+                let colBNm = getColName(colBIdx);
                 let lblB = mkBBLabelAtPin(rowNm, colBNm, +PIN_DIST, 0, rowNm);
                 this.allLabels.push(lblB);
             }

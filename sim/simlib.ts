@@ -268,7 +268,8 @@ namespace pxsim.visuals {
         updateTheme(): void,
     }
 
-    export function resetTxt(el: SVGTextElement, cx: number, cy: number, size: number, rot: number, txt: string, txtXOffFactor?: number, txtYOffFactor?: number) {
+    export function mkTxt(cx: number, cy: number, size: number, rot: number, txt: string, txtXOffFactor?: number, txtYOffFactor?: number): SVGTextElement {
+        let el = <SVGTextElement>svg.elt("text")
          //HACK: these constants (txtXOffFactor, txtYOffFactor) tweak the way this algorithm knows how to center the text
         txtXOffFactor = txtXOffFactor || -0.33333;
         txtYOffFactor = txtYOffFactor || 0.3;
@@ -278,10 +279,6 @@ namespace pxsim.visuals {
             transform: `translate(${cx} ${cy}) rotate(${rot}) translate(${xOff} ${yOff})` });
         svg.addClass(el, "noselect");
         el.textContent = txt;
-    }
-    export function mkTxt(cx: number, cy: number, size: number, rot: number, txt: string, txtXOffFactor?: number, txtYOffFactor?: number): SVGTextElement {
-        let el = <SVGTextElement>svg.elt("text")
-        resetTxt(el, cx, cy, size, rot, txt, txtXOffFactor, txtYOffFactor);
         return el;
     }
 
