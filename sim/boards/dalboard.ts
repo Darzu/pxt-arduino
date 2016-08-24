@@ -40,7 +40,7 @@ namespace pxsim {
             super()
             this.id = "b" + Math_.random(2147483647);
             this.bus = new EventBus(runtime);
-            
+
             // components
             this.ledMatrixCmp = new LedMatrixCmp(runtime);
             this.buttonPairState = new ButtonPairCmp();
@@ -81,12 +81,13 @@ namespace pxsim {
         initAsync(msg: SimulatorRunMessage): Promise<void> {
             let options = (msg.options || {}) as RuntimeOptions;
             let theme = mkRandomTheme();
-            
+
             let boardDef = ARDUINO_ZERO; //TODO: read from pxt.json/pxttarget.json
             let cmpsList = msg.parts;
             cmpsList.sort();
             let cmpDefs = COMPONENT_DEFINITIONS; //TODO: read from pxt.json/pxttarget.json
 
+            //TODO: allow other visualizations
             let view = new visuals.DalBoardSvg({
                 boardDef: boardDef,
                 activeComponents: cmpsList,
@@ -126,14 +127,14 @@ namespace pxsim.visuals {
     const BOT_MARGIN = 20;
     const PIN_LBL_SIZE = PIN_DIST * 0.7;
     const PIN_LBL_HOVER_SIZE = PIN_LBL_SIZE * 1.5;
-    const SQUARE_PIN_WIDTH = PIN_DIST*0.66666;
-    const SQUARE_PIN_HOVER_WIDTH = PIN_DIST*0.66666 + PIN_DIST/3.0;
+    const SQUARE_PIN_WIDTH = PIN_DIST * 0.66666;
+    const SQUARE_PIN_HOVER_WIDTH = PIN_DIST * 0.66666 + PIN_DIST / 3.0;
 
     export type ComputedBoardDimensions = {
-        scaleFn: (n: number)=>number, 
-        height: number, 
-        width: number, 
-        xOff: number, 
+        scaleFn: (n: number) => number,
+        height: number,
+        width: number,
+        xOff: number,
         yOff: number
     };
     export function getBoardDimensions(b: BoardDefinition): ComputedBoardDimensions {
@@ -149,7 +150,7 @@ namespace pxsim.visuals {
         }
     }
 
-    export const WIRE_WIDTH = PIN_DIST/2.5;
+    export const WIRE_WIDTH = PIN_DIST / 2.5;
     export const BOARD_SYTLE = `
         .noselect {
             -webkit-touch-callout: none; /* iOS Safari */

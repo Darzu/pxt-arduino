@@ -2,12 +2,7 @@
 /// <reference path="../../libs/microbit/dal.d.ts"/>
 /// <reference path="../../libs/microbit/shims.d.ts"/>
 /// <reference path="../../libs/microbit/enums.d.ts"/>
-/// <reference path="../simlib.ts"/>
-
-namespace pxsim {
-    export enum NeoPixelMode {RGB, RGBW};
-    export type RGBW = [number, number, number, number];
-}
+/// <reference path="../state/neopixel.ts"/>
 
 namespace pxsim.visuals {
     //TODO: determine this from static analysis
@@ -20,57 +15,8 @@ namespace pxsim.visuals {
     })();
 }
 
-namespace pxsim {
-    export function sendBufferAsm(buffer: Buffer, pin: DigitalPin) {
-        let b = board();
-        if (b) {
-            let np = b.neopixelCmp;
-            if (np) {
-                np.sendBuffer(buffer, pin);
-                runtime.queueDisplayUpdate();
-            }
-        }
-    }
-}
-
-namespace pxsim {
-
-    export class NeoPixelCmp {
-        private buffers: {[pin: number]: Uint8Array[]} = {};
-        public pixelColors: {[pin: number]: RGBW[]} = {};
-        public pinModes: {[pin: number]: NeoPixelMode};
-
-        constructor() {
-            this.pinModes = visuals.NEOPIXEL_LAYOUT; //TODO: don't hardcode
-        }
-
-        public sendBuffer(buffer: Buffer, pin: DigitalPin) {
-            //update buffers
-            let buf = <Uint8Array[]>(<any>buffer).data;
-            this.buffers[pin] = buf;
-
-            //update colors
-            let stride = this.pinModes[pin] === NeoPixelMode.RGBW ? 4 : 3;
-            
-            let pixelCount = Math.floor(buf.length / stride);
-            let pixelColors = (this.pixelColors[pin] || (this.pixelColors[pin] = []));
-                
-            for (let i = 0; i < pixelCount; i++) {
-                // NOTE: for whatever reason, NeoPixels pack GRB not RGB
-                let r = buf[i * stride + 1] as any as number
-                let g = buf[i * stride + 0] as any as number
-                let b = buf[i * stride + 2] as any as number
-                let w = 0;
-                if (stride === 4)
-                    w = buf[i * stride + 3] as any as number
-                pixelColors[i] = [r,g,b,w]
-            }
-        }
-    }
-}
-
 //TODO move to utils
-namespace pxsim {
+namespace pxsim.visuals {
     //expects rgb from 0,255, gives h in [0,360], s in [0, 100], l in [0, 100]
     export function rgbToHsl(rgb: [number, number, number]): [number, number, number] {
         let [r, g, b] = rgb;

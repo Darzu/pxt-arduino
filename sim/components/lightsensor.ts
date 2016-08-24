@@ -2,14 +2,6 @@
 /// <reference path="../../node_modules/pxt-core/built/pxtsim.d.ts"/>
 /// <reference path="../../libs/microbit/dal.d.ts"/>
 
-
-namespace pxsim {
-    export class LightSensorCmp {
-        usesLightLevel = false;
-        lightLevel = 128;
-    }
-}
-
 namespace pxsim.visuals {
     export interface ILightSensorTheme {
         lightLevelOn?: string;
@@ -98,16 +90,5 @@ namespace pxsim.visuals {
             svg.setGradientValue(this.lightLevelGradient, Math.min(100, Math.max(0, Math.floor(lv * 100 / 255))) + '%')
             this.lightLevelText.textContent = lv.toString();
         }
-    }
-}
-
-namespace pxsim.input {
-    export function lightLevel(): number {
-        let b = board().lightSensorCmp;
-        if (!b.usesLightLevel) {
-            b.usesLightLevel = true;
-            runtime.queueDisplayUpdate();
-        }
-        return b.lightLevel;
     }
 }

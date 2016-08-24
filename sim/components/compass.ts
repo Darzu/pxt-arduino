@@ -2,13 +2,6 @@
 /// <reference path="../../node_modules/pxt-core/built/pxtsim.d.ts"/>
 /// <reference path="../../libs/microbit/dal.d.ts"/>
 
-namespace pxsim {
-    export class CompassCmp {
-        usesHeading = false;
-        heading = 90;
-    }
-}
-
 namespace pxsim.visuals {
     export interface ICompassTheme {
         color: string
@@ -91,21 +84,5 @@ namespace pxsim.visuals {
             this.headText = <SVGTextElement>svg.child(g, "text", { x: 310, y: 100, class: "sim-text" })
             return g;
         }
-    }
-}
-
-namespace pxsim.input {
-    export function compassHeading(): number {
-        let b = board().compassCmp;
-        if (!b.usesHeading) {
-            b.usesHeading = true;
-            runtime.queueDisplayUpdate();
-        }
-        return b.heading;
-    }
-    
-    export function magneticForce(): number {
-        // TODO
-        return 0;
     }
 }

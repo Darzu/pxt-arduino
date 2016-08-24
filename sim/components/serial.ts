@@ -2,38 +2,6 @@
 /// <reference path="../../node_modules/pxt-core/built/pxtsim.d.ts"/>
 /// <reference path="../../libs/microbit/dal.d.ts"/>
 
-namespace pxsim {
-    export class SerialCmp {
-        serialIn: string[] = [];
-
-        public recieveData(data: string) {
-            this.serialIn.push();
-        }
-
-        readSerial() {
-            let v = this.serialIn.shift() || "";
-            return v;
-        }
-
-        serialOutBuffer: string = "";
-        writeSerial(s: string) {
-            for (let i = 0; i < s.length; ++i) {
-                let c = s[i];
-                this.serialOutBuffer += c;
-                if (c == "\n") {
-                    Runtime.postMessage(<SimulatorSerialMessage>{
-                        type: "serial",
-                        data: this.serialOutBuffer,
-                        id: runtime.id
-                    })
-                    this.serialOutBuffer = ""
-                    break;
-                }
-            }
-        }
-    }
-}
-
 namespace pxsim.visuals {
     export interface ISerialTheme {
         systemLedStroke: string,
@@ -48,9 +16,9 @@ namespace pxsim.visuals {
         private systemLed: SVGCircleElement;
 
         public style = `
-.sim-systemled {
-    stroke-width: 1px;
-}`;
+            .sim-systemled {
+                stroke-width: 1px;
+            }`;
 
         private state: SerialCmp;
         public element: SVGElement;
@@ -106,29 +74,5 @@ namespace pxsim.visuals {
                 }
             }
         }
-    }
-}
-
-
-namespace pxsim.serial {
-    export function writeString(s: string) {
-        board().writeSerial(s);
-    }
-
-    export function readString(): string {
-        return board().serialCmp.readSerial();
-    }
-
-    export function readLine(): string {
-        return board().serialCmp.readSerial();
-    }
-
-    export function onDataReceived(delimiters: string, handler: RefAction) {
-        let b = board();
-        b.bus.listen(DAL.MICROBIT_ID_SERIAL, DAL.MICROBIT_SERIAL_EVT_DELIM_MATCH, handler);
-    }
-
-    export function redirect(tx: number, rx: number, rate: number) {
-        // TODO?
     }
 }

@@ -2,15 +2,6 @@
 /// <reference path="../../node_modules/pxt-core/built/pxtsim.d.ts"/>
 /// <reference path="../../libs/microbit/dal.d.ts"/>
 
-
-namespace pxsim {
-    export class ThermometerCmp {
-        usesTemperature = false;
-        temperature = 21;
-
-    }
-}
-
 namespace pxsim.visuals {
     export interface IThermometerTheme {
         foreground: string,
@@ -37,10 +28,10 @@ namespace pxsim.visuals {
 
         //TODO(DZ): parameterize stroke
         public style = `
-.sim-thermometer {
-    stroke:#aaa;
-    stroke-width: 3px;
-}`;
+            .sim-thermometer {
+                stroke:#aaa;
+                stroke-width: 3px;
+            }`;
 
         public init(bus: EventBus, state: ThermometerCmp, svgEl: SVGSVGElement) {
             this.defs = [];
@@ -96,16 +87,5 @@ namespace pxsim.visuals {
             svg.setGradientValue(this.thermometerGradient, 100 - per + "%");
             this.thermometerText.textContent = t + "°C";
         }
-    }
-}
-
-namespace pxsim.input {
-    export function temperature(): number {
-        let b = board();
-        if (!b.thermometerCmp.usesTemperature) {
-            b.thermometerCmp.usesTemperature = true;
-            runtime.queueDisplayUpdate();
-        }
-        return b.thermometerCmp.temperature;
     }
 }
