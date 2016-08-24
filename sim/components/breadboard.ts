@@ -1,7 +1,6 @@
 namespace pxsim.visuals {
-    // The distance between the center of two pins. This is the factor on which everything else is scaled.
+    // The distance between the center of two pins. This is the constant on which everything else is based.
     const PIN_DIST = 15;
-
     // CSS styling for the breadboard
     const BLUE = "#1AA5D7";
     const RED = "#DD4BA0";
@@ -105,45 +104,51 @@ namespace pxsim.visuals {
             fill:${RED};
         }
         `
-    const PIN_HOVER_SCALAR = 1.3;
-    const PIN_LBL_SIZE = PIN_DIST * 0.7;
-    const LABEL_HOVER_SCALAR = 1.3;
+    // Pin rows and coluns
+    const MID_ROWS = 10;
+    const MID_ROW_GAPS = [4, 4];
+    const MID_ROW_AND_GAPS = MID_ROWS + MID_ROW_GAPS.length;
+    const MID_COLS = 30;
+    const BAR_ROWS = 2;
+    const BAR_COLS = 25;
+    const POWER_COLS = BAR_COLS * 2;
+    const BAR_COL_GAPS = [4, 9, 14, 19];
+    const BAR_COL_AND_GAPS = BAR_COLS + BAR_COL_GAPS.length;
+    // Essential dimensions
+    const WIDTH = PIN_DIST * (MID_COLS + 3);
+    const HEIGHT = PIN_DIST * (MID_ROW_AND_GAPS + POWER_COLS + 5.5);
     const MID_RATIO = 0.66666666;
+    const BAR_RATIO = (1.0 - MID_RATIO) * 0.5;
+    const MID_HEIGHT = HEIGHT * MID_RATIO;
+    const BAR_HEIGHT = HEIGHT * BAR_RATIO;
+    // Pin grids
+    const MID_GRID_WIDTH = (MID_COLS - 1) * PIN_DIST;
+    const MID_GRID_HEIGHT = (MID_ROW_AND_GAPS - 1) * PIN_DIST;
+    const MID_GRID_X = (WIDTH - MID_GRID_WIDTH) / 2.0;
+    const MID_GRID_Y = BAR_HEIGHT + (MID_HEIGHT - MID_GRID_HEIGHT) / 2.0;
+    const BAR_GRID_HEIGHT = (BAR_ROWS - 1) * PIN_DIST;
+    const BAR_GRID_WIDTH = (BAR_COL_AND_GAPS - 1) * PIN_DIST;
+    const BAR_TOP_GRID_X = (WIDTH - BAR_GRID_WIDTH) / 2.0;
+    const BAR_TOP_GRID_Y = (BAR_HEIGHT - BAR_GRID_HEIGHT) / 2.0;
+    const BAR_BOT_GRID_X = BAR_TOP_GRID_X;
+    const BAR_BOT_GRID_Y = BAR_TOP_GRID_Y + BAR_HEIGHT + MID_HEIGHT;
+    // Individual pins 
+    const PIN_HOVER_SCALAR = 1.3;
     const PIN_WIDTH = PIN_DIST / 2.5;
     const PIN_ROUNDING = PIN_DIST / 7.5;
-    const BACKGROUND_ROUNDING = PIN_DIST * 0.3;
-    const CHANNEL_HEIGHT = PIN_DIST * 1.0;
-    const SML_CHANNEL_HEIGHT = PIN_DIST * 0.05;
-    const MID_COLS = 30;
-    const MID_ROWS = 10;
-    const BAR_COLS = 25;
-    const BAR_ROWS = 2;
-    const POWER_COLS = BAR_COLS * 2;
-    const MID_ROW_GAPS = [4, 4];
-    const BOT_BAR_COL_GAPS = [4, 9, 14, 19];
-    const TOP_BAR_COL_GAPS = BOT_BAR_COL_GAPS.map(g => g + BAR_COLS);
-    const BAR_COLS_AND_GAPS = BAR_COLS + BOT_BAR_COL_GAPS.length;
-    const MID_ROW_AND_GAPS = MID_ROWS + MID_ROW_GAPS.length;
-    const LBL_ROT = -90;
+    // Labels
+    const PIN_LBL_SIZE = PIN_DIST * 0.7;
+    const PIN_LBL_HOVER_SCALAR = 1.3;
     const PLUS_LBL_SIZE = PIN_DIST * 1.7;
     const MINUS_LBL_SIZE = PIN_DIST * 2;
     const POWER_LBL_OFFSET = PIN_DIST * 0.8;
-    const MINUS_LBL_OFFSET = PIN_DIST * 0.07;
-    const WIDTH = PIN_DIST * (MID_COLS + 3);
-    const HEIGHT = PIN_DIST * (MID_ROWS + MID_ROW_GAPS.length + BAR_ROWS * 2 + 5.5);
-    const MID_HEIGHT = HEIGHT * MID_RATIO;
-    const BAR_RATIO = (1.0 - MID_RATIO) * 0.5;
-    const BAR_HEIGHT = HEIGHT * BAR_RATIO;
-    const MID_GRID_WIDTH = (MID_COLS - 1) * PIN_DIST;
-    const MID_GRID_HEIGHT = (MID_ROW_AND_GAPS - 1) * PIN_DIST;
-    const MID_GRID_X = (WIDTH - MID_GRID_WIDTH) * 0.5;
-    const MID_GRID_Y = BAR_HEIGHT + (MID_HEIGHT - MID_GRID_HEIGHT) * 0.5;
-    const BAR_GRID_HEIGHT = (BAR_ROWS - 1) * PIN_DIST;
-    const BAR_GRID_WIDTH = (BAR_COLS_AND_GAPS - 1) * PIN_DIST;
-    const BAR_TOP_GRID_X = (WIDTH - BAR_GRID_WIDTH) * 0.5;
-    const BAR_TOP_GRID_Y = (BAR_HEIGHT - BAR_GRID_HEIGHT) * 0.5;
-    const BAR_BOT_GRID_X = BAR_TOP_GRID_X;
-    const BAR_BOT_GRID_Y = BAR_TOP_GRID_Y + BAR_HEIGHT + MID_HEIGHT;
+    const MINUS_LBL_EXTRA_OFFSET = PIN_DIST * 0.07;
+    const LBL_ROTATION = -90;
+    // Channels
+    const CHANNEL_HEIGHT = PIN_DIST * 1.0;
+    const SMALL_CHANNEL_HEIGHT = PIN_DIST * 0.05;
+    // Background
+    const BACKGROUND_ROUNDING = PIN_DIST * 0.3;
 
     export interface GridPin {
         el: SVGElement,
@@ -262,7 +267,7 @@ namespace pxsim.visuals {
             extraClasses.forEach(c => svg.addClass(el, c));
 
         //hover lbl
-        let hoverEl = mkTxt(cx, cy, size * LABEL_HOVER_SCALAR, rotation, txt);
+        let hoverEl = mkTxt(cx, cy, size * PIN_LBL_HOVER_SCALAR, rotation, txt);
         svg.addClass(hoverEl, "sim-bb-label-hover");
         if (extraClasses)
             extraClasses.forEach(c => svg.addClass(hoverEl, c));
@@ -341,8 +346,8 @@ namespace pxsim.visuals {
             }
 
             mkChannel(BAR_HEIGHT + MID_HEIGHT / 2, CHANNEL_HEIGHT, "sim-bb-mid-channel");
-            mkChannel(BAR_HEIGHT, SML_CHANNEL_HEIGHT);
-            mkChannel(BAR_HEIGHT + MID_HEIGHT, SML_CHANNEL_HEIGHT);
+            mkChannel(BAR_HEIGHT, SMALL_CHANNEL_HEIGHT);
+            mkChannel(BAR_HEIGHT + MID_HEIGHT, SMALL_CHANNEL_HEIGHT);
 
             //-----pins
             const getMidTopOrBot = (rowIdx: number) => rowIdx < MID_ROWS / 2.0 ? "b" : "t";
@@ -391,7 +396,7 @@ namespace pxsim.visuals {
                 getRowName: getBarRowName,
                 getColName: getColName,
                 getGroupName: getBarGroupName,
-                colIdxsWithGap: BOT_BAR_COL_GAPS,
+                colIdxsWithGap: BAR_COL_GAPS,
             });
             let botBarGridG = botBarGridRes.g;
             this.allPins = this.allPins.concat(botBarGridRes.allPins);
@@ -409,7 +414,7 @@ namespace pxsim.visuals {
                 getRowName: getBarRowName,
                 getColName: getColName,
                 getGroupName: getBarGroupName,
-                colIdxsWithGap: TOP_BAR_COL_GAPS,
+                colIdxsWithGap: BAR_COL_GAPS.map(g => g + BAR_COLS),
             });
             let topBarGridG = topBarGridRes.g;
             this.allPins = this.allPins.concat(topBarGridRes.allPins);
@@ -433,7 +438,7 @@ namespace pxsim.visuals {
             //-----labels
             const mkBBLabelAtPin = (row: string, col: string, xOffset: number, yOffset: number, txt: string, group?: string): GridLabel => {
                 let size = PIN_LBL_SIZE;
-                let rotation = LBL_ROT;
+                let rotation = LBL_ROTATION;
                 let loc = this.getCoord(row, col);
                 let [cx, cy] = loc;
                 let t = mkBBLabel(cx + xOffset, cy + yOffset, size, rotation, txt, group);
@@ -474,20 +479,20 @@ namespace pxsim.visuals {
             //+- labels
             let botPowerLabels = [
                 //BL
-                mkBBLabel(0 + POWER_LBL_OFFSET + MINUS_LBL_OFFSET, BAR_HEIGHT + MID_HEIGHT + POWER_LBL_OFFSET, MINUS_LBL_SIZE, LBL_ROT, `-`, getBarGroupName(0, 0), [`sim-bb-blue`]),
-                mkBBLabel(0 + POWER_LBL_OFFSET, BAR_HEIGHT + MID_HEIGHT + BAR_HEIGHT - POWER_LBL_OFFSET, PLUS_LBL_SIZE, LBL_ROT, `+`, getBarGroupName(1, 0), [`sim-bb-red`]),
+                mkBBLabel(0 + POWER_LBL_OFFSET + MINUS_LBL_EXTRA_OFFSET, BAR_HEIGHT + MID_HEIGHT + POWER_LBL_OFFSET, MINUS_LBL_SIZE, LBL_ROTATION, `-`, getBarGroupName(0, 0), [`sim-bb-blue`]),
+                mkBBLabel(0 + POWER_LBL_OFFSET, BAR_HEIGHT + MID_HEIGHT + BAR_HEIGHT - POWER_LBL_OFFSET, PLUS_LBL_SIZE, LBL_ROTATION, `+`, getBarGroupName(1, 0), [`sim-bb-red`]),
                 //BR
-                mkBBLabel(WIDTH - POWER_LBL_OFFSET + MINUS_LBL_OFFSET, BAR_HEIGHT + MID_HEIGHT + POWER_LBL_OFFSET, MINUS_LBL_SIZE, LBL_ROT, `-`, getBarGroupName(0, BAR_COLS - 1), [`sim-bb-blue`]),
-                mkBBLabel(WIDTH - POWER_LBL_OFFSET, BAR_HEIGHT + MID_HEIGHT + BAR_HEIGHT - POWER_LBL_OFFSET, PLUS_LBL_SIZE, LBL_ROT, `+`, getBarGroupName(1, BAR_COLS - 1), [`sim-bb-red`]),
+                mkBBLabel(WIDTH - POWER_LBL_OFFSET + MINUS_LBL_EXTRA_OFFSET, BAR_HEIGHT + MID_HEIGHT + POWER_LBL_OFFSET, MINUS_LBL_SIZE, LBL_ROTATION, `-`, getBarGroupName(0, BAR_COLS - 1), [`sim-bb-blue`]),
+                mkBBLabel(WIDTH - POWER_LBL_OFFSET, BAR_HEIGHT + MID_HEIGHT + BAR_HEIGHT - POWER_LBL_OFFSET, PLUS_LBL_SIZE, LBL_ROTATION, `+`, getBarGroupName(1, BAR_COLS - 1), [`sim-bb-red`]),
             ];
             this.allLabels = this.allLabels.concat(botPowerLabels);
             let topPowerLabels = [
                 //TL
-                mkBBLabel(0 + POWER_LBL_OFFSET + MINUS_LBL_OFFSET, 0 + POWER_LBL_OFFSET, MINUS_LBL_SIZE, LBL_ROT, `-`, getBarGroupName(0, BAR_COLS), [`sim-bb-blue`]),
-                mkBBLabel(0 + POWER_LBL_OFFSET, BAR_HEIGHT - POWER_LBL_OFFSET, PLUS_LBL_SIZE, LBL_ROT, `+`, getBarGroupName(1, BAR_COLS), [`sim-bb-red`]),
+                mkBBLabel(0 + POWER_LBL_OFFSET + MINUS_LBL_EXTRA_OFFSET, 0 + POWER_LBL_OFFSET, MINUS_LBL_SIZE, LBL_ROTATION, `-`, getBarGroupName(0, BAR_COLS), [`sim-bb-blue`]),
+                mkBBLabel(0 + POWER_LBL_OFFSET, BAR_HEIGHT - POWER_LBL_OFFSET, PLUS_LBL_SIZE, LBL_ROTATION, `+`, getBarGroupName(1, BAR_COLS), [`sim-bb-red`]),
                 //TR
-                mkBBLabel(WIDTH - POWER_LBL_OFFSET + MINUS_LBL_OFFSET, 0 + POWER_LBL_OFFSET, MINUS_LBL_SIZE, LBL_ROT, `-`, getBarGroupName(0, POWER_COLS - 1), [`sim-bb-blue`]),
-                mkBBLabel(WIDTH - POWER_LBL_OFFSET, BAR_HEIGHT - POWER_LBL_OFFSET, PLUS_LBL_SIZE, LBL_ROT, `+`, getBarGroupName(1, POWER_COLS - 1), [`sim-bb-red`]),
+                mkBBLabel(WIDTH - POWER_LBL_OFFSET + MINUS_LBL_EXTRA_OFFSET, 0 + POWER_LBL_OFFSET, MINUS_LBL_SIZE, LBL_ROTATION, `-`, getBarGroupName(0, POWER_COLS - 1), [`sim-bb-blue`]),
+                mkBBLabel(WIDTH - POWER_LBL_OFFSET, BAR_HEIGHT - POWER_LBL_OFFSET, PLUS_LBL_SIZE, LBL_ROTATION, `+`, getBarGroupName(1, POWER_COLS - 1), [`sim-bb-red`]),
             ];
             this.allLabels = this.allLabels.concat(topPowerLabels);
 
