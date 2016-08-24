@@ -60,7 +60,7 @@ namespace pxsim.visuals {
     export function findDistSqrd(a: Coord, b: Coord): number {
         let x = a[0] - b[0];
         let y = a[1] - b[1];
-        return x*x + y*y;
+        return x * x + y * y;
     }
     export function findClosestCoordIdx(a: Coord, bs: Coord[]): number {
         let dists = bs.map(b => findDistSqrd(a, b));
@@ -85,16 +85,16 @@ namespace pxsim.visuals {
          //HACK: these constants (txtXOffFactor, txtYOffFactor) tweak the way this algorithm knows how to center the text
         txtXOffFactor = txtXOffFactor || -0.33333;
         txtYOffFactor = txtYOffFactor || 0.3;
-        const xOff = txtXOffFactor*size*txt.length;
-        const yOff = txtYOffFactor*size;
-        svg.hydrate(el, {style: `font-size:${size}px;`, 
+        const xOff = txtXOffFactor * size * txt.length;
+        const yOff = txtYOffFactor * size;
+        svg.hydrate(el, {style: `font-size:${size}px;`,
             transform: `translate(${cx} ${cy}) rotate(${rot}) translate(${xOff} ${yOff})` });
         svg.addClass(el, "noselect");
         el.textContent = txt;
         return el;
     }
 
-    export type WireColor = 
+    export type WireColor =
         "black" | "white" | "gray" | "purple" | "blue" | "green" | "yellow" | "orange" | "red" | "brown";
     export const WIRE_COLOR_MAP: Map<string> = {
         black: "#514f4d",

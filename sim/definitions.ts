@@ -25,20 +25,20 @@ namespace pxsim {
     export type ComponentDefinition = {
         breadboardColumnsNeeded: number,
         breadboardStartRow: string,
-        gpioPinsNeeded?: number | number[], 
+        gpioPinsNeeded?: number | number[],
         wires: WireDefinition[],
         assemblyStep: number,
         builtinPartVisual?: string,
         builtinSimSate?: string,
         builtinSimVisual?: string,
-    } 
+    }
     export type WireDefinition = {
-        start: LocationDefinition, 
-        end: LocationDefinition, 
-        color: string, 
+        start: LocationDefinition,
+        end: LocationDefinition,
+        color: string,
         assemblyStep: number
     };
-    export type LocationDefinition = 
+    export type LocationDefinition =
         ["breadboard", string, number] | ["GPIO", number] | "ground" | "threeVolt";
 
     export type ComponentInstance = {
@@ -48,11 +48,11 @@ namespace pxsim {
         builtinPartVisual?: string,
         builtinSimSate?: string,
         builtinSimVisual?: string,
-    } 
+    }
     export type WireInstance = {
-        start: LocationInstance, 
+        start: LocationInstance,
         end: LocationInstance,
-        color: string, 
+        color: string,
         assemblyStep: number
     };
     export type BreadboardLocation = [string, string];
@@ -67,7 +67,7 @@ namespace pxsim {
             height: 762,
             pinDist: 35.5,
             pinBlocks: [
-                {x: 276.8, y: 17.8, labels: ["SCL", "SDA","AREF", "GND0", "~13", "~12", "~11", "~10", "~9", "~8"]},
+                {x: 276.8, y: 17.8, labels: ["SCL", "SDA", "AREF", "GND0", "~13", "~12", "~11", "~10", "~9", "~8"]},
                 {x: 655.5, y: 17.8, labels: ["7", "~6", "~5", "~4", "~3", "2", "TX->1", "RX<-0"]},
                 {x: 411.7, y: 704.6, labels: ["ATN", "IOREF", "RESET", "3.3V", "5V", "GND1", "GND2", "VIN"]},
                 {x: 732.9, y: 704.6, labels: ["A0", "A1", "A2", "A3", "A4", "A5"]},
@@ -85,7 +85,7 @@ namespace pxsim {
         "ledmatrix": {
             breadboardColumnsNeeded: 8,
             breadboardStartRow: "h",
-            gpioPinsNeeded: [5,5],
+            gpioPinsNeeded: [5, 5],
             assemblyStep: 0,
             builtinPartVisual: "ledmatrix",
             builtinSimSate: "ledmatrix",
