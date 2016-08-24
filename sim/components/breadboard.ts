@@ -228,37 +228,36 @@ namespace pxsim.visuals {
         }
         return {g: grid, allPins: allPins};
     }
-
     function mkBBPin(): SVGElAndSize {
         let el = svg.elt("rect");
+        let width = PIN_WIDTH;
         svg.hydrate(el, {
             class: "sim-bb-pin",
             rx: PIN_ROUNDING,
             ry: PIN_ROUNDING,
-            width: PIN_WIDTH,
-            height: PIN_WIDTH
+            width: width,
+            height: width
         });
-        return {e: el, w: PIN_WIDTH, h: PIN_WIDTH, l: 0, t: 0};
+        return {e: el, w: width, h: width, l: 0, t: 0};
     }
     function mkBBHoverPin(): SVGElAndSize {
         let el = svg.elt("rect");
+        let width = PIN_WIDTH * PIN_HOVER_SCALAR;
         svg.hydrate(el, {
             class: "sim-bb-pin-hover",
             rx: PIN_ROUNDING,
             ry: PIN_ROUNDING,
-            width: PIN_WIDTH * PIN_HOVER_SCALAR,
-            height: PIN_WIDTH * PIN_HOVER_SCALAR
+            width: width,
+            height: width,
         });
-        return {e: el, w: PIN_WIDTH, h: PIN_WIDTH, l: 0, t: 0};
+        return {e: el, w: width, h: width, l: 0, t: 0};
     }
-
     export interface GridLabel {
         el: SVGTextElement,
         hoverEl: SVGTextElement,
         txt: string,
         group?: string,
     };
-
     function mkBBLabel(cx: number, cy: number, size: number, rotation: number, txt: string, group: string, extraClasses?: string[]): GridLabel {
         //lbl
         let el = mkTxt(cx, cy, size, rotation, txt);
@@ -275,12 +274,10 @@ namespace pxsim.visuals {
         let lbl = {el: el, hoverEl: hoverEl, txt: txt, group: group};
         return lbl;
     }
-
     interface BBBar {
         el: SVGRectElement,
         group?: string
     };
-
     export class Breadboard {
         public bb: SVGGElement;
         public defs: SVGElement[] = [];
