@@ -111,13 +111,14 @@ namespace pxsim.visuals {
     const MID_COLS = 30;
     const BAR_ROWS = 2;
     const BAR_COLS = 25;
+    const POWER_ROWS = BAR_ROWS * 2;
     const POWER_COLS = BAR_COLS * 2;
     const BAR_COL_GAPS = [4, 9, 14, 19];
     const BAR_COL_AND_GAPS = BAR_COLS + BAR_COL_GAPS.length;
     // Essential dimensions
     const WIDTH = PIN_DIST * (MID_COLS + 3);
-    const HEIGHT = PIN_DIST * (MID_ROW_AND_GAPS + POWER_COLS + 5.5);
-    const MID_RATIO = 0.66666666;
+    const HEIGHT = PIN_DIST * (MID_ROW_AND_GAPS + POWER_ROWS + 5.5);
+    const MID_RATIO = 2.0 / 3.0;
     const BAR_RATIO = (1.0 - MID_RATIO) * 0.5;
     const MID_HEIGHT = HEIGHT * MID_RATIO;
     const BAR_HEIGHT = HEIGHT * BAR_RATIO;
