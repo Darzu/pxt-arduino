@@ -181,6 +181,7 @@ namespace pxsim.visuals {
                 })
                 btn.addEventListener(pointerEvents.up, ev => {
                     btnStates[index].pressed = false;
+                    this.bus.queue(btnStates[index].id, DAL.MICROBIT_BUTTON_EVT_UP);
                     this.bus.queue(btnStates[index].id, DAL.MICROBIT_BUTTON_EVT_CLICK);
                 })
             })
@@ -195,6 +196,7 @@ namespace pxsim.visuals {
             })
             this.abBtn.addEventListener(pointerEvents.up, ev => {
                 updateBtns(false);
+                this.bus.queue(this.state.abBtn.id, DAL.MICROBIT_BUTTON_EVT_UP);
                 this.bus.queue(this.state.abBtn.id, DAL.MICROBIT_BUTTON_EVT_CLICK);
             })
         }

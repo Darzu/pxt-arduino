@@ -123,6 +123,10 @@ namespace pxsim.control {
         U.userError("reset not implemented in simulator yet")
     }
 
+    export function waitMicros(micros: number) {
+        // TODO        
+    }
+
     export function deviceName(): string {
         let b = board();
         return b && b.id
@@ -172,6 +176,18 @@ namespace pxsim.pins {
 
     export function createBuffer(sz: number) {
         return pxsim.BufferMethods.createBuffer(sz)
+    }
+
+    export function pulseIn(name: number, value: number, maxDuration: number): number {
+        let pin = getPin(name);
+        if (!pin) return 0;
+
+        return 5000;
+    }
+
+    export function spiWrite(value: number): number {
+        // TODO
+        return 0;
     }
 
     export function i2cReadBuffer(address: number, size: number, repeat?: boolean): RefBuffer {

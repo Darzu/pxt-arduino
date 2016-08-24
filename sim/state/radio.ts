@@ -15,10 +15,10 @@ namespace pxsim {
         }
 
         queue(packet: PacketBuffer) {
-            if (this.datagram.length < 5) {
+            if (this.datagram.length < 4) {
                 this.datagram.push(packet);
-                (<DalBoard>runtime.board).bus.queue(DAL.MICROBIT_ID_RADIO, DAL.MICROBIT_RADIO_EVT_DATAGRAM);
             }
+            (<DalBoard>runtime.board).bus.queue(DAL.MICROBIT_ID_RADIO, DAL.MICROBIT_RADIO_EVT_DATAGRAM);
         }
 
         send(buffer: number[] | string) {
@@ -153,5 +153,6 @@ namespace pxsim.radio {
 
     export function onDataReceived(handler: RefAction): void {
         pxt.registerWithDal(DAL.MICROBIT_ID_RADIO, DAL.MICROBIT_RADIO_EVT_DATAGRAM, handler);
+        radio.receiveNumber();
     }
 }
