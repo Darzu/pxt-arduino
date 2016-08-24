@@ -2,119 +2,12 @@
 /// <reference path="../../node_modules/pxt-core/built/pxtsim.d.ts"/>
 /// <reference path="../../libs/microbit/dal.d.ts"/>
 
-// themes
-namespace pxsim {
-    const accents = ["#3ADCFE", "#FFD43A", "#3AFFB3", "#FF3A54"];
-
-    export function mkTheme(accent: string): visuals.IBoardTheme {
-        return {
-            accent: accent,
-        }
-    }
-    export function mkRandomTheme(): visuals.IBoardTheme {
-        let accent = accents[Math.floor(Math.random() * accents.length)];
-        return mkTheme(accent);
-    }
-}
-
-namespace pxsim {
-    export class DalBoard extends BaseBoard {
-        id: string;
-
-        // the bus
-        bus: EventBus;
-
-        // state & update logic for component services
-        ledMatrixState: LedMatrixState;
-        edgeConnectorState: EdgeConnectorState;
-        serialState: SerialState;
-        accelerometerState: AccelerometerState;
-        compassState: CompassState;
-        thermometerState: ThermometerState;
-        lightSensorState: LightSensorState;
-        buttonPairState: ButtonPairState;
-        radioState: RadioState;
-        neopixelState: NeoPixelState;
-
-        constructor() {
-            super()
-            this.id = "b" + Math_.random(2147483647);
-            this.bus = new EventBus(runtime);
-
-            // components
-            this.ledMatrixState = new LedMatrixState(runtime);
-            this.buttonPairState = new ButtonPairState();
-            this.edgeConnectorState = new EdgeConnectorState();
-            this.radioState = new RadioState(runtime);
-            this.accelerometerState = new AccelerometerState(runtime);
-            this.serialState = new SerialState();
-            this.thermometerState = new ThermometerState();
-            this.lightSensorState = new LightSensorState();
-            this.compassState = new CompassState();
-            this.neopixelState = new NeoPixelState();
-        }
-
-        receiveMessage(msg: SimulatorMessage) {
-            if (!runtime || runtime.dead) return;
-
-            switch (msg.type || "") {
-                case "eventbus":
-                    let ev = <SimulatorEventBusMessage>msg;
-                    this.bus.queue(ev.id, ev.eventid, ev.value);
-                    break;
-                case "serial":
-                    let data = (<SimulatorSerialMessage>msg).data || "";
-                    this.serialState.recieveData(data);
-                    break;
-                case "radiopacket":
-                    let packet = <SimulatorRadioPacketMessage>msg;
-                    this.radioState.recievePacket(packet);
-                    break;
-            }
-        }
-
-        kill() {
-            super.kill();
-            AudioContextManager.stop();
-        }
-
-        initAsync(msg: SimulatorRunMessage): Promise<void> {
-            let options = (msg.options || {}) as RuntimeOptions;
-            let theme = mkRandomTheme();
-
-            let boardDef = ARDUINO_ZERO; //TODO: read from pxt.json/pxttarget.json
-            let cmpsList = msg.parts;
-            cmpsList.sort();
-            let cmpDefs = COMPONENT_DEFINITIONS; //TODO: read from pxt.json/pxttarget.json
-
-            //TODO: allow other visualizations
-            let view = new visuals.DalBoardSvg({
-                boardDef: boardDef,
-                activeComponents: cmpsList,
-                componentDefinitions: cmpDefs,
-                theme: theme,
-                runtime: runtime
-            })
-
-            document.body.innerHTML = ""; // clear children
-            document.body.appendChild(view.element);
-
-            return Promise.resolve();
-        }
-    }
-}
-
 namespace pxsim.visuals {
     const svg = pxsim.svg;
-
-    export interface IBoardTheme {
-        accent?: string;
-    }
 
     export interface IBoardSvgProps {
         runtime: pxsim.Runtime;
         boardDef: BoardDefinition;
-        theme?: IBoardTheme;
         disableTilt?: boolean;
         activeComponents: string[];
         componentDefinitions: Map<ComponentDefinition>;
@@ -695,15 +588,12 @@ namespace pxsim.visuals {
         }
 
         private updateTheme() {
-            let theme = this.props.theme;
-
             this.components.forEach(c => c.updateTheme());
         }
 
         public updateState() {
             let state = this.board;
             if (!state) return;
-            let theme = this.props.theme;
 
             this.components.forEach(c => c.updateState());
 

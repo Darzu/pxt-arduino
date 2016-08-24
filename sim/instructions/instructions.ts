@@ -408,7 +408,6 @@ namespace pxsim.instructions {
     function mkBoard(boardDef: BoardDefinition, cmpDefs: Map<ComponentDefinition>, 
         width: number, buildMode: boolean = false): visuals.DalBoardSvg {
         let board = new visuals.DalBoardSvg({
-            theme: pxsim.mkRandomTheme(),
             runtime: pxsim.runtime,
             boardDef: boardDef,
             activeComponents: [],
