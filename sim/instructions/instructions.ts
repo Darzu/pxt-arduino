@@ -363,10 +363,11 @@ namespace pxsim.instructions {
         let stepToWires: WireInstance[][] = [];
         let stepToCmps: ComponentInstance[][] = [];
         basicWires.forEach(w => {
-            (stepToWires[w.assemblyStep] || (stepToWires[w.assemblyStep] = [])).push(w)
+            let step = w.assemblyStep + 1;
+            (stepToWires[step] || (stepToWires[step] = [])).push(w)
         });
-        let getMaxStep = (ns: {assemblyStep: number}[]) => ns.reduce((m,n) => Math.max(m,n.assemblyStep), 0);
-        let stepOffset = getMaxStep(basicWires) + 1;
+        let getMaxStep = (ns: {assemblyStep: number}[]) => ns.reduce((m, n) => Math.max(m, n.assemblyStep), 0);
+        let stepOffset = getMaxStep(basicWires) + 2;
         cmpsAndWiring.forEach(cAndWs => {
             let [c,ws] = cAndWs;
             let cStep = c.assemblyStep+stepOffset;
@@ -445,10 +446,10 @@ namespace pxsim.instructions {
     }
     function drawSteps(board: visuals.DalBoardSvg, step: number, props: BoardProps) 
     {
-        //old steps
         if (step > 0) {
             svg.addClass(board.element, "grayed");
         }
+
         for (let i = 0; i <= step; i++) {
             let wires = props.stepToWires[i];
             if (wires) {
