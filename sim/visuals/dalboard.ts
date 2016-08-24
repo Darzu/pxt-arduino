@@ -38,7 +38,7 @@ namespace pxsim.visuals {
             scaleFn: scaleFn,
             height: scaleFn(vis.height),
             width: width,
-            xOff: (BOARD_BASE_WIDTH - width)/2.0,
+            xOff: (BOARD_BASE_WIDTH - width) / 2.0,
             yOff: TOP_MARGIN
         }
     }
@@ -54,7 +54,7 @@ namespace pxsim.visuals {
             user-select: none;           /* Non-prefixed version, currently
                                             not supported by any browser */
         }
-        svg.sim.grayscale {    
+        svg.sim.grayscale {
             -moz-filter: grayscale(1);
             -webkit-filter: grayscale(1);
             filter: grayscale(1);
@@ -75,7 +75,7 @@ namespace pxsim.visuals {
             animation-iteration-count: infinite;
             animation-duration: 1.25s;
         }
-        @keyframes sim-theme-glow-animation {  
+        @keyframes sim-theme-glow-animation {
             from { opacity: 1; }
             to   { opacity: 0.75; }
         }
@@ -85,7 +85,7 @@ namespace pxsim.visuals {
             animation-duration: 0.1s;
         }
 
-        @keyframes sim-flash-animation {  
+        @keyframes sim-flash-animation {
             from { fill: yellow; }
             to   { fill: default; }
         }
@@ -96,7 +96,7 @@ namespace pxsim.visuals {
             animation-timing-function: ease-in;
         }
 
-        @keyframes sim-flash-stroke-animation {  
+        @keyframes sim-flash-stroke-animation {
             from { stroke: yellow; }
             to   { stroke: default; }
         }
@@ -104,7 +104,7 @@ namespace pxsim.visuals {
         .sim-board-pin {
             fill:#999;
             stroke:#000;
-            stroke-width:${PIN_DIST/3.0}px;
+            stroke-width:${PIN_DIST / 3.0}px;
         }
         .sim-bb-wire {
             fill:none;
@@ -119,7 +119,7 @@ namespace pxsim.visuals {
         .sim-bb-wire-hover {
             stroke-width: ${WIRE_WIDTH}px;
             visibility: hidden;
-            stroke-dasharray: ${PIN_DIST/10.0},${PIN_DIST/1.5};
+            stroke-dasharray: ${PIN_DIST / 10.0},${PIN_DIST / 1.5};
             /*stroke-opacity: 0.4;*/
         }
         .sim-board-pin-lbl {
@@ -134,7 +134,7 @@ namespace pxsim.visuals {
         .sim-board-pin-hover {
             visibility: hidden;
             pointer-events: all;
-            stroke-width:${PIN_DIST/6.0}px;
+            stroke-width:${PIN_DIST / 6.0}px;
         }
         .sim-board-pin-hover:hover {
             visibility: visible;
@@ -230,12 +230,12 @@ namespace pxsim.visuals {
 
         private availablePowerPins = {
             top: {
-                threeVolt: mkRange(26,51).map(n => <BreadboardLocation>["+", `${n}`]),
-                ground: mkRange(26,51).map(n => <BreadboardLocation>["-", `${n}`]),
+                threeVolt: mkRange(26, 51).map(n => <BreadboardLocation>["+", `${n}`]),
+                ground: mkRange(26, 51).map(n => <BreadboardLocation>["-", `${n}`]),
             },
             bottom: {
-                threeVolt: mkRange(1,26).map(n => <BreadboardLocation>["+", `${n}`]),
-                ground: mkRange(1,26).map(n => <BreadboardLocation>["-", `${n}`]),
+                threeVolt: mkRange(1, 26).map(n => <BreadboardLocation>["+", `${n}`]),
+                ground: mkRange(1, 26).map(n => <BreadboardLocation>["-", `${n}`]),
             },
         };
 
@@ -313,19 +313,19 @@ namespace pxsim.visuals {
 
         private getCmpClass = (type: string) => `sim-${type}-cmp`;
 
-        private allocateLocation(location: LocationDefinition, 
+        private allocateLocation(location: LocationDefinition,
             opts: {
                 nearestBBPin?: BreadboardLocation,
                 startColumn?: number,
                 availableGPIOPins?: string[],
-            }): LocationInstance 
+            }): LocationInstance
         {
             if (location === "ground" || location === "threeVolt") {
                 U.assert(!!opts.nearestBBPin);
                 let [nearRow, nearCol] = opts.nearestBBPin;
                 let nearestCoord = this.getBBCoord(nearRow, nearCol);
                 let firstTopAndBot = [
-                    this.availablePowerPins.top.ground[0] || this.availablePowerPins.top.threeVolt[0], 
+                    this.availablePowerPins.top.ground[0] || this.availablePowerPins.top.threeVolt[0],
                     this.availablePowerPins.bottom.ground[0] || this.availablePowerPins.bottom.threeVolt[0]
                 ].map(l => {
                     let [row, col] = l;
@@ -424,7 +424,7 @@ namespace pxsim.visuals {
                     nearestBBPin: <BreadboardLocation>endInsts[1 - idx][1],
                     startColumn: opts.startColumn,
                     availableGPIOPins: opts.availableGPIOPins
-                })); 
+                }));
             return {start: endInsts[0], end: endInsts[1], color: wireDef.color, assemblyStep: wireDef.assemblyStep};
         }
         private allocateGPIOPins(cmpDefs: ComponentDefinition[]): string[][][] {
@@ -471,11 +471,11 @@ namespace pxsim.visuals {
                     while (0 < assignment.gpioNeeded && 0 < smallestAvailableBlockThatFits.length) {
                         assignment.gpioNeeded--;
                         let pin = smallestAvailableBlockThatFits[0];
-                        smallestAvailableBlockThatFits.splice(0,1);
+                        smallestAvailableBlockThatFits.splice(0, 1);
                         assignment.gpioAssigned.push(pin);
                     }
                     sortBlockAssignments();
-                } while(0 < blockAssignments[0].gpioNeeded);
+                } while (0 < blockAssignments[0].gpioNeeded);
             }
             if (0 < blockAssignments.length && 0 < blockAssignments[0].gpioNeeded) {
                 //TODO: out of pins
@@ -498,18 +498,18 @@ namespace pxsim.visuals {
         }
         private allocateColumns(cmpDefs: ComponentDefinition[]): number[] {
             let componentsCount = cmpDefs.length;
-            let totalAvailableSpace = 30;//TODO allow multiple breadboards
+            let totalAvailableSpace = 30; //TODO allow multiple breadboards
             let totalSpaceNeeded = cmpDefs.map(d => d.breadboardColumnsNeeded).reduce((p, n) => p + n, 0);
             let extraSpace = totalAvailableSpace - totalSpaceNeeded;
             if (extraSpace <= 0) {
                 console.log("Not enough breadboard space!");
                 //TODO
             }
-            let padding = Math.floor(extraSpace/(componentsCount-1+2));
-            let componentSpacing = padding;//Math.floor(extraSpace/(componentsCount-1));
-            let totalCmpPadding = extraSpace - componentSpacing*(componentsCount-1);
-            let leftPadding = Math.floor(totalCmpPadding/2);
-            let rightPadding = Math.ceil(totalCmpPadding/2);
+            let padding = Math.floor(extraSpace / (componentsCount - 1 + 2));
+            let componentSpacing = padding; //Math.floor(extraSpace/(componentsCount-1));
+            let totalCmpPadding = extraSpace - componentSpacing * (componentsCount - 1);
+            let leftPadding = Math.floor(totalCmpPadding / 2);
+            let rightPadding = Math.ceil(totalCmpPadding / 2);
             let nextAvailableCol = 1 + leftPadding;
             let cmpStartCol = cmpDefs.map(cmp => {
                 let col = nextAvailableCol;
@@ -531,7 +531,7 @@ namespace pxsim.visuals {
         public allocateComponentsAndWiring(cmpDefs: ComponentDefinition[]): [ComponentInstance, WireInstance[]][] {
             let cmpGPIOPinBlocks = this.allocateGPIOPins(cmpDefs);
             let availableGPIOPins = cmpGPIOPinBlocks.map(blks => blks.reduce((p, n) => p.concat(n), []));
-            let cmpStartCol = this.allocateColumns(cmpDefs);            
+            let cmpStartCol = this.allocateColumns(cmpDefs);
             let wires = cmpDefs.map((c, idx) => c.wires.map(d => this.allocateWire(d, {
                 availableGPIOPins: availableGPIOPins[idx],
                 startColumn: cmpStartCol[idx],
@@ -553,7 +553,7 @@ namespace pxsim.visuals {
         public addAll(basicWiresAndCmpsAndWires: [WireInstance[], [ComponentInstance, WireInstance[]][]]) {
             let [basicWires, cmpsAndWires] = basicWiresAndCmpsAndWires;
             basicWires.forEach(w => this.addWire(w));
-            cmpsAndWires.forEach((cAndWs, idx) => {                    
+            cmpsAndWires.forEach((cAndWs, idx) => {
                 let [cmpDef, wireDefs] = cAndWs;
                 wireDefs.forEach(w => this.addWire(w));
                 this.addComponent(cmpDef);
@@ -608,7 +608,7 @@ namespace pxsim.visuals {
                 if (vs[i] < min) {
                     min = vs[i];
                     minIdx = i;
-                }   
+                }
             }
             return minIdx;
         }
@@ -629,25 +629,25 @@ namespace pxsim.visuals {
             this.style.textContent += this.breadboard.style;
             let bbSize = this.breadboard.getSVGAndSize();
             let [bbWidth, bbHeight] = [bbSize.w, bbSize.h];
-            const bbX = (BOARD_BASE_WIDTH - bbWidth)/2;
+            const bbX = (BOARD_BASE_WIDTH - bbWidth) / 2;
             this.bbX = bbX;
             const bbY = TOP_MARGIN + this.boardDim.height + MID_MARGIN;
             this.bbY = bbY;
             this.breadboard.updateLocation(bbX, bbY);
 
             // edges
-            this.boardEdges = [TOP_MARGIN, TOP_MARGIN+this.boardDim.height, bbY, bbY+bbHeight]
+            this.boardEdges = [TOP_MARGIN, TOP_MARGIN + this.boardDim.height, bbY, bbY + bbHeight]
 
             // filters
             let glow = svg.child(this.defs, "filter", { id: "filterglow", x: "-5%", y: "-5%", width: "120%", height: "120%" });
             svg.child(glow, "feGaussianBlur", { stdDeviation: "5", result: "glow" });
             let merge = svg.child(glow, "feMerge", {});
-            for (let i = 0; i < 3; ++i) 
+            for (let i = 0; i < 3; ++i)
                 svg.child(merge, "feMergeNode", { in: "glow" })
 
             // main board
-            this.background = svg.child(this.g, "image", 
-                { class: "sim-board", x: this.boardDim.xOff, y: this.boardDim.yOff, width: this.boardDim.width, height: this.boardDim.height, 
+            this.background = svg.child(this.g, "image",
+                { class: "sim-board", x: this.boardDim.xOff, y: this.boardDim.yOff, width: this.boardDim.width, height: this.boardDim.height,
                     "href": `${this.boardDef.visual.image}`});
             let backgroundCover = this.mkGrayCover(this.boardDim.xOff, this.boardDim.yOff, this.boardDim.width, this.boardDim.height);
             this.g.appendChild(backgroundCover);
@@ -774,7 +774,7 @@ namespace pxsim.visuals {
 
         // wires
         private mkCurvedWireSeg = (p1: [number, number], p2: [number, number], clr: string): SVGPathElement => {
-            const coordStr = (xy: [number, number]):string => {return `${xy[0]}, ${xy[1]}`};
+            const coordStr = (xy: [number, number]): string => {return `${xy[0]}, ${xy[1]}`};
             let c1: [number, number] = [p1[0], p2[1]];
             let c2: [number, number] = [p2[0], p1[1]];
             let w = <SVGPathElement>svg.mkPath("sim-bb-wire", `M${coordStr(p1)} C${coordStr(c1)} ${coordStr(c2)} ${coordStr(p2)}`);
@@ -786,7 +786,7 @@ namespace pxsim.visuals {
             return w;
         }
         private mkWireSeg = (p1: [number, number], p2: [number, number], clr: string): SVGPathElement => {
-            const coordStr = (xy: [number, number]):string => {return `${xy[0]}, ${xy[1]}`};
+            const coordStr = (xy: [number, number]): string => {return `${xy[0]}, ${xy[1]}`};
             let w = <SVGPathElement>svg.mkPath("sim-bb-wire", `M${coordStr(p1)} L${coordStr(p2)}`);
             if (clr in WIRE_COLOR_MAP) {
                 svg.addClass(w, `wire-stroke-${clr}`);
@@ -796,11 +796,11 @@ namespace pxsim.visuals {
             return w;
         }
         private mkWireEnd = (p: [number, number], clr: string): SVGElement => {
-            const endW = PIN_DIST/4;
+            const endW = PIN_DIST / 4;
             let w = svg.elt("circle");
             let x = p[0];
             let y = p[1];
-            let r = WIRE_WIDTH/2 + endW/2;
+            let r = WIRE_WIDTH / 2 + endW / 2;
             svg.hydrate(w, {cx: x, cy: y, r: r, class: "sim-bb-wire-end"});
             if (clr in WIRE_COLOR_MAP) {
                 svg.addClass(w, `wire-fill-${clr}`);
@@ -814,7 +814,7 @@ namespace pxsim.visuals {
             let wires: SVGElement[] = [];
             let g = svg.child(this.g, "g", {class: "sim-bb-wire-group"});
             const closestPointOffBoard = (p: [number, number]): [number, number] => {
-                const offset = PIN_DIST/2;
+                const offset = PIN_DIST / 2;
                 let e = this.closestEdge(p);
                 let y: number;
                 if (e - p[1] < 0)
@@ -845,11 +845,11 @@ namespace pxsim.visuals {
                 let isBetweenMiddleTwoEdges = (edgeIdx1 == 1 || edgeIdx1 == 2) && (edgeIdx2 == 1 || edgeIdx2 == 2);
                 if (isBetweenMiddleTwoEdges) {
                     midSeg = this.mkCurvedWireSeg(offP1, offP2, clr);
-                    midSegHover =this. mkCurvedWireSeg(offP1, offP2, clr);
+                    midSegHover = this. mkCurvedWireSeg(offP1, offP2, clr);
                 } else {
                     midSeg = this.mkWireSeg(offP1, offP2, clr);
                     midSegHover = this.mkWireSeg(offP1, offP2, clr);
-                } 
+                }
                 svg.addClass(midSegHover, "sim-bb-wire-hover");
                 g.appendChild(offSeg1);
                 wires.push(offSeg1);
@@ -865,11 +865,11 @@ namespace pxsim.visuals {
                 setId(endG);
                 setId(midSegHover);
                 this.style.textContent += `
-                    .${wireIdClass}:hover ~ .${wireIdClass}.sim-bb-wire-hover { 
-                        visibility: visible; 
+                    .${wireIdClass}:hover ~ .${wireIdClass}.sim-bb-wire-hover {
+                        visibility: visible;
                     }
-                    .sim-bb-wire-ends-g:hover .sim-bb-wire-end { 
-                        stroke: red; 
+                    .sim-bb-wire-ends-g:hover .sim-bb-wire-end {
+                        stroke: red;
                     }`
             }
             return {endG: endG, end1: end1, end2: end2, wires: wires};

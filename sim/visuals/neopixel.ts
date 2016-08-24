@@ -20,7 +20,7 @@ namespace pxsim.visuals {
     //expects rgb from 0,255, gives h in [0,360], s in [0, 100], l in [0, 100]
     export function rgbToHsl(rgb: [number, number, number]): [number, number, number] {
         let [r, g, b] = rgb;
-        let [r$, g$, b$] = [r/255, g/255, b/255];
+        let [r$, g$, b$] = [r / 255, g / 255, b / 255];
         let cMin = Math.min(r$, g$, b$);
         let cMax = Math.max(r$, g$, b$);
         let cDelta = cMax - cMin;
@@ -28,24 +28,24 @@ namespace pxsim.visuals {
         let maxAndMin = cMax + cMin;
 
         //lum
-        l = (maxAndMin / 2)*100
-        
+        l = (maxAndMin / 2) * 100
+
         if (cDelta === 0)
             s = h = 0;
         else {
             //hue
             if (cMax === r$)
-                h = 60 * (((g$-b$)/cDelta) % 6);
+                h = 60 * (((g$ - b$) / cDelta) % 6);
             else if (cMax === g$)
-                h = 60 * (((b$-r$)/cDelta) + 2);
+                h = 60 * (((b$ - r$) / cDelta) + 2);
             else if (cMax === b$)
-                h = 60 * (((r$-g$)/cDelta) + 4);
+                h = 60 * (((r$ - g$) / cDelta) + 4);
 
             //sat
             if (l > 50)
-                s = 100*(cDelta / (2 - maxAndMin));
+                s = 100 * (cDelta / (2 - maxAndMin));
             else
-                s = 100*(cDelta / maxAndMin);
+                s = 100 * (cDelta / maxAndMin);
         }
 
         return [Math.floor(h), Math.floor(s), Math.floor(l)];
@@ -53,24 +53,24 @@ namespace pxsim.visuals {
 }
 
 namespace pxsim.visuals {
-    const PIXEL_SPACING = PIN_DIST*3;
+    const PIXEL_SPACING = PIN_DIST * 3;
     const PIXEL_RADIUS = PIN_DIST;
-    const CANVAS_WIDTH = 1.2*PIN_DIST;
-    const CANVAS_HEIGHT = 12*PIN_DIST;
+    const CANVAS_WIDTH = 1.2 * PIN_DIST;
+    const CANVAS_HEIGHT = 12 * PIN_DIST;
     const CANVAS_VIEW_WIDTH = CANVAS_WIDTH;
     const CANVAS_VIEW_HEIGHT = CANVAS_HEIGHT;
-    const CANVAS_VIEW_PADDING = PIN_DIST*4;
-    const CANVAS_LEFT = 1.4*PIN_DIST;
+    const CANVAS_VIEW_PADDING = PIN_DIST * 4;
+    const CANVAS_LEFT = 1.4 * PIN_DIST;
     const CANVAS_TOP = PIN_DIST;
 
     // For the instructions parts list
-    export function mkNeoPixelPart(xy: Coord = [0,0]): SVGElAndSize {
+    export function mkNeoPixelPart(xy: Coord = [0, 0]): SVGElAndSize {
         const NP_PART_XOFF = -13.5;
         const NP_PART_YOFF = -11;
         const NP_PART_WIDTH = 87.5;
         const NP_PART_HEIGHT = 190;
         const NEOPIXEL_PART_IMG = "neopixel-black-60-vert.svg";
-        let [x,y] = xy;
+        let [x, y] = xy;
         let l = x + NP_PART_XOFF;
         let t = y + NP_PART_YOFF;
         let w = NP_PART_WIDTH;
@@ -89,14 +89,14 @@ namespace pxsim.visuals {
         public cx: number;
         public cy: number;
 
-        constructor(xy: Coord = [0,0]) {
+        constructor(xy: Coord = [0, 0]) {
             let circle = <SVGCircleElement>svg.elt("circle");
             let r = PIXEL_RADIUS;
             let [cx, cy] = xy;
             svg.hydrate(circle, {cx: cx, cy: cy, r: r, class: "sim-neopixel"});
             this.e = circle;
-            this.w = r*2;
-            this.h = r*2;
+            this.w = r * 2;
+            this.h = r * 2;
             this.l = cx - r;
             this.t = cy - r;
             this.cx = cx;
@@ -118,7 +118,7 @@ namespace pxsim.visuals {
         public pixels: NeoPixel[];
         private viewBox: [number, number, number, number];
         private background: SVGRectElement;
-        
+
         constructor(pin: number) {
             this.pixels = [];
             this.pin = pin;
@@ -136,16 +136,16 @@ namespace pxsim.visuals {
         }
 
         private updateViewBox(x: number, y: number, w: number, h: number) {
-            this.viewBox = [x,y,w,h];
+            this.viewBox = [x, y, w, h];
             svg.hydrate(this.canvas, {"viewBox": `${x} ${y} ${w} ${h}`});
             svg.hydrate(this.background, {"x": x, "y": y, "width": w, "height": h});
         }
-        
+
         public update(colors: RGBW[]) {
             for (let i = 0; i < colors.length; i++) {
                 let pixel = this.pixels[i];
                 if (!pixel) {
-                    let cxy: Coord = [0, CANVAS_VIEW_PADDING + i*PIXEL_SPACING];
+                    let cxy: Coord = [0, CANVAS_VIEW_PADDING + i * PIXEL_SPACING];
                     pixel = this.pixels[i] = new NeoPixel(cxy);
                     this.canvas.appendChild(pixel.e);
                 }
@@ -161,7 +161,7 @@ namespace pxsim.visuals {
             //resize if necessary
             let [first, last] = [this.pixels[0], this.pixels[this.pixels.length - 1]]
             let yDiff = last.cy - first.cy;
-            let newH = yDiff + CANVAS_VIEW_PADDING*2;
+            let newH = yDiff + CANVAS_VIEW_PADDING * 2;
             let [oldX, oldY, oldW, oldH] = this.viewBox;
             if (oldH < newH) {
                 let scalar = newH / oldH;
@@ -171,7 +171,7 @@ namespace pxsim.visuals {
         }
 
         public setLoc(xy: Coord) {
-            let [x,y] = xy;
+            let [x, y] = xy;
             svg.hydrate(this.canvas, {x: x, y: y});
         }
     };
@@ -208,7 +208,7 @@ namespace pxsim.visuals {
             this.stripsGroup = <SVGGElement>svg.elt("g");
             this.element = this.stripsGroup;
 
-            this.mkStrip(7);//TODO: don't hardcode this
+            this.mkStrip(7); //TODO: don't hardcode this
         }
         private getStripsList() {
             let strips: NeoPixelStrip[] = [];
@@ -233,7 +233,7 @@ namespace pxsim.visuals {
                 if (s) {
                     let [x, y] = xy;
                     s.canvas.setLoc([x + CANVAS_LEFT, y + CANVAS_TOP]);
-                    svg.hydrate(s.part.e, {transform: `translate(${x} ${y})`});//TODO: update part's l,h, etc.
+                    svg.hydrate(s.part.e, {transform: `translate(${x} ${y})`}); //TODO: update part's l,h, etc.
                 }
             });
         }

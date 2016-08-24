@@ -142,7 +142,7 @@ namespace pxsim {
                     // if there is already something in the queue, start processing
                     if (this.queue[0])
                         setTimeout(this.process, this.queue[0].interval)
-                    // this may push additional stuff 
+                    // this may push additional stuff
                     top.whenDone(false);
                 } else {
                     setTimeout(this.process, top.interval)
@@ -185,76 +185,76 @@ namespace pxsim {
 }
 
 namespace pxsim.images {
-    export function createImage(img: Image) {                 
-        return img 
+    export function createImage(img: Image) {
+        return img
     }
-    export function createBigImage(img: Image) {         
-        return img 
+    export function createBigImage(img: Image) {
+        return img
     }
 }
 
 namespace pxsim.ImageMethods {
-    export function showImage(leds: Image, offset: number) {        
+    export function showImage(leds: Image, offset: number) {
         if (!leds) panic(PanicCode.MICROBIT_NULL_DEREFERENCE);
 
         leds.copyTo(offset, 5, board().ledMatrixState.image, 0)
         runtime.queueDisplayUpdate()
     }
 
-    export function plotImage(leds: Image, offset: number): void {        
+    export function plotImage(leds: Image, offset: number): void {
         if (!leds) panic(PanicCode.MICROBIT_NULL_DEREFERENCE);
 
         leds.copyTo(offset, 5, board().ledMatrixState.image, 0)
         runtime.queueDisplayUpdate()
     }
 
-    export function height(leds: Image): number {                
+    export function height(leds: Image): number {
         if (!leds) panic(PanicCode.MICROBIT_NULL_DEREFERENCE);
         return Image.height;
     }
 
-    export function width(leds: Image): number {                
+    export function width(leds: Image): number {
         if (!leds) panic(PanicCode.MICROBIT_NULL_DEREFERENCE);
         return leds.width;
     }
 
-    export function plotFrame(leds: Image, frame: number) {                
+    export function plotFrame(leds: Image, frame: number) {
         ImageMethods.plotImage(leds, frame * Image.height);
     }
 
-    export function showFrame(leds: Image, frame: number) {                
+    export function showFrame(leds: Image, frame: number) {
         ImageMethods.showImage(leds, frame * Image.height);
     }
 
-    export function pixel(leds: Image, x: number, y: number): number {                
+    export function pixel(leds: Image, x: number, y: number): number {
         if (!leds) panic(PanicCode.MICROBIT_NULL_DEREFERENCE);
         return leds.get(x, y);
     }
 
-    export function setPixel(leds: Image, x: number, y: number, v: number) {                
+    export function setPixel(leds: Image, x: number, y: number, v: number) {
         if (!leds) panic(PanicCode.MICROBIT_NULL_DEREFERENCE);
         leds.set(x, y, v);
     }
 
-    export function clear(leds: Image) {                
+    export function clear(leds: Image) {
         if (!leds) panic(PanicCode.MICROBIT_NULL_DEREFERENCE);
 
         leds.clear();
     }
 
-    export function setPixelBrightness(i: Image, x: number, y: number, b: number) {                
+    export function setPixelBrightness(i: Image, x: number, y: number, b: number) {
         if (!i) panic(PanicCode.MICROBIT_NULL_DEREFERENCE);
 
         i.set(x, y, b);
     }
 
-    export function pixelBrightness(i: Image, x: number, y: number): number {                
+    export function pixelBrightness(i: Image, x: number, y: number): number {
         if (!i) panic(PanicCode.MICROBIT_NULL_DEREFERENCE);
 
         return i.get(x, y);
     }
 
-    export function scrollImage(leds: Image, stride: number, interval: number): void {                
+    export function scrollImage(leds: Image, stride: number, interval: number): void {
         if (!leds) panic(PanicCode.MICROBIT_NULL_DEREFERENCE);
         if (stride == 0) stride = 1;
 
@@ -279,7 +279,7 @@ namespace pxsim.ImageMethods {
 }
 
 namespace pxsim.basic {
-    export function showNumber(x: number, interval: number) {                
+    export function showNumber(x: number, interval: number) {
         if (interval < 0) return;
 
         let leds = createImageFromString(x.toString());
@@ -287,7 +287,7 @@ namespace pxsim.basic {
         else showLeds(leds, interval * 5);
     }
 
-    export function showString(s: string, interval: number) {                
+    export function showString(s: string, interval: number) {
         if (interval < 0) return;
         if (s.length == 0) {
             clearScreen();
@@ -298,58 +298,58 @@ namespace pxsim.basic {
         }
     }
 
-    export function showLeds(leds: Image, delay: number): void {                
+    export function showLeds(leds: Image, delay: number): void {
         showAnimation(leds, delay);
     }
 
-    export function clearScreen() {                
+    export function clearScreen() {
         board().ledMatrixState.image.clear();
         runtime.queueDisplayUpdate()
     }
 
-    export function showAnimation(leds: Image, interval: number): void {                
+    export function showAnimation(leds: Image, interval: number): void {
         ImageMethods.scrollImage(leds, 5, interval);
     }
 
-    export function plotLeds(leds: Image): void {                
+    export function plotLeds(leds: Image): void {
         ImageMethods.plotImage(leds, 0);
     }
 }
 
 namespace pxsim.led {
-    export function plot(x: number, y: number) {                
+    export function plot(x: number, y: number) {
         board().ledMatrixState.image.set(x, y, 255);
         runtime.queueDisplayUpdate()
     }
 
-    export function unplot(x: number, y: number) {                
+    export function unplot(x: number, y: number) {
         board().ledMatrixState.image.set(x, y, 0);
         runtime.queueDisplayUpdate()
     }
 
-    export function point(x: number, y: number): boolean {                
+    export function point(x: number, y: number): boolean {
         return !!board().ledMatrixState.image.get(x, y);
     }
 
-    export function brightness(): number {                
+    export function brightness(): number {
         return board().ledMatrixState.brigthness;
     }
 
-    export function setBrightness(value: number): void {                
+    export function setBrightness(value: number): void {
         board().ledMatrixState.brigthness = value;
         runtime.queueDisplayUpdate()
     }
 
-    export function stopAnimation(): void {                
+    export function stopAnimation(): void {
         board().ledMatrixState.animationQ.cancelAll();
     }
 
-    export function setDisplayMode(mode: DisplayMode): void {                
+    export function setDisplayMode(mode: DisplayMode): void {
         board().ledMatrixState.displayMode = mode;
         runtime.queueDisplayUpdate()
     }
 
-    export function screenshot(): Image {                
+    export function screenshot(): Image {
         let img = createImage(5)
         board().ledMatrixState.image.copyTo(0, 5, img, 0);
         return img;

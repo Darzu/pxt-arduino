@@ -5,32 +5,32 @@
 namespace pxsim.visuals {
     export function mkBtnSvg(xy: Coord): SVGAndSize<SVGGElement> {
         let [innerCls, outerCls] = ["sim-button", "sim-button-outer"];
-        const tabSize = PIN_DIST/2.5;
-        const pegR = PIN_DIST/5;
-        const btnR = PIN_DIST*.8;
-        const pegMargin = PIN_DIST/8;
-        const plateR = PIN_DIST/12;
+        const tabSize = PIN_DIST / 2.5;
+        const pegR = PIN_DIST / 5;
+        const btnR = PIN_DIST * .8;
+        const pegMargin = PIN_DIST / 8;
+        const plateR = PIN_DIST / 12;
 
         const pegOffset = pegMargin + pegR;
-        let [x,y] = xy;
-        const left = x - tabSize/2;
-        const top = y - tabSize/2; 
-        const plateH = 3*PIN_DIST-tabSize;
-        const plateW = 2*PIN_DIST+tabSize;
+        let [x, y] = xy;
+        const left = x - tabSize / 2;
+        const top = y - tabSize / 2;
+        const plateH = 3 * PIN_DIST - tabSize;
+        const plateW = 2 * PIN_DIST + tabSize;
         const plateL = left;
         const plateT = top + tabSize;
-        const btnCX = plateL + plateW/2;
-        const btnCY = plateT + plateH/2;
-        
+        const btnCX = plateL + plateW / 2;
+        const btnCY = plateT + plateH / 2;
+
         let btng = <SVGGElement>svg.elt("g");
         //tabs
         const mkTab = (x: number, y: number) => {
             svg.child(btng, "rect", { class: "sim-button-tab", x: x, y: y, width: tabSize, height: tabSize})
         }
         mkTab(left, top);
-        mkTab(left + 2*PIN_DIST, top);
-        mkTab(left, top + 3*PIN_DIST);
-        mkTab(left + 2*PIN_DIST, top + 3*PIN_DIST);
+        mkTab(left + 2 * PIN_DIST, top);
+        mkTab(left, top + 3 * PIN_DIST);
+        mkTab(left + 2 * PIN_DIST, top + 3 * PIN_DIST);
 
         //plate
         svg.child(btng, "rect", { class: outerCls, x: plateL, y: plateT, rx: plateR, ry: plateR, width: plateW, height: plateH });
@@ -48,16 +48,16 @@ namespace pxsim.visuals {
         let innerBtn = svg.child(btng, "circle", { class: innerCls, cx: btnCX, cy: btnCY, r: btnR });
 
         //return
-        return { e: btng, t: top, l: left, w: plateW, h: plateH + 2*tabSize };
+        return { e: btng, t: top, l: left, w: plateW, h: plateH + 2 * tabSize };
     }
     export const BUTTON_PAIR_STYLE = `
             .sim-button {
-                pointer-events: none;   
-                fill: #000; 
+                pointer-events: none;
+                fill: #000;
             }
             .sim-button-outer:active ~ .sim-button,
             .sim-button-virtual:active {
-                fill: #FFA500; 
+                fill: #FFA500;
             }
             .sim-button-outer {
                 cursor: pointer;
@@ -65,14 +65,14 @@ namespace pxsim.visuals {
             }
             .sim-button-outer:hover {
                 stroke:gray;
-                stroke-width: ${PIN_DIST/5}px;
+                stroke-width: ${PIN_DIST / 5}px;
             }
             .sim-button-nut {
                 fill:#000;
                 pointer-events:none;
             }
             .sim-button-nut:hover {
-                stroke:${PIN_DIST/15}px solid #704A4A; 
+                stroke:${PIN_DIST / 15}px solid #704A4A;
             }
             .sim-button-tab {
                 fill:#FFF;
@@ -80,9 +80,9 @@ namespace pxsim.visuals {
             }
             .sim-button-virtual {
                 cursor: pointer;
-                fill: rgba(255, 255, 255, 0.6); 
+                fill: rgba(255, 255, 255, 0.6);
                 stroke: rgba(255, 255, 255, 1);
-                stroke-width: ${PIN_DIST/5}px;
+                stroke-width: ${PIN_DIST / 5}px;
             }
             .sim-button-virtual:hover {
                 stroke: rgba(128, 128, 128, 1);
@@ -136,20 +136,20 @@ namespace pxsim.visuals {
 
             const mkVirtualBtn = () => {
                 const numPins = 2;
-                const w = PIN_DIST*2.8;
-                const offset = (w - (numPins*PIN_DIST))/2;
-                const corner = PIN_DIST/2;
-                const cx = 0 - offset + w/2;
+                const w = PIN_DIST * 2.8;
+                const offset = (w - (numPins * PIN_DIST)) / 2;
+                const corner = PIN_DIST / 2;
+                const cx = 0 - offset + w / 2;
                 const cy = cx;
-                const txtSize = PIN_DIST*1.3;
+                const txtSize = PIN_DIST * 1.3;
                 const x = -offset;
                 const y = -offset;
-                const txtXOff = PIN_DIST/7;
-                const txtYOff = PIN_DIST/10;
+                const txtXOff = PIN_DIST / 7;
+                const txtYOff = PIN_DIST / 10;
 
                 let btng = <SVGGElement>svg.elt("g");
                 let btn = svg.child(btng, "rect", { class: "sim-button-virtual", x: x, y: y, rx: corner, ry: corner, width: w, height: w});
-                let btnTxt = mkTxt(cx+txtXOff, cy+txtYOff, txtSize, 0, "A+B");
+                let btnTxt = mkTxt(cx + txtXOff, cy + txtYOff, txtSize, 0, "A+B");
                 svg.addClass(btnTxt, "sim-text")
                 svg.addClass(btnTxt, "sim-text-virtual");
                 btng.appendChild(btnTxt);

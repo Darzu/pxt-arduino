@@ -3,7 +3,7 @@
 /// <reference path="../../node_modules/pxt-core/built/pxtrunner.d.ts"/>
 /// <reference path="../../libs/microbit/dal.d.ts"/>
 
-//HACK: allows instructions.html to access pxtblocks without requiring simulator.html to import blocks as well 
+//HACK: allows instructions.html to access pxtblocks without requiring simulator.html to import blocks as well
 if (!(<any>window).pxt) (<any>window).pxt = {};
 import pxtrunner = pxt.runner;
 import pxtdocs = pxt.docs;
@@ -24,7 +24,7 @@ namespace pxsim.instructions {
     type Orientation = "landscape" | "portrait";
     const ORIENTATION: Orientation = "portrait";
     const PPI = 96.0;
-    const [FULL_PAGE_WIDTH, FULL_PAGE_HEIGHT] 
+    const [FULL_PAGE_WIDTH, FULL_PAGE_HEIGHT]
         = (ORIENTATION == "portrait" ? [PPI * 8.5, PPI * 11.0] : [PPI * 11.0, PPI * 8.5]);
     const PAGE_MARGIN = PPI * 0.45;
     const PAGE_WIDTH = FULL_PAGE_WIDTH - PAGE_MARGIN * 2;
@@ -101,60 +101,60 @@ namespace pxsim.instructions {
         if (el.classList) el.classList.add(cls);
         //BUG: won't work if element has class that is prefix of new class
         //TODO: make github issue (same issue exists svg.addClass)
-        else if (!el.className.indexOf(cls)) el.className += ' ' + cls;
+        else if (!el.className.indexOf(cls)) el.className += " " + cls;
     }
     function mkTxt(p: [number, number], txt: string, size: number) {
         let el = svg.elt("text")
-        let [x,y] = p;
+        let [x, y] = p;
         svg.hydrate(el, { x: x, y: y, style: `font-size:${size}px;` });
         el.textContent = txt;
         return el;
     }
     function mkWireSeg(p1: [number, number], p2: [number, number], clr: string): visuals.SVGAndSize<SVGPathElement> {
-        const coordStr = (xy: [number, number]):string => {return `${xy[0]}, ${xy[1]}`};
+        const coordStr = (xy: [number, number]): string => {return `${xy[0]}, ${xy[1]}`};
         let [x1, y1] = p1;
         let [x2, y2] = p2
         let yLen = (y2 - y1);
-        let c1: [number, number] = [x1, y1 + yLen*.8];
-        let c2: [number, number] = [x2, y2 - yLen*.8];
+        let c1: [number, number] = [x1, y1 + yLen * .8];
+        let c2: [number, number] = [x2, y2 - yLen * .8];
         let e = <SVGPathElement>svg.mkPath("sim-bb-wire", `M${coordStr(p1)} C${coordStr(c1)} ${coordStr(c2)} ${coordStr(p2)}`);
         (<any>e).style["stroke"] = clr;
-        return {e: e, l: Math.min(x1, x2), t: Math.min(y1, y2), w: Math.abs(x1-x2), h: Math.abs(y1-y2)};
+        return {e: e, l: Math.min(x1, x2), t: Math.min(y1, y2), w: Math.abs(x1 - x2), h: Math.abs(y1 - y2)};
     }
     function mkWireEnd(p: [number, number], top: boolean, clr: string): visuals.SVGElAndSize {
-        const endW = visuals.PIN_DIST/4.0;
-        let k = visuals.WIRE_WIDTH*.6;
-        let [cx, cy] = p; 
+        const endW = visuals.PIN_DIST / 4.0;
+        let k = visuals.WIRE_WIDTH * .6;
+        let [cx, cy] = p;
         let o = top ? -1 : 1;
-        let g = svg.elt('g')
+        let g = svg.elt("g")
 
         let el = svg.elt("rect");
-        let h1 = k*10;
-        let w1 = k*2;
-        let x1 = cx - w1/2;
-        let y1 = cy - (h1/2);
+        let h1 = k * 10;
+        let w1 = k * 2;
+        let x1 = cx - w1 / 2;
+        let y1 = cy - (h1 / 2);
         svg.hydrate(el, {x: x1, y: y1, width: w1, height: h1, rx: 0.5, ry: 0.5, class: "sim-bb-wire-end"});
         (<any>el).style["stroke-width"] = `${endW}px`;
 
         let el2 = svg.elt("rect");
-        let h2 = k*6;
+        let h2 = k * 6;
         let w2 = k;
-        let cy2 = cy + o * (h1/2 + h2/2);
-        let x2 = cx - w2/2;
-        let y2 = cy2 - (h2/2);
+        let cy2 = cy + o * (h1 / 2 + h2 / 2);
+        let x2 = cx - w2 / 2;
+        let y2 = cy2 - (h2 / 2);
         svg.hydrate(el2, {x: x2, y: y2, width: w2, height: h2});
         (<any>el2).style["fill"] = `#bbb`;
 
         g.appendChild(el2);
         g.appendChild(el);
-        return {e: g, l: x1 - endW, t: Math.min(y1, y2), w: w1 + endW*2, h: h1 + h2};
+        return {e: g, l: x1 - endW, t: Math.min(y1, y2), w: w1 + endW * 2, h: h1 + h2};
     }
     function mkWire(cp: [number, number], clr: string): visuals.SVGAndSize<SVGGElement> {
-        let g = <SVGGElement>svg.elt('g');
+        let g = <SVGGElement>svg.elt("g");
         let [cx, cy] = cp;
         let offset = WIRE_CURVE_OFF;
-        let p1: visuals.Coord = [cx - offset, cy - WIRE_LENGTH/2];
-        let p2: visuals.Coord = [cx + offset, cy + WIRE_LENGTH/2];
+        let p1: visuals.Coord = [cx - offset, cy - WIRE_LENGTH / 2];
+        let p2: visuals.Coord = [cx + offset, cy + WIRE_LENGTH / 2];
         clr = visuals.mapWireColor(clr);
         let e1 = mkWireEnd(p1, true, clr);
         let s = mkWireSeg(p1, p2, clr);
@@ -184,15 +184,15 @@ namespace pxsim.instructions {
     };
     function mkBoardImgSvg(def: BoardDefinition): visuals.SVGElAndSize {
         let img = svg.elt( "image");
-        let [l, t] = [0,0];
+        let [l, t] = [0, 0];
         let w = def.visual.width;
         let h = def.visual.height;
-        svg.hydrate(img, { 
-            class: "sim-board", 
-            x: l, 
-            y: t, 
-            width: def.visual.width, 
-            height: def.visual.height, 
+        svg.hydrate(img, {
+            class: "sim-board",
+            x: l,
+            y: t,
+            width: def.visual.width,
+            height: def.visual.height,
             "href": `${def.visual.image}`});
 
         return {e: img, w: w, h: h, l: l, t};
@@ -201,7 +201,7 @@ namespace pxsim.instructions {
         let bb = new visuals.Breadboard();
         return bb.getSVGAndSize();
     }
-    function wrapSvg(el: visuals.SVGElAndSize, opts: mkCmpDivOpts): HTMLElement { 
+    function wrapSvg(el: visuals.SVGElAndSize, opts: mkCmpDivOpts): HTMLElement {
         //TODO: Refactor this function; it is too complicated. There is a lot of error-prone math being done
         // to scale and place all elements which could be simplified with more forethought.
         let svgEl = <SVGSVGElement>document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -209,7 +209,7 @@ namespace pxsim.instructions {
 
         let cmpSvgEl = <SVGSVGElement>document.createElementNS("http://www.w3.org/2000/svg", "svg");
         svgEl.appendChild(cmpSvgEl);
-        
+
         cmpSvgEl.appendChild(el.e);
         let cmpSvgAtts = {
             "viewBox": `${el.l} ${el.t} ${el.w} ${el.h}`,
@@ -270,59 +270,59 @@ namespace pxsim.instructions {
             let size = opts.topSize;
             let txtW = size / txtAspectRatio[0];
             let txtH = size / txtAspectRatio[1];
-            let [cx, y] = [elDims.l + elDims.w/2, elDims.t - LBL_VERT_PAD - txtH/2];
+            let [cx, y] = [elDims.l + elDims.w / 2, elDims.t - LBL_VERT_PAD - txtH / 2];
             let lbl = visuals.mkTxt(cx, y, size, 0, opts.top, xOff, yOff);
             svg.addClass(lbl, "cmp-lbl");
             svgEl.appendChild(lbl);
 
-            let len = txtW*opts.top.length;
-            updateT(y - txtH/2);
-            updateL(cx - len/2);
-            updateR(cx + len/2);
+            let len = txtW * opts.top.length;
+            updateT(y - txtH / 2);
+            updateL(cx - len / 2);
+            updateR(cx + len / 2);
         }
         if (opts && opts.bot) {
             let size = opts.botSize;
             let txtW = size / txtAspectRatio[0];
             let txtH = size / txtAspectRatio[1];
-            let [cx, y] = [elDims.l + elDims.w/2, elDims.t + elDims.h + LBL_VERT_PAD + txtH/2];
+            let [cx, y] = [elDims.l + elDims.w / 2, elDims.t + elDims.h + LBL_VERT_PAD + txtH / 2];
             let lbl = visuals.mkTxt(cx, y, size, 0, opts.bot, xOff, yOff);
             svg.addClass(lbl, "cmp-lbl");
             svgEl.appendChild(lbl);
 
-            let len = txtW*opts.bot.length;
-            updateB(y + txtH/2);
-            updateL(cx - len/2);
-            updateR(cx + len/2);
+            let len = txtW * opts.bot.length;
+            updateB(y + txtH / 2);
+            updateL(cx - len / 2);
+            updateR(cx + len / 2);
         }
         if (opts && opts.right) {
             let size = opts.rightSize;
             let txtW = size / txtAspectRatio[0];
             let txtH = size / txtAspectRatio[1];
-            let len = txtW*opts.right.length;
-            let [cx, cy] = [elDims.l + elDims.w + LBL_RIGHT_PAD + len/2, elDims.t + elDims.h/2];
+            let len = txtW * opts.right.length;
+            let [cx, cy] = [elDims.l + elDims.w + LBL_RIGHT_PAD + len / 2, elDims.t + elDims.h / 2];
             let lbl = visuals.mkTxt(cx, cy, size, 0, opts.right, xOff, yOff);
             svg.addClass(lbl, "cmp-lbl");
             svgEl.appendChild(lbl);
 
-            updateT(cy - txtH/2);
-            updateR(cx + len/2);
-            updateB(cy + txtH/2);
+            updateT(cy - txtH / 2);
+            updateR(cx + len / 2);
+            updateB(cy + txtH / 2);
         }
         if (opts && opts.left) {
             let size = opts.leftSize;
             let txtW = size / txtAspectRatio[0];
             let txtH = size / txtAspectRatio[1];
-            let len = txtW*opts.left.length;
-            let [cx, cy] = [elDims.l - LBL_LEFT_PAD - len/2, elDims.t + elDims.h/2];
+            let len = txtW * opts.left.length;
+            let [cx, cy] = [elDims.l - LBL_LEFT_PAD - len / 2, elDims.t + elDims.h / 2];
             let lbl = visuals.mkTxt(cx, cy, size, 0, opts.left, xOff, yOff);
             svg.addClass(lbl, "cmp-lbl");
             svgEl.appendChild(lbl);
 
-            updateT(cy - txtH/2);
-            updateL(cx - len/2);
-            updateB(cy + txtH/2);
+            updateT(cy - txtH / 2);
+            updateL(cx - len / 2);
+            updateB(cy + txtH / 2);
         }
-        
+
         let svgAtts = {
             "viewBox": `${dims.l} ${dims.t} ${dims.w} ${dims.h}`,
             "width": dims.w,
@@ -337,10 +337,10 @@ namespace pxsim.instructions {
     function mkCmpDiv(type: "wire" | string, opts: mkCmpDivOpts): HTMLElement {
         let el: visuals.SVGElAndSize;
         if (type == "wire") {
-            el = mkWire([0,0], opts.wireClr || "red");
+            el = mkWire([0, 0], opts.wireClr || "red");
         } else {
             let cnstr = builtinComponentPartVisual[type];
-            el = cnstr([0,0]);
+            el = cnstr([0, 0]);
         }
         return wrapSvg(el, opts);
     }
@@ -348,7 +348,7 @@ namespace pxsim.instructions {
         boardDef: BoardDefinition,
         cmpDefs: Map<ComponentDefinition>,
         allAlloc: [WireInstance[], [ComponentInstance, WireInstance[]][]],
-        stepToWires: WireInstance[][], 
+        stepToWires: WireInstance[][],
         stepToCmps: ComponentInstance[][]
         allWires: WireInstance[],
         allCmps: ComponentInstance[],
@@ -369,21 +369,21 @@ namespace pxsim.instructions {
         let getMaxStep = (ns: {assemblyStep: number}[]) => ns.reduce((m, n) => Math.max(m, n.assemblyStep), 0);
         let stepOffset = getMaxStep(basicWires) + 2;
         cmpsAndWiring.forEach(cAndWs => {
-            let [c,ws] = cAndWs;
-            let cStep = c.assemblyStep+stepOffset;
+            let [c, ws] = cAndWs;
+            let cStep = c.assemblyStep + stepOffset;
             let arr = stepToCmps[cStep] || (stepToCmps[cStep] = []);
             arr.push(c);
-            let wSteps = ws.map(w => w.assemblyStep+stepOffset);
+            let wSteps = ws.map(w => w.assemblyStep + stepOffset);
             ws.forEach((w, i) => {
                 let wStep = wSteps[i];
                 let arr = stepToWires[wStep] || (stepToWires[wStep] = []);
                 arr.push(w);
             })
-            stepOffset = Math.max(cStep, wSteps.reduce((m,n)=>Math.max(m,n),0)) + 1;
+            stepOffset = Math.max(cStep, wSteps.reduce((m, n) => Math.max(m, n), 0)) + 1;
         });
         let lastStep = stepOffset - 1;
         let allCmps = cmpsAndWiring.map(p => p[0]);
-        let allWires = basicWires.concat(cmpsAndWiring.map(p => p[1]).reduce((p,n)=>p.concat(n),[]));
+        let allWires = basicWires.concat(cmpsAndWiring.map(p => p[1]).reduce((p, n) => p.concat(n), []));
         let colorToWires: Map<WireInstance[]> = {}
         let allWireColors: string[] = [];
         allWires.forEach(w => {
@@ -406,7 +406,7 @@ namespace pxsim.instructions {
             allWireColors: allWireColors,
         };
     }
-    function mkBoard(boardDef: BoardDefinition, cmpDefs: Map<ComponentDefinition>, 
+    function mkBoard(boardDef: BoardDefinition, cmpDefs: Map<ComponentDefinition>,
         width: number, buildMode: boolean = false): visuals.DalBoardSvg {
         let board = new visuals.DalBoardSvg({
             runtime: pxsim.runtime,
@@ -418,7 +418,7 @@ namespace pxsim.instructions {
             "width": width,
         });
         svg.addClass(board.element, "board-svg");
-        if (buildMode){
+        if (buildMode) {
             svg.hydrate(board.background, {
                 "href": `${boardDef.visual.outlineImage}`
             })
@@ -429,7 +429,7 @@ namespace pxsim.instructions {
         }
 
         board.updateState();
-        
+
         //set smiley
         //HACK
         // let img = board.board.displayCmp.image;
@@ -444,8 +444,7 @@ namespace pxsim.instructions {
 
         return board;
     }
-    function drawSteps(board: visuals.DalBoardSvg, step: number, props: BoardProps) 
-    {
+    function drawSteps(board: visuals.DalBoardSvg, step: number, props: BoardProps) {
         if (step > 0) {
             svg.addClass(board.element, "grayed");
         }
@@ -459,13 +458,13 @@ namespace pxsim.instructions {
                     if (i === step) {
                         //location highlights
                         if (w.start[0] == "breadboard") {
-                            let [row,col] = <BreadboardLocation>w.start[1];
+                            let [row, col] = <BreadboardLocation>w.start[1];
                             let lbls = board.breadboard.highlightLoc(row, col);
                         } else {
                             board.highlightLoc(<DALBoardLocation>w.start[1]);
                         }
                         if (w.end[0] == "breadboard") {
-                            let [row,col] = <BreadboardLocation>w.end[1];
+                            let [row, col] = <BreadboardLocation>w.end[1];
                             let lbls = board.breadboard.highlightLoc(row, col);
                         } else {
                             board.highlightLoc(<DALBoardLocation>w.end[1]);
@@ -509,7 +508,7 @@ namespace pxsim.instructions {
         //panel
         let panel = document.createElement("div");
         addClass(panel, "instr-panel");
-        
+
         return panel;
     }
     function mkPartsPanel(props: BoardProps) {
@@ -527,7 +526,7 @@ namespace pxsim.instructions {
         let bbRaw = mkBBSvg();
         let bb = wrapSvg(bbRaw, {left: QUANT_LBL(1), leftSize: QUANT_LBL_SIZE, cmpScale: BB_SCALE});
         panel.appendChild(bb);
-    
+
         // components
         let cmps = props.allCmps;
         cmps.forEach(c => {
@@ -562,12 +561,12 @@ namespace pxsim.instructions {
     }
     function mkStepPanel(step: number, props: BoardProps) {
         let panel = mkPanel();
-        
+
         //board
         let board = mkBoard(props.boardDef, props.cmpDefs, BOARD_WIDTH, true)
         drawSteps(board, step, props);
         panel.appendChild(board.element);
-        
+
         //number
         let numDiv = document.createElement("div");
         addClass(numDiv, "panel-num-outer");
@@ -575,7 +574,7 @@ namespace pxsim.instructions {
         panel.appendChild(numDiv)
         let num = document.createElement("div");
         addClass(num, "panel-num");
-        num.textContent = (step+1)+"";
+        num.textContent = (step + 1) + "";
         numDiv.appendChild(num)
 
         // add requirements
@@ -586,7 +585,7 @@ namespace pxsim.instructions {
         wires.forEach(w => {
             let cmp = mkCmpDiv("wire", {
                 top: bbLocToCoordStr(<BreadboardLocation>w.end[1]),
-                topSize: LOC_LBL_SIZE, 
+                topSize: LOC_LBL_SIZE,
                 bot: bbLocToCoordStr(<BreadboardLocation>w.start[1]),
                 botSize: LOC_LBL_SIZE,
                 wireClr: w.color,
@@ -627,7 +626,7 @@ namespace pxsim.instructions {
 
         let props = mkBoardProps(board, cmps);
         board.addAll(props.allAlloc);
-        
+
         return [panel, props];
     }
     function mkFinalPanel(props: BoardProps) {
@@ -641,7 +640,7 @@ namespace pxsim.instructions {
 
         return panel;
     }
-    function parseQs(): (key: string)=>string {
+    function parseQs(): (key: string) => string {
         let qs = window.location.search.substring(1);
         let getQsVal = (key: string) => decodeURIComponent((qs.split(`${key}=`)[1] || "").split("&")[0] || "").replace(/\+/g, " ");
         return getQsVal;
@@ -656,9 +655,9 @@ namespace pxsim.instructions {
         }
 
         //project code
-        let tsCode = getQsVal("code");  
-        var codeSpinnerDiv = document.getElementById('proj-code-spinner'); 
-        var codeContainerDiv = document.getElementById('proj-code-container'); 
+        let tsCode = getQsVal("code");
+        let codeSpinnerDiv = document.getElementById("proj-code-spinner");
+        let codeContainerDiv = document.getElementById("proj-code-container");
         if (tsCode) {
             //we use the docs renderer to decompile the code to blocks and render it
             //TODO: render the blocks code directly
@@ -690,7 +689,7 @@ namespace pxsim.instructions {
         //init runtime
         const COMP_CODE = "";
         if (!pxsim.initCurrentRuntime)
-            pxsim.initCurrentRuntime = initRuntimeWithDalBoard; 
+            pxsim.initCurrentRuntime = initRuntimeWithDalBoard;
         pxsim.runtime = new Runtime(COMP_CODE);
         pxsim.runtime.board = null;
         pxsim.initCurrentRuntime();
@@ -711,7 +710,7 @@ namespace pxsim.instructions {
         document.body.appendChild(partsPanel);
 
         //steps
-        for (let s = 0; s <= props.lastStep; s++){
+        for (let s = 0; s <= props.lastStep; s++) {
             let p = mkStepPanel(s, props);
             document.body.appendChild(p);
         }

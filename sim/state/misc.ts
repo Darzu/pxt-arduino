@@ -91,7 +91,7 @@ namespace pxsim {
             _vca.gain.value = gain;
         }
     }
-    
+
     export interface RuntimeOptions {
         theme: string;
     }
@@ -129,7 +129,7 @@ namespace pxsim.control {
     }
 
     export function waitMicros(micros: number) {
-        // TODO        
+        // TODO
     }
 
     export function deviceName(): string {
