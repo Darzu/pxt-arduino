@@ -276,14 +276,9 @@ namespace pxsim.visuals {
         group?: string
     };
 
-    export interface BreadboardOptions {
-        pinDistance: number
-    };
-
     export class Breadboard {
         public bb: SVGGElement;
         private styleEl: SVGStyleElement;
-        private opts: BreadboardOptions;
         public defs: SVGElement[] = [];
         public style: string;
 
@@ -295,8 +290,7 @@ namespace pxsim.visuals {
         private rowColToPin: Map<Map<GridPin>> = {};
         private rowColToLbls: Map<Map<GridLabel[]>> = {};
 
-        constructor(opts: BreadboardOptions) {
-            this.opts = opts;
+        constructor() {
             this.style = BREADBOARD_CSS;
             this.buildDom();
         }
@@ -375,7 +369,7 @@ namespace pxsim.visuals {
                 yOffset: MID_GRID_Y,
                 rowCount: MID_ROWS,
                 colCount: MID_COLS,
-                pinDist: this.opts.pinDistance,
+                pinDist: PIN_DIST,
                 mkPin: mkBBPin,
                 mkHoverPin: mkBBHoverPin,
                 getRowName: getMidRowName,
@@ -392,7 +386,7 @@ namespace pxsim.visuals {
                 yOffset: BAR_BOT_GRID_Y,
                 rowCount: BAR_ROWS,
                 colCount: BAR_COLS,
-                pinDist: this.opts.pinDistance,
+                pinDist: PIN_DIST,
                 mkPin: mkBBPin,
                 mkHoverPin: mkBBHoverPin,
                 getRowName: getBarRowName,
@@ -410,7 +404,7 @@ namespace pxsim.visuals {
                 rowCount: BAR_ROWS,
                 colCount: BAR_COLS,
                 colStartIdx: BAR_COLS,
-                pinDist: this.opts.pinDistance,
+                pinDist: PIN_DIST,
                 mkPin: mkBBPin,
                 mkHoverPin: mkBBHoverPin,
                 getRowName: getBarRowName,
