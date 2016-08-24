@@ -56,6 +56,9 @@ namespace pxsim.visuals {
         .sim-bb-pin-group:hover .sim-bb-label-hover {
             visibility: visible;
         }
+        .sim-bb-pin-group:hover .sim-bb-label {
+            visibility: hidden;
+        }
         /* outline mode */
         .sim-bb-outline .sim-bb-background {
             stroke-width: ${pinDist / 7}px;
