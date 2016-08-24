@@ -213,9 +213,9 @@ namespace pxsim {
         return res;
     }
 
-    export function bbLocToCoordStr(loc: string) {
-        let {rowNm, colNm} = visuals.BRK_PIN_NM(loc);
-        return `(${rowNm},${colNm})`
+    export function bbLocToCoordStr(loc: BreadboardLocation) {
+        let [row, col] = loc;
+        return `(${row},${col})`
     }
 }
 
@@ -304,6 +304,7 @@ namespace pxsim.visuals {
     }
 
     export interface SVGAndSize<T extends SVGElement> {e: T, t: number, l: number, w: number, h: number};
+    export type SVGElAndSize = SVGAndSize<SVGElement>;
 
     export const PIN_DIST = 15;
 }

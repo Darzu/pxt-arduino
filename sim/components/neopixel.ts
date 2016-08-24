@@ -118,7 +118,7 @@ namespace pxsim.visuals {
     const CANVAS_TOP = PIN_DIST;
 
     // For the instructions parts list
-    export function mkNeoPixelPart(xy: Coord = [0,0]): SVGAndSize<SVGElement> {
+    export function mkNeoPixelPart(xy: Coord = [0,0]): SVGElAndSize {
         const NP_PART_XOFF = -13.5;
         const NP_PART_YOFF = -11;
         const NP_PART_WIDTH = 87.5;
@@ -186,7 +186,7 @@ namespace pxsim.visuals {
             });
             this.canvas = el;
             this.background = <SVGRectElement>svg.child(el, "rect", { class: "sim-neopixel-background hidden"});
-            this.updateViewBox(-CANVAS_VIEW_WIDTH/2, 0, CANVAS_VIEW_WIDTH, CANVAS_VIEW_HEIGHT);
+            this.updateViewBox(-CANVAS_VIEW_WIDTH / 2, 0, CANVAS_VIEW_WIDTH, CANVAS_VIEW_HEIGHT);
         }
 
         private updateViewBox(x: number, y: number, w: number, h: number) {
@@ -213,14 +213,14 @@ namespace pxsim.visuals {
                 svg.removeClass(this.background, "hidden");
 
             //resize if necessary
-            let [first, last] = [this.pixels[0], this.pixels[this.pixels.length-1]]
+            let [first, last] = [this.pixels[0], this.pixels[this.pixels.length - 1]]
             let yDiff = last.cy - first.cy;
             let newH = yDiff + CANVAS_VIEW_PADDING*2;
             let [oldX, oldY, oldW, oldH] = this.viewBox;
             if (oldH < newH) {
-                let scalar = newH/oldH;
-                let newW = oldW*scalar;
-                this.updateViewBox(-newW/2, oldY, newW, newH);
+                let scalar = newH / oldH;
+                let newW = oldW * scalar;
+                this.updateViewBox(-newW / 2, oldY, newW, newH);
             }
         }
 
@@ -230,7 +230,7 @@ namespace pxsim.visuals {
         }
     };
 
-    export type NeoPixelStrip = {canvas: NeoPixelCanvas, part: SVGAndSize<SVGElement>};
+    export type NeoPixelStrip = {canvas: NeoPixelCanvas, part: SVGElAndSize};
 
     export class NeoPixelSvg implements IBoardComponent<NeoPixelCmp> {
         public style: string = `
@@ -274,10 +274,9 @@ namespace pxsim.visuals {
             return strips;
         }
         public moveToCoord(xy: Coord): void {
-            let topPad = PIN_DIST*2;
-            let [x,y] = xy;
-            let loc: Coord = [x, y+topPad];
-            this.lastLocations = [loc];//TODO: support multiple strips
+            let [x, y] = xy;
+            let loc: Coord = [x, y];
+            this.lastLocations = [loc]; //TODO: support multiple strips
             this.updateStripLocs();
         }
         private updateStripLocs() {
@@ -286,8 +285,8 @@ namespace pxsim.visuals {
             xys.forEach((xy, i) => {
                 let s = strips[i];
                 if (s) {
-                    let [x,y] = xy;
-                    s.canvas.setLoc([x+CANVAS_LEFT, y+CANVAS_TOP]);
+                    let [x, y] = xy;
+                    s.canvas.setLoc([x + CANVAS_LEFT, y + CANVAS_TOP]);
                     svg.hydrate(s.part.e, {transform: `translate(${x} ${y})`});//TODO: update part's l,h, etc.
                 }
             });

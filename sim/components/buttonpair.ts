@@ -134,12 +134,11 @@ namespace pxsim.visuals {
         }
 
         public moveToCoord(xy: Coord) {
-            let topPad = PIN_DIST*4;
-            let btnWidth = PIN_DIST*3; 
-            let [x,y] = xy;
-            translateEl(this.aBtn, [x, y + topPad])
-            translateEl(this.bBtn, [x + btnWidth, y + topPad])
-            translateEl(this.abBtn, [x + PIN_DIST*1.5, y + topPad + PIN_DIST*4])
+            let btnWidth = PIN_DIST * 3;
+            let [x, y] = xy;
+            translateEl(this.aBtn, [x, y])
+            translateEl(this.bBtn, [x + btnWidth, y])
+            translateEl(this.abBtn, [x + PIN_DIST * 1.5, y + PIN_DIST * 4])
         }
 
         public updateState() {
@@ -154,8 +153,8 @@ namespace pxsim.visuals {
         public updateTheme() {}
 
         private mkBtns() {
-            this.aBtn = mkBtnSvg([0,0]).e;
-            this.bBtn = mkBtnSvg([0,0]).e;
+            this.aBtn = mkBtnSvg([0, 0]).e;
+            this.bBtn = mkBtnSvg([0, 0]).e;
 
             const mkVirtualBtn = () => {
                 const numPins = 2;

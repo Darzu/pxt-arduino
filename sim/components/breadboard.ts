@@ -6,8 +6,6 @@ namespace pxsim.visuals {
         .sim-bb-background {
             fill:#E0E0E0;
         }
-        .sim-bb-channel {
-        }
         .sim-bb-pin {
             fill:#999;
         }
@@ -58,7 +56,7 @@ namespace pxsim.visuals {
         .sim-bb-pin-group:hover .sim-bb-label-hover {
             visibility: visible;
         }
-        /*Outline mode*/
+        /* outline mode */
         .sim-bb-outline .sim-bb-background {
             stroke-width: ${pinDist / 7}px;
             fill: #FFF;
@@ -69,7 +67,7 @@ namespace pxsim.visuals {
             stroke: #888;
             stroke-width: 1px;
         }
-        /*Grayed out*/
+        /* grayed out */
         .grayed .sim-bb-red,
         .grayed .sim-bb-blue {
             fill: #BBB;
@@ -86,7 +84,7 @@ namespace pxsim.visuals {
         .grayed .sim-bb-group-wire {
             stroke: #DDD;
         }
-        /*Highlighted*/
+        /* highlighted */
         .sim-bb-label.highlight {
             visibility: hidden;
         }
@@ -104,73 +102,163 @@ namespace pxsim.visuals {
     const LABEL_HOVER_SCALAR = 1.3;
     const BB_MID_RATIO = 0.66666666;
     const PINS_PER_BAR_ROW = 5 * 5;
+    const PIN_WIDTH = PIN_DIST / 2.5;
+    const PIN_ROUNDING = PIN_DIST / 7.5;
+    const BB_BACKGROUND_ROUNDING = PIN_DIST * 0.3;
+    const BB_CHANNEL_HEIGHT = PIN_DIST;
+    const BB_SML_CHANNEL_HEIGHT = PIN_DIST * 0.05;
+    const BB_MID_COLS = 30;
+    const BB_MID_ROWS = 10;
+    const BB_BAR_COLS = 25;
+    const BB_BAR_ROWS = 2;
+    const BB_POWER_COLS = BB_BAR_COLS * 2;
+    const BB_MID_ROW_GAPS = [4, 4];
+    const BB_BOT_BAR_COL_GAPS = [4, 9, 14, 19];
+    const BB_TOP_BAR_COL_GAPS = BB_BOT_BAR_COL_GAPS.map(g => g + BB_BAR_COLS);
+    const BB_LBL_ROT = -90;
+    const BB_PLUS_LBL_SIZE = PIN_DIST * 1.7;
+    const BB_MINUS_LBL_SIZE = PIN_DIST * 2;
+    const BB_POWER_LBL_OFFSET = PIN_DIST * 0.8;
+    const BB_MINUS_LBL_OFFSET = PIN_DIST * 0.07;
+    const BB_COMPUTE_WIDTH = (pinDist: number) =>
+        pinDist * (BB_MID_COLS + 3);
+    const BB_COMPUTE_HEIGHT = (pinDist: number) =>
+        pinDist * (BB_MID_ROWS + BB_MID_ROW_GAPS.length + BB_BAR_ROWS * 2 + 5.5);
 
-    export declare type PinFn = (p: SVGRectElement, i: number, j: number, x: number, y: number, overPin: SVGRectElement, grid: SVGGElement)=>void;
-
-    export function mkGrid(l: number, t: number, rs: number, cs: number, size: number, hoverSize: number, props: any, pinFn: PinFn): SVGGElement {
-        const x = l - size/2;
-        const y = t - size/2;
-
+    export interface GridPin {
+        el: SVGElement,
+        hoverEl: SVGElement,
+        cx: number,
+        cy: number,
+        row: string,
+        col: string,
+        group?: string
+    };
+    export interface GridOptions {
+        xOffset?: number,
+        yOffset?: number,
+        rowCount: number,
+        colCount: number,
+        rowStartIdx?: number,
+        colStartIdx?: number,
+        pinDist: number,
+        mkPin: () => SVGElAndSize,
+        mkHoverPin: () => SVGElAndSize,
+        getRowName: (rowIdx: number) => string,
+        getColName: (colIdx: number) => string,
+        getGroupName?: (rowIdx: number, colIdx: number) => string,
+        gapAfterRowIndices?: number[],
+        gapAfterColIndices?: number[],
+    };
+    export interface GridResult {
+        g: SVGGElement,
+        allPins: GridPin[],
+    }
+    export function mkGrid(opts: GridOptions): GridResult {
+        let xOff = opts.xOffset || 0;
+        let yOff = opts.yOffset || 0;
+        let allPins: GridPin[] = [];
         let grid = <SVGGElement>svg.elt("g");
-        for (let i = 0; i < rs; i++) {
-            for (let j = 0; j < cs; j++) {
-                let mkPin = (x: number, y: number, size: number) => {
-                    let pin = <SVGRectElement>svg.elt("rect")
-                    svg.hydrate(pin, props)
-                    svg.hydrate(pin, { x: x, y: y, width: size, height: size })
-                    return pin;
+        let rowGaps = 0;
+        let colGaps = 0;
+        let colIdxOffset = opts.colStartIdx || 0;
+        let rowIdxOffset = opts.rowStartIdx || 0;
+        for (let rowIdx = 0; rowIdx < opts.rowCount; rowIdx++) {
+            let cy = yOff + rowIdx * opts.pinDist + rowGaps * opts.pinDist;
+            let userRowIdx = rowIdx + rowIdxOffset;
+            for (let colIdx = 0; colIdx < opts.colCount; colIdx++) {
+                let cx = xOff + colIdx * opts.pinDist + colGaps * opts.pinDist;
+                let userColIdx = colIdx + colIdxOffset;
+                const addEl = (pin: SVGElAndSize) => {
+                    let pinX = cx - pin.w * 0.5;
+                    let pinY = cy - pin.h * 0.5;
+                    svg.hydrate(pin.e, {x: pinX, y: pinY});
+                    grid.appendChild(pin.e);
+                    return pin.e;
                 }
-                let pinX = x+j*PIN_DIST;
-                let pinY = y+i*PIN_DIST;
-                let pin = mkPin(pinX, pinY, size);
-                let sizeDiff = hoverSize - size;
-                let overX = pinX - sizeDiff/2;
-                let overY = pinY - sizeDiff/2;
-                let overPin = mkPin(overX, overY, hoverSize);
-                grid.appendChild(pin);
-                grid.appendChild(overPin);
-                pinFn(pin, i, j, pinX+size/2, pinY+size/2, overPin, grid);
+                let el = addEl(opts.mkPin());
+                let hoverEl = addEl(opts.mkHoverPin());
+                let row = opts.getRowName(userRowIdx);
+                let col = opts.getColName(userColIdx);
+                let group = opts.getGroupName ? opts.getGroupName(userRowIdx, userColIdx) : null;
+                let gridPin: GridPin = {el: el, hoverEl: hoverEl, cx: cx, cy: cy, row: row, col: col, group: group};
+                allPins.push(gridPin);
+                //column gaps
+                let colGapIdx = opts.gapAfterColIndices ? opts.gapAfterColIndices.indexOf(userColIdx) :  - 1;
+                if (0 <= colGapIdx) {
+                    opts.gapAfterColIndices = opts.gapAfterColIndices.splice(colGapIdx, 1);
+                    colGaps += 1;
+                }
+            }
+            //row gaps
+            let rowGapIdx = opts.gapAfterRowIndices ? opts.gapAfterRowIndices.indexOf(userRowIdx) :  - 1;
+            if (0 <= rowGapIdx) {
+                opts.gapAfterRowIndices = opts.gapAfterRowIndices.splice(rowGapIdx, 1);
+                rowGaps += 1;
             }
         }
-        return grid;
+        return {g: grid, allPins: allPins};
     }
+
+    function mkBBPin(): SVGElAndSize {
+        let el = svg.elt("rect");
+        svg.hydrate(el, {
+            class: "sim-bb-pin",
+            rx: PIN_ROUNDING,
+            ry: PIN_ROUNDING,
+            width: PIN_WIDTH,
+            height: PIN_WIDTH
+        });
+        return {e: el, w: PIN_WIDTH, h: PIN_WIDTH, l: 0, t: 0};
+    }
+    function mkBBHoverPin(): SVGElAndSize {
+        let el = svg.elt("rect");
+        svg.hydrate(el, {
+            class: "sim-bb-pin-hover",
+            rx: PIN_ROUNDING,
+            ry: PIN_ROUNDING,
+            width: PIN_WIDTH * PIN_HOVER_SCALAR,
+            height: PIN_WIDTH * PIN_HOVER_SCALAR
+        });
+        return {e: el, w: PIN_WIDTH, h: PIN_WIDTH, l: 0, t: 0};
+    }
+
+    export interface GridLabel {
+        el: SVGTextElement,
+        hoverEl: SVGTextElement,
+        txt: string,
+        group?: string,
+    };
+
+    function mkBBLabel(cx: number, cy: number, size: number, rotation: number, txt: string, group: string, extraClasses?: string[]): GridLabel {
+        //lbl
+        let el = mkTxt(cx, cy, size, rotation, txt);
+        svg.addClass(el, "sim-bb-label");
+        if (extraClasses)
+            extraClasses.forEach(c => svg.addClass(el, c));
+
+        //hover lbl
+        let hoverEl = mkTxt(cx, cy, size * LABEL_HOVER_SCALAR, rotation, txt);
+        svg.addClass(hoverEl, "sim-bb-label-hover");
+        if (extraClasses)
+            extraClasses.forEach(c => svg.addClass(hoverEl, c));
+
+        let lbl = {el: el, hoverEl: hoverEl, txt: txt, group: group};
+        return lbl;
+    }
+
+    interface BBBar {
+        el: SVGRectElement,
+        group?: string
+    };
 
     export interface BreadboardOptions {
         pinDistance: number
     };
 
-    export type BBPin = {
-        el: SVGRectElement,
-        hoverEl: SVGRectElement,
-        cx: number,
-        cy: number,
-        row: string,
-        col: number,
-        group?: string
-    };
-    export type BBLbl = {
-        el: SVGTextElement, 
-        hoverEl: SVGTextElement
-        cx: number, 
-        cy: number, 
-        size: number, 
-        rotation: number, 
-        txt: string, 
-        group?: string,
-    };
-    type BBBar = {
-        e: SVGRectElement, 
-        group?: string
-    };
-
-    export const MK_PIN_NM = (rowNm: string, colNm: number) => `${rowNm}${colNm}`;
-    export const BRK_PIN_NM = (pinNm: string) => {return {rowNm: pinNm[0], colNm: Number(pinNm[1] + (pinNm[2] || "") + (pinNm[3] || ""))}};
-
-    let bbId = 0;
     export class Breadboard {
         public bb: SVGGElement;
         private styleEl: SVGStyleElement;
-        private id: number;
         private opts: BreadboardOptions;
         private width: number;
         private height: number;
@@ -178,26 +266,17 @@ namespace pxsim.visuals {
         public style: string;
 
         //truth
-        public allPins: BBPin[] = [];
-        private allLbls: BBLbl[] = [];
-
-        //quick lookup map
-        private pinNmToPin: Map<BBPin> = {};
-        private pinNmToLbls: Map<BBLbl[]> = {};
-        private lblNmToLbls: Map<BBLbl[]> = {};
-        private barNmToBar: Map<BBBar> = {};
-        public rowColToCoord: Map<Coord[]> = {};
-
-        private recordCoord(row: string, col: number, xy: Coord) {
-            let column = this.rowColToCoord[row] || (this.rowColToCoord[row] = []);
-            column[col] = xy;
-        }
+        private allPins: GridPin[] = [];
+        private allLabels: GridLabel[] = [];
+        private allPowerBars: BBBar[] = [];
+        //quick lookup caches
+        private rowColToPin: Map<Map<GridPin>> = {};
+        private rowColToLbls: Map<Map<GridLabel[]>> = {};
 
         constructor(opts: BreadboardOptions) {
-            this.id = bbId++;
             this.opts = opts;
-            this.width = this.opts.pinDistance * 33;
-            this.height = this.opts.pinDistance * 21.5;
+            this.width = BB_COMPUTE_WIDTH(this.opts.pinDistance);
+            this.height = BB_COMPUTE_HEIGHT(this.opts.pinDistance);
             this.style = BREADBOARD_CSS(this.opts.pinDistance);
             this.buildDom();
         }
@@ -206,60 +285,51 @@ namespace pxsim.visuals {
             translateEl(this.bb, [x, y]);
         }
 
-        private drawLbl = (cx: number, cy: number, size: number, rot: number, txt: string, group: string, cls?: string[]): SVGTextElement => {
-            //lbl
-            let el = mkTxt(cx, cy, size, rot, txt);
-            svg.addClass(el, "sim-bb-label");
-            if (cls)
-                cls.forEach(c => svg.addClass(el, c));
-            this.bb.appendChild(el);
-
-            //hover lbl
-            let hoverEl = mkTxt(cx, cy, size*LABEL_HOVER_SCALAR, rot, txt);
-            svg.addClass(hoverEl, "sim-bb-label-hover");
-            if (cls)
-                cls.forEach(c => svg.addClass(hoverEl, c));
-            this.bb.appendChild(hoverEl);
-
-            //record
-            this.allLbls.push({el: el, cx: cx, cy: cy, size: size, rotation: rot, txt: txt, group: group, hoverEl: hoverEl});
-            return el;
+        public getPin(row: string, col: string): GridPin {
+            let colToPin = this.rowColToPin[row];
+            if (!colToPin)
+                return null;
+            let pin = colToPin[col];
+            if (!pin)
+                return null;
+            return pin;
         }
-        
-        private buildDom() 
-        {
+        public getCoord(row: string, col: string): Coord {
+            let pin = this.getPin(row, col);
+            if (!pin)
+                return null;
+            return [pin.cx, pin.cy];
+        }
+
+        private buildDom() {
             const [width, height] = [this.width, this.height];
             const midH = height * BB_MID_RATIO;
-            const barRatio = (1.0 - BB_MID_RATIO) / 2.0;
+            const barRatio = (1.0 - BB_MID_RATIO) * 0.5;
             const barH = height * barRatio;
-
             const midCols = BREADBOARD_COLUMN_COUNT;
-            const midGridW = (midCols-1) * PIN_DIST;
+            const midGridW = (midCols - 1) * PIN_DIST;
             const midRows = BREADBOARD_ROW_COUNT;
-            const midGridH = (midRows-1) * PIN_DIST;
-            const midGridX = (width - midGridW)/2;
-            const midGridY = barH + (midH - midGridH)/2;
-
+            const midGridH = (midRows - 1) * PIN_DIST;
+            const midGridX = (width - midGridW) * 0.5;
+            const midGridY = barH + (midH - midGridH) * 0.5;
             const barRows = 2;
-            const barGridH = (barRows-1) * PIN_DIST;
-            const barCols = PINS_PER_BAR_ROW + 4/*spacers*/;
-            const barGridW = (barCols-1) * PIN_DIST;
-            const topBarGridX = (width - barGridW)/2;
-            const topBarGridY = (barH - barGridH)/2;
+            const barGridH = (barRows - 1) * PIN_DIST;
+            const barColsAndSpacers = PINS_PER_BAR_ROW + 4;
+            const barGridW = (barColsAndSpacers - 1) * PIN_DIST;
+            const topBarGridX = (width - barGridW) * 0.5;
+            const topBarGridY = (barH - barGridH) * 0.5;
             const botBarGridX = topBarGridX;
             const botBarGridY = topBarGridY + barH + midH;
 
             //wrapper
-            let bb = <SVGGElement>svg.elt("g")
-            this.bb = bb;
-            svg.addClass(bb, "sim-bb");
+            this.bb = <SVGGElement>svg.elt("g");
+            svg.addClass(this.bb, "sim-bb");
 
             //background
-            const bckRnd = PIN_DIST*0.3;
-            svg.child(bb, "rect", { class: "sim-bb-background", width: width, height: height, rx: bckRnd, ry: bckRnd});
+            svg.child(this.bb, "rect", { class: "sim-bb-background", width: width, height: height, rx: BB_BACKGROUND_ROUNDING, ry: BB_BACKGROUND_ROUNDING});
 
             //mid channel
-            let channelGid = "gradient-channel";
+            let channelGid = "sim-bb-channel-grad";
             let channelGrad = <SVGLinearGradientElement>svg.elt("linearGradient")
             svg.hydrate(channelGrad, { id: channelGid, x1: "0%", y1: "0%", x2: "0%", y2: "100%" });
             this.defs.push(channelGrad);
@@ -271,163 +341,236 @@ namespace pxsim.visuals {
             let stop4 = svg.child(channelGrad, "stop", { offset: "100%", style: `stop-color: ${channelDark};` })
 
             const mkChannel = (cy: number, h: number, cls?: string) => {
-                let channel = svg.child(bb, "rect", { class: `sim-bb-channel ${cls || ""}`, y: cy - h/2, width: width, height: h});
+                let channel = svg.child(this.bb, "rect", { class: `sim-bb-channel ${cls || ""}`, y: cy - h / 2, width: width, height: h});
                 channel.setAttribute("fill", `url(#${channelGid})`);
                 return channel;
             }
 
-            const midChannelH = PIN_DIST;
-            const smlChannelH = PIN_DIST*0.05;
-            mkChannel(barH + midH/2, midChannelH, 'sim-bb-mid-channel');
-            mkChannel(barH, smlChannelH);
-            mkChannel(barH+midH, smlChannelH);
+            mkChannel(barH + midH / 2, BB_CHANNEL_HEIGHT, "sim-bb-mid-channel");
+            mkChannel(barH, BB_SML_CHANNEL_HEIGHT);
+            mkChannel(barH + midH, BB_SML_CHANNEL_HEIGHT);
 
-            //pins
-            let getGrpNm = (rowNm: string, colNm: number) => {
-                if (mp.indexOf(rowNm) >= 0) {
-                    return `${rowNm}${colNm <= PINS_PER_BAR_ROW ? "b" : "t"}`
-                } else if (ae.indexOf(rowNm) >= 0) {
-                    return `b${colNm}`
-                } else {
-                    return `t${colNm}`
-                }
-            }
-            const mkPinGrid = (l: number, t: number, rs: number, cs: number, rowNm: (i: number) => string, colNm: (i: number) => number) => {
-                const size = PIN_DIST/2.5;
-                const rounding = size/3;
-                let props = { class: "sim-bb-pin", rx: rounding, ry: rounding }
-                let pinFn: PinFn = (p, i, j, x, y, overP) => {
-                    let rNm = rowNm(i);
-                    let cNm = colNm(j);
-                    let gNm = getGrpNm(rNm, cNm);
-                    this.allPins.push({el: p, cx: x, cy: y, row: rNm, col: cNm, hoverEl: overP, group: gNm});
-                    svg.addClass(overP, "sim-bb-pin-hover");
-                    bb.appendChild(p);
-                    bb.appendChild(overP);
-                }
-                return mkGrid(l, t, rs, cs, size, size * PIN_HOVER_SCALAR, props, pinFn);
-            }
+            //-----pins
+            const getMidTopOrBot = (rowIdx: number) => rowIdx < BB_MID_ROWS / 2.0 ? "b" : "t";
+            const getBarTopOrBot = (colIdx: number) => colIdx < BB_POWER_COLS / 2.0 ? "b" : "t";
+            const alphabet = "abcdefghij".split("").reverse();
+            const getColName = (colIdx: number) => `${colIdx + 1}`;
+            const getMidRowName = (rowIdx: number) => alphabet[rowIdx];
+            const getMidGroupName = (rowIdx: number, colIdx: number) => {
+                let botOrTop = getMidTopOrBot(rowIdx);
+                let colNm = getColName(colIdx);
+                return `${botOrTop}${colNm}`;
+            };
+            const getBarRowName = (rowIdx: number) => rowIdx === 0 ? "-" : "+";
+            const getBarGroupName = (rowIdx: number, colIdx: number) => {
+                let botOrTop = getBarTopOrBot(colIdx);
+                let rowName = getBarRowName(rowIdx);
+                return `${rowName}${botOrTop}`;
+            };
 
-            const mkBar = (x: number, y: number, rowNm: (i: number) => string, colNm: (i: number) => number) => {
-                return [
-                        mkPinGrid(x + 0*PIN_DIST, y, 2, 5, rowNm, j => colNm(j+0)),
-                        mkPinGrid(x + 6*PIN_DIST, y, 2, 5, rowNm, j => colNm(j+5)),
-                        mkPinGrid(x + 12*PIN_DIST, y, 2, 5, rowNm, j => colNm(j+10)),
-                        mkPinGrid(x + 18*PIN_DIST, y, 2, 5, rowNm, j => colNm(j+15)),
-                        mkPinGrid(x + 24*PIN_DIST, y, 2, 5, rowNm, j => colNm(j+20)),
-                ]
-            }
+            //mid grid
+            let midGridRes = mkGrid({
+                xOffset: midGridX,
+                yOffset: midGridY,
+                rowCount: BB_MID_ROWS,
+                colCount: BB_MID_COLS,
+                pinDist: this.opts.pinDistance,
+                mkPin: mkBBPin,
+                mkHoverPin: mkBBHoverPin,
+                getRowName: getMidRowName,
+                getColName: getColName,
+                getGroupName: getMidGroupName,
+                gapAfterRowIndices: BB_MID_ROW_GAPS,
+            });
+            let midGridG = midGridRes.g;
+            this.allPins = this.allPins.concat(midGridRes.allPins);
 
-            let ae = ["e", "d", "c", "b", "a", ];
-            let fj = ["j", "i", "h", "g", "f", ];
-            let mp = ["-", "+"];
-            const jStr = (j: number):number => j+1;
+            //bot bar
+            let botBarGridRes = mkGrid({
+                xOffset: botBarGridX,
+                yOffset: botBarGridY,
+                rowCount: BB_BAR_ROWS,
+                colCount: BB_BAR_COLS,
+                pinDist: this.opts.pinDistance,
+                mkPin: mkBBPin,
+                mkHoverPin: mkBBHoverPin,
+                getRowName: getBarRowName,
+                getColName: getColName,
+                getGroupName: getBarGroupName,
+                gapAfterColIndices: BB_BOT_BAR_COL_GAPS,
+            });
+            let botBarGridG = botBarGridRes.g;
+            this.allPins = this.allPins.concat(botBarGridRes.allPins);
 
-            mkPinGrid(midGridX,midGridY,5,30, i => fj[i], jStr);
-            mkPinGrid(midGridX,midGridY+7*PIN_DIST,5,30, i => ae[i], jStr);
-            mkBar(topBarGridX, topBarGridY, i => mp[i], j => jStr(j+25));
-            mkBar(botBarGridX, botBarGridY, i => mp[i], jStr);
+            //top bar
+            let topBarGridRes = mkGrid({
+                xOffset: topBarGridX,
+                yOffset: topBarGridY,
+                rowCount: BB_BAR_ROWS,
+                colCount: BB_BAR_COLS,
+                colStartIdx: BB_BAR_COLS,
+                pinDist: this.opts.pinDistance,
+                mkPin: mkBBPin,
+                mkHoverPin: mkBBHoverPin,
+                getRowName: getBarRowName,
+                getColName: getColName,
+                getGroupName: getBarGroupName,
+                gapAfterColIndices: BB_TOP_BAR_COL_GAPS,
+            });
+            let topBarGridG = topBarGridRes.g;
+            this.allPins = this.allPins.concat(topBarGridRes.allPins);
 
             //tooltip
             this.allPins.forEach(pin => {
                 let {el, row, col, hoverEl} = pin
-                let title = `(${row}, ${col})`;
+                let title = bbLocToCoordStr([row, col]);
                 svg.hydrate(el, {title: title});
                 svg.hydrate(hoverEl, {title: title});
             })
 
             //catalog pins
             this.allPins.forEach(pin => {
-                let {el, cx, cy, row, col} = pin
-                let pinNm = MK_PIN_NM(row, col);
-                this.pinNmToPin[pinNm] = pin;
-                this.recordCoord(row, Number(col), [cx, cy]);
+                let colToPin = this.rowColToPin[pin.row];
+                if (!colToPin)
+                    colToPin = this.rowColToPin[pin.row] = {};
+                colToPin[pin.col] = pin;
             })
 
-            //labels
-            const drawLblAtPin = (pinName: string, label: string, xOff: number, yOff: number, r: number, s: number, group?: string): SVGTextElement => {
-                let pin = this.pinNmToPin[pinName];
-                let loc = [pin.cx, pin.cy];
-                let t = this.drawLbl(loc[0] + xOff, loc[1] + yOff, s, r, label, group);
+            //-----labels
+            const mkBBLabelAtPin = (row: string, col: string, xOffset: number, yOffset: number, txt: string, group?: string): GridLabel => {
+                let size = PIN_LBL_SIZE;
+                let rotation = BB_LBL_ROT;
+                let loc = this.getCoord(row, col);
+                let [cx, cy] = loc;
+                let t = mkBBLabel(cx + xOffset, cy + yOffset, size, rotation, txt, group);
                 return t;
             }
 
             //columns
-            for (let n = 1; n <= 30; n++)
-                drawLblAtPin("j"+n, `${n}`, 0, -PIN_DIST, -90, PIN_LBL_SIZE, `t${n}`);
-            for (let n = 1; n <= 30; n++)
-                drawLblAtPin("a"+n, `${n}`, 0, PIN_DIST, -90, PIN_LBL_SIZE, `b${n}`);
+            for (let colIdx = 0; colIdx < BB_MID_COLS; colIdx++) {
+                let colNm = getColName(colIdx);
+                //top
+                let rowTIdx = 0;
+                let rowTNm = getMidRowName(rowTIdx);
+                let groupT = getMidGroupName(rowTIdx, colIdx);
+                let lblT = mkBBLabelAtPin(rowTNm, colNm, 0, -PIN_DIST, colNm, groupT);
+                this.allLabels.push(lblT);
+                //bottom
+                let rowBIdx = BB_MID_ROWS - 1;
+                let rowBNm = getMidRowName(rowBIdx);
+                let groupB = getMidGroupName(rowBIdx, colIdx);
+                let lblB = mkBBLabelAtPin(rowBNm, colNm, 0, +PIN_DIST, colNm, groupB);
+                this.allLabels.push(lblB);
+            }
             //rows
-            ae.forEach(a => drawLblAtPin(a+"1", a, -PIN_DIST, 0, -90, PIN_LBL_SIZE))
-            fj.forEach(a => drawLblAtPin(a+"1", a, -PIN_DIST, 0, -90, PIN_LBL_SIZE))
-            ae.forEach(a => drawLblAtPin(a+"30", a, PIN_DIST, 0, -90, PIN_LBL_SIZE))
-            fj.forEach(a => drawLblAtPin(a+"30", a, PIN_DIST, 0, -90, PIN_LBL_SIZE))
+            for (let rowIdx = 0; rowIdx < BB_MID_ROWS; rowIdx++) {
+                let rowNm = getMidRowName(rowIdx);
+                //top
+                let colTIdx = 0;
+                let colTNm = getColName(colTIdx);
+                let lblT = mkBBLabelAtPin(rowNm, colTNm, -PIN_DIST, 0, rowNm);
+                this.allLabels.push(lblT);
+                //top
+                let colBIdx = BB_MID_COLS - 1;
+                let colBNm = getColName(colTIdx);
+                let lblB = mkBBLabelAtPin(rowNm, colBNm, +PIN_DIST, 0, rowNm);
+                this.allLabels.push(lblB);
+            }
 
             //+- labels
-            const pLblSize = PIN_DIST * 1.7;
-            const mLblSize = PIN_DIST * 2;
-            const mpLblOff = PIN_DIST * 0.8;
-            const mXOff = PIN_DIST*0.07;
-            //TL
-            this.drawLbl(0 + mpLblOff + mXOff, 0 + mpLblOff, mLblSize, -90, `-`, "-t", [`sim-bb-blue`]);
-            this.drawLbl(0 + mpLblOff, barH - mpLblOff, pLblSize, -90, `+`, "+t", [`sim-bb-red`]);
-            //TR
-            this.drawLbl(width - mpLblOff + mXOff, 0 + mpLblOff, mLblSize, -90, `-`, "-t", [`sim-bb-blue`]);
-            this.drawLbl(width - mpLblOff, barH - mpLblOff, pLblSize, -90, `+`, "+t", [`sim-bb-red`]);
-            //BL
-            this.drawLbl(0 + mpLblOff + mXOff, barH + midH + mpLblOff, mLblSize, -90, `-`, "-b", [`sim-bb-blue`]);
-            this.drawLbl(0 + mpLblOff, barH + midH + barH - mpLblOff, pLblSize, -90, `+`, "+b", [`sim-bb-red`]);
-            //BR
-            this.drawLbl(width - mpLblOff + mXOff, barH + midH + mpLblOff, mLblSize, -90, `-`, "-b", [`sim-bb-blue`]);
-            this.drawLbl(width - mpLblOff, barH + midH + barH - mpLblOff, pLblSize, -90, `+`, "+b", [`sim-bb-red`]);
-        
+            let botPowerLabels = [
+                //BL
+                mkBBLabel(0 + BB_POWER_LBL_OFFSET + BB_MINUS_LBL_OFFSET, barH + midH + BB_POWER_LBL_OFFSET, BB_MINUS_LBL_SIZE, BB_LBL_ROT, `-`, getBarGroupName(0, 0), [`sim-bb-blue`]),
+                mkBBLabel(0 + BB_POWER_LBL_OFFSET, barH + midH + barH - BB_POWER_LBL_OFFSET, BB_PLUS_LBL_SIZE, BB_LBL_ROT, `+`, getBarGroupName(1, 0), [`sim-bb-red`]),
+                //BR
+                mkBBLabel(width - BB_POWER_LBL_OFFSET + BB_MINUS_LBL_OFFSET, barH + midH + BB_POWER_LBL_OFFSET, BB_MINUS_LBL_SIZE, BB_LBL_ROT, `-`, getBarGroupName(0, BB_BAR_COLS - 1), [`sim-bb-blue`]),
+                mkBBLabel(width - BB_POWER_LBL_OFFSET, barH + midH + barH - BB_POWER_LBL_OFFSET, BB_PLUS_LBL_SIZE, BB_LBL_ROT, `+`, getBarGroupName(1, BB_BAR_COLS - 1), [`sim-bb-red`]),
+            ];
+            this.allLabels = this.allLabels.concat(botPowerLabels);
+            let topPowerLabels = [
+                //TL
+                mkBBLabel(0 + BB_POWER_LBL_OFFSET + BB_MINUS_LBL_OFFSET, 0 + BB_POWER_LBL_OFFSET, BB_MINUS_LBL_SIZE, BB_LBL_ROT, `-`, getBarGroupName(0, BB_BAR_COLS), [`sim-bb-blue`]),
+                mkBBLabel(0 + BB_POWER_LBL_OFFSET, barH - BB_POWER_LBL_OFFSET, BB_PLUS_LBL_SIZE, BB_LBL_ROT, `+`, getBarGroupName(1, BB_BAR_COLS), [`sim-bb-red`]),
+                //TR
+                mkBBLabel(width - BB_POWER_LBL_OFFSET + BB_MINUS_LBL_OFFSET, 0 + BB_POWER_LBL_OFFSET, BB_MINUS_LBL_SIZE, BB_LBL_ROT, `-`, getBarGroupName(0, BB_POWER_COLS - 1), [`sim-bb-blue`]),
+                mkBBLabel(width - BB_POWER_LBL_OFFSET, barH - BB_POWER_LBL_OFFSET, BB_PLUS_LBL_SIZE, BB_LBL_ROT, `+`, getBarGroupName(1, BB_POWER_COLS - 1), [`sim-bb-red`]),
+            ];
+            this.allLabels = this.allLabels.concat(topPowerLabels);
+
             //catalog lbls
-            this.allLbls.forEach(lbl => {
+            let lblNmToLbls: Map<GridLabel[]> = {};
+            this.allLabels.forEach(lbl => {
                 let {el, txt} = lbl;
-                (this.lblNmToLbls[txt] = this.lblNmToLbls[txt] || []).push(lbl);
+                let lbls = lblNmToLbls[txt] = lblNmToLbls[txt] || []
+                lbls.push(lbl);
             });
+            const isPowerPin = (pin: GridPin) => pin.row === "-" || pin.row === "+";
             this.allPins.forEach(pin => {
-                let {row, col} = pin;
-                let pinNm = MK_PIN_NM(row, col);
-                let rowLbls = this.lblNmToLbls[row];
-                let colLbls: BBLbl[] = [];
-                if (row != "-" && row != "+")
-                    colLbls = this.lblNmToLbls[col];
-                this.pinNmToLbls[pinNm] = (this.pinNmToLbls[pinNm] || []).concat(rowLbls, colLbls);
+                let {row, col, group} = pin;
+                let colToLbls = this.rowColToLbls[row] || (this.rowColToLbls[row] = {});
+                let lbls = colToLbls[col] || (colToLbls[col] = []);
+                if (isPowerPin(pin)) {
+                    //power pins
+                    let isBot = Number(col) <= BB_BAR_COLS;
+                    if (isBot)
+                        botPowerLabels.filter(l => l.group == pin.group).forEach(l => lbls.push(l));
+                    else
+                        topPowerLabels.filter(l => l.group == pin.group).forEach(l => lbls.push(l));
+                } else {
+                    //mid pins
+                    let rowLbls = lblNmToLbls[row];
+                    rowLbls.forEach(l => lbls.push(l));
+                    let colLbls = lblNmToLbls[col];
+                    colLbls.forEach(l => lbls.push(l));
+                }
             })
 
-            //blue & red lines
-            const lnLen = barGridW + PIN_DIST*1.5;
-            const lnThickness = PIN_DIST/5.0;
-            const lnYOff = PIN_DIST*.6;
-            const lnXOff = (lnLen - barGridW)/2;
-            let barGrpNms: string[] = [];
-            const drawLn = (x: number, y: number, nm: string, cls: string) => {
-                let ln = <SVGRectElement>svg.child(bb, "rect", { class: cls, x: x, y: y - lnThickness/2, width: lnLen, height: lnThickness});
-                this.barNmToBar[nm] = {e: ln, group: nm};
-                barGrpNms.push(nm);
+            //-----blue & red lines
+            const lnLen = barGridW + PIN_DIST * 1.5;
+            const lnThickness = PIN_DIST / 5.0;
+            const lnYOff = PIN_DIST * 0.6;
+            const lnXOff = (lnLen - barGridW) / 2.0;
+            const mkPowerLine = (x: number, y: number, group: string, cls: string): BBBar => {
+                let ln = <SVGRectElement>svg.elt("rect");
+                svg.hydrate(ln, {
+                    class: `sim-bb-bar ${cls}`,
+                    x: x,
+                    y: y - lnThickness / 2.0,
+                    width: lnLen,
+                    height: lnThickness});
+                let bar: BBBar = {el: ln, group: group};
+                return bar;
             }
-            drawLn(topBarGridX - lnXOff, topBarGridY - lnYOff, "-t", "sim-bb-blue sim-bb-bar");
-            drawLn(topBarGridX - lnXOff, topBarGridY + PIN_DIST + lnYOff, "+t", "sim-bb-red sim-bb-bar");
-            drawLn(botBarGridX - lnXOff, botBarGridY - lnYOff, "-b", "sim-bb-blue sim-bb-bar");
-            drawLn(botBarGridX - lnXOff, botBarGridY + PIN_DIST + lnYOff, "+b", "sim-bb-red sim-bb-bar");
+            let barLines = [
+                //top
+                mkPowerLine(botBarGridX - lnXOff, botBarGridY - lnYOff, getBarGroupName(0, BB_POWER_COLS - 1), "sim-bb-blue"),
+                mkPowerLine(botBarGridX - lnXOff, botBarGridY + PIN_DIST + lnYOff, getBarGroupName(1, BB_POWER_COLS - 1), "sim-bb-red"),
+                //bot
+                mkPowerLine(topBarGridX - lnXOff, topBarGridY - lnYOff, getBarGroupName(0, 0), "sim-bb-blue"),
+                mkPowerLine(topBarGridX - lnXOff, topBarGridY + PIN_DIST + lnYOff, getBarGroupName(1, 0), "sim-bb-red"),
+            ];
+            this.allPowerBars = this.allPowerBars.concat(barLines);
+            //attach power bars
+            this.allPowerBars.forEach(b => this.bb.appendChild(b.el));
 
-            //electrically connected groups
+            //-----electrically connected groups
+            //make groups
             let allGrpNms = this.allPins.map(p => p.group).filter((g, i, a) => a.indexOf(g) == i);
-            let grpNmToPins: Map<BBPin[]> = {};
-            this.allPins.forEach((p, i) => {
-                let g = p.group;
-                (grpNmToPins[g] = grpNmToPins[g] || []).push(p);
-            });
             let groups: SVGGElement[] = allGrpNms.map(grpNm => {
                 let g = <SVGGElement>svg.elt("g");
                 return g;
             });
             groups.forEach(g => svg.addClass(g, "sim-bb-pin-group"));
             groups.forEach((g, i) => svg.addClass(g, `group-${allGrpNms[i]}`));
-            groups.forEach(g => bb.appendChild(g)); //attach to breadboard
             let grpNmToGroup: Map<SVGGElement> = {};
             allGrpNms.forEach((g, i) => grpNmToGroup[g] = groups[i]);
+            //group pins and add connecting wire
+            let grpNmToPins: Map<GridPin[]> = {};
+            this.allPins.forEach((p, i) => {
+                let g = p.group;
+                let pins = grpNmToPins[g] || (grpNmToPins[g] = []);
+                pins.push(p);
+            });
             //connecting wire
             allGrpNms.forEach(grpNm => {
                 let pins = grpNmToPins[grpNm];
@@ -450,71 +593,37 @@ namespace pxsim.visuals {
                 g.appendChild(p.hoverEl);
             })
             //group lbls
-            let otherLblGroup = svg.child(bb, "g", {class: "group-misc"})
-            this.allLbls.forEach(l => {
-                if (ae.indexOf(l.txt) < 0 && fj.indexOf(l.txt) < 0 && l.group){//don't include a-j lbls
+            let miscLblGroup = <SVGGElement>svg.elt("g");
+            svg.hydrate(miscLblGroup, {class: "sim-bb-group-misc"});
+            groups.push(miscLblGroup);
+            this.allLabels.forEach(l => {
+                if (l.group) {
                     let g = grpNmToGroup[l.group];
                     g.appendChild(l.el);
                     g.appendChild(l.hoverEl);
                 } else {
-                    otherLblGroup.appendChild(l.el);
-                    otherLblGroup.appendChild(l.hoverEl);
+                    miscLblGroup.appendChild(l.el);
+                    miscLblGroup.appendChild(l.hoverEl);
                 }
             })
-            //group bars
-            barGrpNms.forEach(grpNm => {
-                let bar = this.barNmToBar[grpNm];
-                let grp = grpNmToGroup[grpNm];
-                grp.appendChild(bar.e);
-            })
 
-            //add id
-            this.styleEl = <SVGStyleElement>svg.child(this.bb, "style");
-            svg.addClass(this.bb, `sim-bb-id-${this.id}`)
+            //attach to bb
+            groups.forEach(g => this.bb.appendChild(g)); //attach to breadboard
         }
 
-        public getSVGAndSize(): SVGAndSize<SVGElement> {
+        public getSVGAndSize(): SVGElAndSize {
             return {e: this.bb, t: 0, l: 0, w: this.width, h: this.height};
         }
 
-        private getClosestPointIdx(xy: Coord, points: Coord[]) {
-            let dists = points.map(p => findDistSqrd(xy, p));
-            let minIdx = 0;
-            let minDist = dists[0];
-            dists.forEach((d, i) => {
-                if (d < minDist) {
-                    minDist = d;
-                    minIdx = i;
-                }
-            });
-            return minIdx;
-        }  
-        public highlightLoc(pinNm: string): BBLbl[] {
-            let {row, col, cx, cy} = this.pinNmToPin[pinNm];
-            let lbls = this.pinNmToLbls[pinNm];
-            const highlightLbl = (lbl: BBLbl) => {
+        public highlightLoc(row: string, col: string) {
+            let pin = this.rowColToPin[row][col];
+            let {cx, cy} = pin;
+            let lbls = this.rowColToLbls[row][col];
+            const highlightLbl = (lbl: GridLabel) => {
                 svg.addClass(lbl.el, "highlight");
                 svg.addClass(lbl.hoverEl, "highlight");
             };
-            if (row == "-" || row == "+") {
-                //+/- sign
-                let lblCoords = lbls.map((l):Coord => [l.cx, l.cy]);
-                let lblIdx = this.getClosestPointIdx([cx, cy], lblCoords);
-                let lbl = lbls[lblIdx];
-                lbls = [lbl]
-                highlightLbl(lbl);
-
-                //bar
-                let colNumber = Number(col);
-                let barNm = row + (colNumber <= PINS_PER_BAR_ROW ? "b" : "t")
-                let bar = this.barNmToBar[barNm];
-                svg.addClass(bar.e, "highlight");
-            } else {
-                if (lbls) {
-                    lbls.forEach(highlightLbl);
-                }
-            }
-            return lbls;
+            lbls.forEach(highlightLbl);
         }
     }
 }

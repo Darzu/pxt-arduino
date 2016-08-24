@@ -121,7 +121,7 @@ namespace pxsim.instructions {
         (<any>e).style["stroke"] = clr;
         return {e: e, l: Math.min(x1, x2), t: Math.min(y1, y2), w: Math.abs(x1-x2), h: Math.abs(y1-y2)};
     }
-    function mkWireEnd(p: [number, number], top: boolean, clr: string): visuals.SVGAndSize<SVGElement> {
+    function mkWireEnd(p: [number, number], top: boolean, clr: string): visuals.SVGElAndSize {
         const endW = visuals.PIN_DIST/4.0;
         let k = visuals.WIRE_WIDTH*.6;
         let [cx, cy] = p; 
@@ -182,7 +182,7 @@ namespace pxsim.instructions {
         cmpHeight?: number,
         cmpScale?: number
     };
-    function mkBoardImgSvg(def: BoardDefinition): visuals.SVGAndSize<SVGElement> {
+    function mkBoardImgSvg(def: BoardDefinition): visuals.SVGElAndSize {
         let img = svg.elt( "image");
         let [l, t] = [0,0];
         let w = def.visual.width;
@@ -197,11 +197,11 @@ namespace pxsim.instructions {
 
         return {e: img, w: w, h: h, l: l, t};
     }
-    function mkBBSvg(): visuals.SVGAndSize<SVGElement> {
+    function mkBBSvg(): visuals.SVGElAndSize {
         let bb = new visuals.Breadboard({pinDistance: visuals.PIN_DIST});
         return bb.getSVGAndSize();
     }
-    function wrapSvg(el: visuals.SVGAndSize<SVGElement>, opts: mkCmpDivOpts): HTMLElement { 
+    function wrapSvg(el: visuals.SVGElAndSize, opts: mkCmpDivOpts): HTMLElement { 
         //TODO: Refactor this function; it is too complicated. There is a lot of error-prone math being done
         // to scale and place all elements which could be simplified with more forethought.
         let svgEl = <SVGSVGElement>document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -335,7 +335,7 @@ namespace pxsim.instructions {
         return div;
     }
     function mkCmpDiv(type: "wire" | string, opts: mkCmpDivOpts): HTMLElement {
-        let el: visuals.SVGAndSize<SVGElement>;
+        let el: visuals.SVGElAndSize;
         if (type == "wire") {
             el = mkWire([0,0], opts.wireClr || "red");
         } else {
@@ -458,15 +458,17 @@ namespace pxsim.instructions {
                     //last step
                     if (i === step) {
                         //location highlights
-                        if (w.start[0] == "bb") {
-                            let lbls = board.breadboard.highlightLoc(w.start[1]);
+                        if (w.start[0] == "breadboard") {
+                            let [row,col] = <BreadboardLocation>w.start[1];
+                            let lbls = board.breadboard.highlightLoc(row, col);
                         } else {
-                            board.highlightLoc(w.start[1]);
+                            board.highlightLoc(<DALBoardLocation>w.start[1]);
                         }
-                        if (w.end[0] == "bb") {
-                            let lbls = board.breadboard.highlightLoc(w.end[1]);
+                        if (w.end[0] == "breadboard") {
+                            let [row,col] = <BreadboardLocation>w.end[1];
+                            let lbls = board.breadboard.highlightLoc(row, col);
                         } else {
-                            board.highlightLoc(w.end[1]);
+                            board.highlightLoc(<DALBoardLocation>w.end[1]);
                         }
 
                         //underboard wires
@@ -488,14 +490,14 @@ namespace pxsim.instructions {
             if (cmps) {
                 cmps.forEach(cmpInst => {
                     let cmp = board.addComponent(cmpInst)
-                    let locLbl = `${cmpInst.breadboardStartRow}${cmpInst.breadboardStartColumn}`
+                    let [row, col]: BreadboardLocation = [`${cmpInst.breadboardStartRow}`, `${cmpInst.breadboardStartColumn}`];
                     //last step
                     if (i === step) {
-                        board.breadboard.highlightLoc(locLbl);
+                        board.breadboard.highlightLoc(row, col);
                         if (cmpInst.builtinPartVisual === "buttonpair") {
                             //TODO: don't specialize this
-                            let locLbl2 = `${cmpInst.breadboardStartRow}${cmpInst.breadboardStartColumn+3}`
-                            board.breadboard.highlightLoc(locLbl2);
+                            let [row2, col2]: BreadboardLocation = [`${cmpInst.breadboardStartRow}`, `${cmpInst.breadboardStartColumn + 3}`];
+                            board.breadboard.highlightLoc(row2, col2);
                         }
                         svg.addClass(cmp.element, "notgrayed");
                     }
@@ -583,9 +585,9 @@ namespace pxsim.instructions {
         let wires = (props.stepToWires[step] || []);
         wires.forEach(w => {
             let cmp = mkCmpDiv("wire", {
-                top: w.end[1],
+                top: bbLocToCoordStr(<BreadboardLocation>w.end[1]),
                 topSize: LOC_LBL_SIZE, 
-                bot: bbLocToCoordStr(w.start[1]),
+                bot: bbLocToCoordStr(<BreadboardLocation>w.start[1]),
                 botSize: LOC_LBL_SIZE,
                 wireClr: w.color,
                 cmpHeight: REQ_WIRE_HEIGHT
@@ -595,16 +597,17 @@ namespace pxsim.instructions {
         });
         let cmps = (props.stepToCmps[step] || []);
         cmps.forEach(c => {
-            let l = `${c.breadboardStartRow}${c.breadboardStartColumn}`;
+            let l: BreadboardLocation = [`${c.breadboardStartRow}`, `${c.breadboardStartColumn}`];
             let locs = [l];
             if (c.builtinPartVisual === "buttonpair") {
                 //TODO: don't special case this
-                locs.push(`${c.breadboardStartRow}${c.breadboardStartColumn+3}`);
+                let l2: BreadboardLocation = [`${c.breadboardStartRow}`, `${c.breadboardStartColumn + 3}`];
+                locs.push(l2);
             }
             locs.forEach((l, i) => {
                 let cmp = mkCmpDiv(c.builtinPartVisual, {
-                    top: bbLocToCoordStr(l), 
-                    topSize: LOC_LBL_SIZE, 
+                    top: bbLocToCoordStr(l),
+                    topSize: LOC_LBL_SIZE,
                     cmpHeight: REQ_CMP_HEIGHT,
                     cmpScale: REQ_CMP_SCALE
                 })
@@ -613,7 +616,7 @@ namespace pxsim.instructions {
             });
         });
 
-        return panel;  
+        return panel;
     }
     function updateFrontPanel(boardDef: BoardDefinition, cmpDefs: Map<ComponentDefinition>, cmps: string[]): [HTMLElement, BoardProps] {
         const FRONT_PAGE_BOARD_WIDTH = 200;

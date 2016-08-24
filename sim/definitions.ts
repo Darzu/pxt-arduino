@@ -4,6 +4,11 @@
 /// <reference path="./components/neopixel.ts"/>
 
 namespace pxsim {
+    export interface PinBlockDefinition {
+        x: number,
+        y: number,
+        labels: string[]
+    }
     export interface BoardDefinition {
         visual: {
             image: string,
@@ -11,7 +16,7 @@ namespace pxsim {
             width: number,
             height: number,
             pinDist: number,
-            pinBlocks: { x: number, y: number, labels: string[] }[],
+            pinBlocks: PinBlockDefinition[],
         },
         gpioPinBlocks: string[][],
         groundPins: string[],
@@ -35,7 +40,7 @@ namespace pxsim {
     };
     export type LocationDefinition = 
         ["breadboard", string, number] | ["GPIO", number] | "ground" | "threeVolt";
-        
+
     export type ComponentInstance = {
         breadboardStartColumn: number,
         breadboardStartRow: string,
@@ -50,7 +55,9 @@ namespace pxsim {
         color: string, 
         assemblyStep: number
     };
-    export type LocationInstance = ["breadboard", string] | ["dalboard", string];
+    export type BreadboardLocation = [string, string];
+    export type DALBoardLocation = string;
+    export type LocationInstance = ["breadboard", BreadboardLocation] | ["dalboard", DALBoardLocation];
 
     export const ARDUINO_ZERO: BoardDefinition = {
         visual: {
@@ -151,7 +158,7 @@ namespace pxsim {
         "lightsensor": (d: DalBoard) => d.lightSensorCmp,
         "neopixel": (d: DalBoard) => d.neopixelCmp,
     };
-    export const builtinComponentPartVisual: Map<(xy: visuals.Coord) => visuals.SVGAndSize<SVGElement>> = {
+    export const builtinComponentPartVisual: Map<(xy: visuals.Coord) => visuals.SVGElAndSize> = {
         "buttonpair": (xy: visuals.Coord) => visuals.mkBtnSvg(xy),
         "ledmatrix": (xy: visuals.Coord) => visuals.mkLedMatrixSvg(xy, 8, 8),
         "neopixel": (xy: visuals.Coord) => visuals.mkNeoPixelPart(xy),

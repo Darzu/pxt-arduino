@@ -125,8 +125,11 @@ namespace pxsim.visuals {
     const MID_MARGIN = 40;
     const BOT_MARGIN = 20;
     export const PIN_LBL_SIZE = PIN_DIST * 0.7;
+    const PIN_LBL_HOVER_SIZE = PIN_LBL_SIZE * 1.5;
     export const BREADBOARD_COLUMN_COUNT = 30;
     export const BREADBOARD_ROW_COUNT = 12;
+    const SQUARE_PIN_WIDTH = PIN_DIST*0.66666;
+    const SQUARE_PIN_HOVER_WIDTH = PIN_DIST*0.66666 + PIN_DIST/3.0;
 
     export type ComputedBoardDimensions = {
         scaleFn: (n: number)=>number, 
@@ -326,19 +329,21 @@ namespace pxsim.visuals {
         private id: number;
         public bbX: number;
         public bbY: number;
-        private allPins: BBPin[] = [];
-        private allLbls: BBLbl[] = [];
-        private pinNmToLbl: Map<BBLbl> = {};
-        private pinNmToPin: Map<BBPin> = {};
-        private nameToLoc: Map<[number, number]> = {};
+        //truth
+        private allPins: GridPin[] = [];
+        private allLabels: GridLabel[] = [];
+        //cache
+        private pinNmToLbl: Map<GridLabel> = {};
+        private pinNmToPin: Map<GridPin> = {};
+
         private availablePowerPins = {
             top: {
-                threeVolt: mkRange(26,51).map(n => `+${n}`),
-                ground: mkRange(26,51).map(n => `-${n}`),
+                threeVolt: mkRange(26,51).map(n => <BreadboardLocation>["+", `${n}`]),
+                ground: mkRange(26,51).map(n => <BreadboardLocation>["-", `${n}`]),
             },
             bottom: {
-                threeVolt: mkRange(1,26).map(n => `+${n}`),
-                ground: mkRange(1,26).map(n => `-${n}`),
+                threeVolt: mkRange(1,26).map(n => <BreadboardLocation>["+", `${n}`]),
+                ground: mkRange(1,26).map(n => <BreadboardLocation>["-", `${n}`]),
             },
         };
 
@@ -378,12 +383,34 @@ namespace pxsim.visuals {
             }
         }
 
-        public loc(name: string): [number, number] {
-            if (!(name in this.nameToLoc)) {
-                console.error("Unknown location: " + name)
-                return [0,0];
+        private getGPIOCoord(pinNm: string): Coord {
+            let pin = this.pinNmToPin[pinNm];
+            if (!pin)
+                return null;
+            return [pin.cx, pin.cy];
+        }
+        private getBBCoord(row: string, col: string): Coord {
+            let bbCoord = this.breadboard.getCoord(row, col);
+            if (!bbCoord)
+                return null;
+            let [x, y] = bbCoord;
+            return [x + this.bbX, y + this.bbY];
+        }
+
+        public getPinCoord(loc: LocationInstance): Coord {
+            let coord: Coord;
+            if (loc[0] === "breadboard") {
+                let [row, col] = <BreadboardLocation>loc[1];
+                coord = this.getBBCoord(row, col);
+            } else {
+                let pinNm = <DALBoardLocation>loc[1];
+                coord = this.getGPIOCoord(pinNm);
             }
-            return this.nameToLoc[name];
+            if (!coord) {
+                console.error("Unknown location: " + name)
+                return [0, 0];
+            }
+            return coord;
         }
 
         private mkGrayCover(x: number, y: number, w: number, h: number) {
@@ -396,24 +423,28 @@ namespace pxsim.visuals {
 
         private allocateLocation(location: LocationDefinition, 
             opts: {
-                nearestPin?: string,
+                nearestBBPin?: BreadboardLocation,
                 startColumn?: number,
                 availableGPIOPins?: string[],
             }): LocationInstance 
         {
             if (location === "ground" || location === "threeVolt") {
-                U.assert(!!opts.nearestPin);
-                let nearestCoord = this.loc(opts.nearestPin);
+                U.assert(!!opts.nearestBBPin);
+                let [nearRow, nearCol] = opts.nearestBBPin;
+                let nearestCoord = this.getBBCoord(nearRow, nearCol);
                 let firstTopAndBot = [
                     this.availablePowerPins.top.ground[0] || this.availablePowerPins.top.threeVolt[0], 
                     this.availablePowerPins.bottom.ground[0] || this.availablePowerPins.bottom.threeVolt[0]
-                ].map(l => this.loc(l)); 
+                ].map(l => {
+                    let [row, col] = l;
+                    return this.getBBCoord(row, col)
+                });
                 if (!firstTopAndBot[0] || !firstTopAndBot[1]) {
                     console.debug(`No more available "${location}" locations!`);
                     //TODO
                 }
                 let nearTop = findClosestCoordIdx(nearestCoord, firstTopAndBot) == 0;
-                let pins: string[];
+                let pins: BreadboardLocation[];
                 if (nearTop) {
                     if (location === "ground") {
                         pins = this.availablePowerPins.top.ground;
@@ -427,7 +458,10 @@ namespace pxsim.visuals {
                         pins = this.availablePowerPins.bottom.threeVolt;
                     }
                 }
-                let pinCoords = pins.map(p => this.loc(p));
+                let pinCoords = pins.map(p => {
+                    let [row, col] = p;
+                    return this.getBBCoord(row, col)
+                });
                 let pinIdx = findClosestCoordIdx(nearestCoord, pinCoords);
                 let pin = pins[pinIdx];
                 if (nearTop) {
@@ -441,8 +475,8 @@ namespace pxsim.visuals {
             } else if (location[0] === "breadboard") {
                 U.assert(!!opts.startColumn);
                 let row = <string>location[1];
-                let col = (<number>location[2] + opts.startColumn);
-                return ["breadboard", `${row}${col}`]
+                let col = (<number>location[2] + opts.startColumn).toString();
+                return ["breadboard", [row, col]]
             } else if (location[0] === "GPIO") {
                 U.assert(!!opts.availableGPIOPins);
                 let idx = <number>location[1];
@@ -465,22 +499,22 @@ namespace pxsim.visuals {
                 console.log("No available 3.3V pin on board!");
                 //TODO
             }
-            let topLeft = "-26";
-            let botLeft = "-1";
+            let topLeft: BreadboardLocation = ["-", "26"];
+            let botLeft: BreadboardLocation = ["-", "1"];
             const GROUND_COLOR = "blue";
             const POWER_COLOR = "red";
             const wires: WireInstance[] = [
-                {start: this.allocateLocation("ground", {nearestPin: topLeft}), 
-                 end: this.allocateLocation("ground", {nearestPin: botLeft}), 
+                {start: this.allocateLocation("ground", {nearestBBPin: topLeft}),
+                 end: this.allocateLocation("ground", {nearestBBPin: botLeft}),
                  color: GROUND_COLOR, assemblyStep: 0},
-                {start: this.allocateLocation("ground", {nearestPin: topLeft}), 
-                 end: ["dalboard", boardGround], 
+                {start: this.allocateLocation("ground", {nearestBBPin: topLeft}),
+                 end: ["dalboard", boardGround],
                 color: GROUND_COLOR, assemblyStep: 0},
-                {start: this.allocateLocation("threeVolt", {nearestPin: topLeft}), 
-                 end: this.allocateLocation("threeVolt", {nearestPin: botLeft}), 
+                {start: this.allocateLocation("threeVolt", {nearestBBPin: topLeft}),
+                 end: this.allocateLocation("threeVolt", {nearestBBPin: botLeft}),
                  color: POWER_COLOR, assemblyStep: 1},
-                {start: this.allocateLocation("threeVolt", {nearestPin: topLeft}), 
-                 end: ["dalboard", threeVoltPin], 
+                {start: this.allocateLocation("threeVolt", {nearestBBPin: topLeft}),
+                 end: ["dalboard", threeVoltPin],
                 color: POWER_COLOR, assemblyStep: 1},
             ];
             return wires;
@@ -495,7 +529,7 @@ namespace pxsim.visuals {
             let endIsPower = ends.map(e => e === "ground" || e === "threeVolt");
             let endInsts = ends.map((e, idx) => !endIsPower[idx] ? this.allocateLocation(e, opts) : null)
             endInsts = endInsts.map((e, idx) => e ? e : this.allocateLocation(ends[idx], {
-                    nearestPin: endInsts[1 - idx][1],
+                    nearestBBPin: <BreadboardLocation>endInsts[1 - idx][1],
                     startColumn: opts.startColumn,
                     availableGPIOPins: opts.availableGPIOPins
                 })); 
@@ -635,11 +669,9 @@ namespace pxsim.visuals {
         }
 
         public addWire(w: WireInstance): {endG: SVGGElement, end1: SVGElement, end2: SVGElement, wires: SVGElement[]} {
-            let startLoc = this.loc(w.start[1]);
-            let endLoc = this.loc(w.end[1]);
-            let wireEls = this.drawWire(startLoc, endLoc, w.color)
-            let tooltip = `${bbLocToCoordStr(w.start[1])} -> ${bbLocToCoordStr(w.end[1])}`
-            wireEls.wires.forEach(w => svg.hydrate(w, {title: tooltip}));
+            let startLoc = this.getPinCoord(w.start);
+            let endLoc = this.getPinCoord(w.end);
+            let wireEls = this.drawWire(startLoc, endLoc, w.color);
             return wireEls;
         }
         public addComponent(cmpDesc: ComponentInstance): IBoardComponent<any> {
@@ -652,8 +684,8 @@ namespace pxsim.visuals {
             if (cmp.defs)
                 cmp.defs.forEach(d => this.defs.appendChild(d));
             this.style.textContent += cmp.style || "";
-            let loc = `j${cmpDesc.breadboardStartColumn}`;
-            let coord = this.loc(loc);
+            let [row, col] = [`${cmpDesc.breadboardStartRow}`, `${cmpDesc.breadboardStartColumn}`];
+            let coord = this.getBBCoord(row, col);
             cmp.moveToCoord(coord);
             let cls = this.getCmpClass(name);
             svg.addClass(cmp.element, cls);
@@ -699,22 +731,6 @@ namespace pxsim.visuals {
         private closestEdge(p: [number, number]): number {
             return this.boardEdges[this.closestEdgeIdx(p)];
         }
-        private resetLbl(lbl: SVGTextElement, pinX: number, pinY: number, size: number, name: string) {
-            let [x,y] = [pinX, pinY];
-            let lblY: number;
-            let lblX: number;
-            let topEdge = this.closestEdgeIdx([x,y]) == 0;
-            if (topEdge) {
-                let lblLen = size * 0.25 * name.length;
-                lblY = y + 12 + lblLen;
-                lblX = x;
-            } else {
-                let lblLen = size * 0.32 * name.length;
-                lblY = y - 11 - lblLen;
-                lblX = x;
-            }
-            resetTxt(lbl, lblX, lblY, size, 270, name);
-        }
 
         private buildDom() {
             // breadboard
@@ -729,14 +745,6 @@ namespace pxsim.visuals {
             const bbY = TOP_MARGIN + this.boardDim.height + MID_MARGIN;
             this.bbY = bbY;
             this.breadboard.updateLocation(bbX, bbY);
-            const addBBLoc = (name: string, relativeXY: [number, number]): void => {
-                this.nameToLoc[name] = [bbX + relativeXY[0], bbY + relativeXY[1]];
-            }
-            for (let pinIdx in this.breadboard.allPins) {
-                let pin = this.breadboard.allPins[pinIdx];
-                let pinNm = MK_PIN_NM(pin.row, pin.col);
-                addBBLoc(pinNm, [pin.cx, pin.cy]);
-            }
 
             // edges
             this.boardEdges = [TOP_MARGIN, TOP_MARGIN+this.boardDim.height, bbY, bbY+bbHeight]
@@ -754,47 +762,112 @@ namespace pxsim.visuals {
                     "href": `${this.boardDef.visual.image}`});
             let backgroundCover = this.mkGrayCover(this.boardDim.xOff, this.boardDim.yOff, this.boardDim.width, this.boardDim.height);
             this.g.appendChild(backgroundCover);
-            const mkPinGrid = (l: number, t: number, rs: number, cs: number, getNm: (i: number, j: number) => string) => {
-                const size = PIN_DIST*0.66666;
-                const hoverSize = PIN_DIST*0.66666 + PIN_DIST/3.0;
-                let props = { class: "sim-board-pin" }
-                let pinFn = (p: SVGRectElement, i: number, j: number, x: number, y: number, overP: SVGRectElement, grid: SVGGElement) => {
-                    let name = getNm(i, j);
-                    this.nameToLoc[name] = [x, y];
-                    svg.hydrate(p, {title: name});
-                    let pin: BBPin = {el: p, cx: x, cy: y, row: name, col: 0, hoverEl: overP, group: name};
-                    this.allPins.push(pin);
-                    this.pinNmToPin[name] = pin;
-                    //label
-                    let lbl = <SVGTextElement>svg.elt("text");    
-                    this.resetLbl(lbl, x, y, PIN_LBL_SIZE, name);
-                    svg.addClass(lbl, "sim-board-pin-lbl");
-                    grid.appendChild(lbl);
-                    let hoverLbl = <SVGTextElement>svg.elt("text");   
-                    const SIZE_SCALAR = 1.5; 
-                    this.resetLbl(hoverLbl, x, y, PIN_LBL_SIZE*SIZE_SCALAR, name);
-                    svg.addClass(hoverLbl, "sim-board-pin-lbl-hover");
-                    grid.appendChild(hoverLbl);
-                    let bbLbl: BBLbl = {el: lbl, cx: x, cy: y, size: PIN_LBL_SIZE, rotation: 270, txt: name, hoverEl: hoverLbl};
-                    this.allLbls.push(bbLbl);
-                    this.pinNmToLbl[name] = bbLbl;
-                    //hover
-                    svg.addClass(overP, "sim-board-pin-hover");
-                    svg.hydrate(overP, {title: name});
-                };
-                let grid = mkGrid(l, t, rs, cs, size, size, props, pinFn);
 
-                return grid;
+            // ----- pins
+            const mkSquarePin = (): SVGElAndSize => {
+                let el = svg.elt("rect");
+                let width = SQUARE_PIN_WIDTH;
+                svg.hydrate(el, {
+                    class: "sim-board-pin",
+                    width: width,
+                    height: width,
+                });
+                return {e: el, w: width, h: width, l: 0, t: 0};
             }
-            this.boardDef.visual.pinBlocks.forEach(pinBlock => {
-                let l = this.boardDim.xOff + this.boardDim.scaleFn(pinBlock.x) + PIN_DIST/2.0;
-                let t = this.boardDim.yOff + this.boardDim.scaleFn(pinBlock.y) + PIN_DIST/2.0;
-                let rs = 1;
-                let cs = pinBlock.labels.length;
-                let pins = mkPinGrid(l, t, rs, cs, (i, j) => pinBlock.labels[j]);
-                svg.addClass(pins, "sim-board-pin-group");
-                this.g.appendChild(pins);
-            })
+            const mkSquareHoverPin = (): SVGElAndSize => {
+                let el = svg.elt("rect");
+                let width = SQUARE_PIN_HOVER_WIDTH;
+                svg.hydrate(el, {
+                    class: "sim-board-pin-hover",
+                    width: width,
+                    height: width
+                });
+                return {e: el, w: width, h: width, l: 0, t: 0};
+            }
+            const mkPinBlockGrid = (pinBlock: PinBlockDefinition, blockIdx: number) => {
+                let xOffset = this.boardDim.xOff + this.boardDim.scaleFn(pinBlock.x) + PIN_DIST / 2.0;
+                let yOffset = this.boardDim.yOff + this.boardDim.scaleFn(pinBlock.y) + PIN_DIST / 2.0;
+                let rowCount = 1;
+                let colCount = pinBlock.labels.length;
+                let getColName = (colIdx: number) => pinBlock.labels[colIdx];
+                let getRowName = () => `${blockIdx + 1}`
+                let getGroupName = () => pinBlock.labels.join(" ");
+                let gridRes = mkGrid({
+                    xOffset: xOffset,
+                    yOffset: yOffset,
+                    rowCount: rowCount,
+                    colCount: colCount,
+                    pinDist: PIN_DIST,
+                    mkPin: mkSquarePin,
+                    mkHoverPin: mkSquareHoverPin,
+                    getRowName: getRowName,
+                    getColName: getColName,
+                    getGroupName: getGroupName,
+                });
+                let pins = gridRes.allPins;
+                let pinsG = gridRes.g;
+                svg.addClass(gridRes.g, "sim-board-pin-group");
+                return gridRes;
+            };
+            let pinBlocks = this.boardDef.visual.pinBlocks.map(mkPinBlockGrid);
+            pinBlocks.forEach(blk => blk.allPins.forEach(p => {
+                this.allPins.push(p);
+            }));
+            //tooltip
+            this.allPins.forEach(p => {
+                let tooltip = p.col;
+                svg.hydrate(p.el, {title: tooltip});
+                svg.hydrate(p.hoverEl, {title: tooltip});
+            });
+            //attach pins
+            this.allPins.forEach(p => {
+                this.g.appendChild(p.el);
+                this.g.appendChild(p.hoverEl);
+            });
+            //catalog pins
+            this.allPins.forEach(p => {
+                this.pinNmToPin[p.col] = p;
+            });
+
+            // ----- labels
+            const mkLabelTxtEl = (pinX: number, pinY: number, size: number, txt: string): SVGTextElement => {
+                //TODO: extract constants
+                let lblY: number;
+                let lblX: number;
+                let topEdge = this.closestEdgeIdx([pinX, pinY]) == 0;
+                if (topEdge) {
+                    let lblLen = size * 0.25 * txt.length;
+                    lblX = pinX;
+                    lblY = pinY + 12 + lblLen;
+                } else {
+                    let lblLen = size * 0.32 * txt.length;
+                    lblX = pinX;
+                    lblY = pinY - 11 - lblLen;
+                }
+                let el = mkTxt(lblX, lblY, size, -90, txt);
+                return el;
+            };
+            const mkLabel = (pinX: number, pinY: number, txt: string): GridLabel => {
+                let el = mkLabelTxtEl(pinX, pinY, PIN_LBL_SIZE, txt);
+                svg.addClass(el, "sim-board-pin-lbl");
+                let hoverEl = mkLabelTxtEl(pinX, pinY, PIN_LBL_HOVER_SIZE, txt);
+                svg.addClass(hoverEl, "sim-board-pin-lbl-hover");
+                let label: GridLabel = {el: el, hoverEl: hoverEl, txt: txt};
+                return label;
+            }
+            this.allLabels = this.allPins.map(p => {
+                return mkLabel(p.cx, p.cy, p.col);
+            });
+            //attach labels
+            this.allLabels.forEach(l => {
+                this.g.appendChild(l.el);
+                this.g.appendChild(l.hoverEl);
+            });
+            //catalog labels
+            this.allPins.forEach((pin, pinIdx) => {
+                let lbl = this.allLabels[pinIdx];
+                this.pinNmToLbl[pin.col] = lbl;
+            });
 
             // wire colors
             //TODO: handle all wire colors even ones not in WIRE_COLOR_MAP
@@ -807,7 +880,7 @@ namespace pxsim.visuals {
                     fill: ${mapWireColor(clr)};
                 }
                 `
-            } 
+            }
         }
 
         // wires
@@ -847,7 +920,7 @@ namespace pxsim.visuals {
             }
             (<any>w).style["stroke-width"] = `${endW}px`;
             return w;
-        }                
+        }
         private drawWire(pin1: Coord, pin2: Coord, clr: string): {endG: SVGGElement, end1: SVGElement, end2: SVGElement, wires: SVGElement[]} {
             let wires: SVGElement[] = [];
             let g = svg.child(this.g, "g", {class: "sim-bb-wire-group"});
