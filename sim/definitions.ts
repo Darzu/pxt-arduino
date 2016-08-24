@@ -148,15 +148,15 @@ namespace pxsim {
     };
     export const builtinComponentSimState: Map<(d: DalBoard) => any> = {
         "buttonpair": (d: DalBoard) => d.buttonPairState,
-        "ledmatrix": (d: DalBoard) => d.ledMatrixCmp,
+        "ledmatrix": (d: DalBoard) => d.ledMatrixState,
         "edgeconnector": (d: DalBoard) => d.edgeConnectorState,
-        "serial": (d: DalBoard) => d.serialCmp,
-        "radio": (d: DalBoard) => d.radioCmp,
-        "thermometer": (d: DalBoard) => d.thermometerCmp,
-        "accelerometer": (d: DalBoard) => d.accelerometerCmp,
-        "compass": (d: DalBoard) => d.compassCmp,
-        "lightsensor": (d: DalBoard) => d.lightSensorCmp,
-        "neopixel": (d: DalBoard) => d.neopixelCmp,
+        "serial": (d: DalBoard) => d.serialState,
+        "radio": (d: DalBoard) => d.radioState,
+        "thermometer": (d: DalBoard) => d.thermometerState,
+        "accelerometer": (d: DalBoard) => d.accelerometerState,
+        "compass": (d: DalBoard) => d.compassState,
+        "lightsensor": (d: DalBoard) => d.lightSensorState,
+        "neopixel": (d: DalBoard) => d.neopixelState,
     };
     export const builtinComponentPartVisual: Map<(xy: visuals.Coord) => visuals.SVGElAndSize> = {
         "buttonpair": (xy: visuals.Coord) => visuals.mkBtnSvg(xy),

@@ -178,7 +178,7 @@ namespace pxsim.visuals {
 
     export type NeoPixelStrip = {canvas: NeoPixelCanvas, part: SVGElAndSize};
 
-    export class NeoPixelSvg implements IBoardComponent<NeoPixelCmp> {
+    export class NeoPixelSvg implements IBoardComponent<NeoPixelState> {
         public style: string = `
             .sim-neopixel-canvas {
             }
@@ -197,12 +197,12 @@ namespace pxsim.visuals {
         `;
         public element: SVGElement;
         public defs: SVGElement[];
-        private state: NeoPixelCmp;
+        private state: NeoPixelState;
         private strips: {[pin: number]: NeoPixelStrip} = {};
         private stripsGroup: SVGGElement;
         private lastLocations: Coord[] = [];
 
-        public init(bus: EventBus, state: NeoPixelCmp, svgEl: SVGSVGElement): void {
+        public init(bus: EventBus, state: NeoPixelState, svgEl: SVGSVGElement): void {
             this.state = state;
 
             this.stripsGroup = <SVGGElement>svg.elt("g");

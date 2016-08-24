@@ -1,5 +1,5 @@
 namespace pxsim {
-    export class LightSensorCmp {
+    export class LightSensorState {
         usesLightLevel = false;
         lightLevel = 128;
     }
@@ -7,7 +7,7 @@ namespace pxsim {
 
 namespace pxsim.input {
     export function lightLevel(): number {
-        let b = board().lightSensorCmp;
+        let b = board().lightSensorState;
         if (!b.usesLightLevel) {
             b.usesLightLevel = true;
             runtime.queueDisplayUpdate();

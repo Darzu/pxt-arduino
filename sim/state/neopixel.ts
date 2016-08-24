@@ -2,7 +2,7 @@ namespace pxsim {
     export function sendBufferAsm(buffer: Buffer, pin: DigitalPin) {
         let b = board();
         if (b) {
-            let np = b.neopixelCmp;
+            let np = b.neopixelState;
             if (np) {
                 np.sendBuffer(buffer, pin);
                 runtime.queueDisplayUpdate();
@@ -15,7 +15,7 @@ namespace pxsim {
     export enum NeoPixelMode {RGB, RGBW};
     export type RGBW = [number, number, number, number];
 
-    export class NeoPixelCmp {
+    export class NeoPixelState {
         private buffers: {[pin: number]: Uint8Array[]} = {};
         public pixelColors: {[pin: number]: RGBW[]} = {};
         public pinModes: {[pin: number]: NeoPixelMode};

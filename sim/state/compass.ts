@@ -1,6 +1,6 @@
 namespace pxsim.input {
     export function compassHeading(): number {
-        let b = board().compassCmp;
+        let b = board().compassState;
         if (!b.usesHeading) {
             b.usesHeading = true;
             runtime.queueDisplayUpdate();
@@ -15,7 +15,7 @@ namespace pxsim.input {
 }
 
 namespace pxsim {
-    export class CompassCmp {
+    export class CompassState {
         usesHeading = false;
         heading = 90;
     }

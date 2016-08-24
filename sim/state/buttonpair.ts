@@ -26,7 +26,7 @@ namespace pxsim {
         pressed: boolean;
     }
 
-    export class ButtonPairCmp {
+    export class ButtonPairState {
         usesButtonAB: boolean = false;
         aBtn: Button;
         bBtn: Button;

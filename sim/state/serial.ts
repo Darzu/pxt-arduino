@@ -1,5 +1,5 @@
 namespace pxsim {
-    export class SerialCmp {
+    export class SerialState {
         serialIn: string[] = [];
 
         public recieveData(data: string) {
@@ -36,11 +36,11 @@ namespace pxsim.serial {
     }
 
     export function readString(): string {
-        return board().serialCmp.readSerial();
+        return board().serialState.readSerial();
     }
 
     export function readLine(): string {
-        return board().serialCmp.readSerial();
+        return board().serialState.readSerial();
     }
 
     export function onDataReceived(delimiters: string, handler: RefAction) {

@@ -1,6 +1,6 @@
 namespace pxsim.input {
     export function onGesture(gesture: number, handler: RefAction) {
-        let b = board().accelerometerCmp;
+        let b = board().accelerometerState;
         b.accelerometer.activate();
 
         if (gesture == 11 && !b.useShake) { // SAKE
@@ -11,7 +11,7 @@ namespace pxsim.input {
     }
 
     export function acceleration(dimension: number): number {
-        let b = board().accelerometerCmp;
+        let b = board().accelerometerState;
         let acc = b.accelerometer;
         acc.activate();
         switch (dimension) {
@@ -23,7 +23,7 @@ namespace pxsim.input {
     }
 
     export function rotation(kind: number): number {
-        let b = board().accelerometerCmp;
+        let b = board().accelerometerState;
         let acc = b.accelerometer;
         acc.activate();
         let x = acc.getX(MicroBitCoordinateSystem.NORTH_EAST_DOWN);
@@ -42,7 +42,7 @@ namespace pxsim.input {
     }
 
     export function setAccelerometerRange(range: number) {
-        let b = board().accelerometerCmp;
+        let b = board().accelerometerState;
         b.accelerometer.setSampleRange(range);
     }
 }
@@ -378,7 +378,7 @@ namespace pxsim {
 
     }
 
-    export class AccelerometerCmp {
+    export class AccelerometerState {
         accelerometer: Accelerometer;
         useShake = false;
 

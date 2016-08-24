@@ -25,16 +25,16 @@ namespace pxsim {
         bus: EventBus;
 
         // state & update logic for component services
-        ledMatrixCmp: LedMatrixCmp;
-        edgeConnectorState: EdgeConnectorCmp;
-        serialCmp: SerialCmp;
-        accelerometerCmp: AccelerometerCmp;
-        compassCmp: CompassCmp;
-        thermometerCmp: ThermometerCmp;
-        lightSensorCmp: LightSensorCmp;
-        buttonPairState: ButtonPairCmp;
-        radioCmp: RadioCmp;
-        neopixelCmp: NeoPixelCmp;
+        ledMatrixState: LedMatrixState;
+        edgeConnectorState: EdgeConnectorState;
+        serialState: SerialState;
+        accelerometerState: AccelerometerState;
+        compassState: CompassState;
+        thermometerState: ThermometerState;
+        lightSensorState: LightSensorState;
+        buttonPairState: ButtonPairState;
+        radioState: RadioState;
+        neopixelState: NeoPixelState;
 
         constructor() {
             super()
@@ -42,16 +42,16 @@ namespace pxsim {
             this.bus = new EventBus(runtime);
 
             // components
-            this.ledMatrixCmp = new LedMatrixCmp(runtime);
-            this.buttonPairState = new ButtonPairCmp();
-            this.edgeConnectorState = new EdgeConnectorCmp();
-            this.radioCmp = new RadioCmp(runtime);
-            this.accelerometerCmp = new AccelerometerCmp(runtime);
-            this.serialCmp = new SerialCmp();
-            this.thermometerCmp = new ThermometerCmp();
-            this.lightSensorCmp = new LightSensorCmp();
-            this.compassCmp = new CompassCmp();
-            this.neopixelCmp = new NeoPixelCmp();
+            this.ledMatrixState = new LedMatrixState(runtime);
+            this.buttonPairState = new ButtonPairState();
+            this.edgeConnectorState = new EdgeConnectorState();
+            this.radioState = new RadioState(runtime);
+            this.accelerometerState = new AccelerometerState(runtime);
+            this.serialState = new SerialState();
+            this.thermometerState = new ThermometerState();
+            this.lightSensorState = new LightSensorState();
+            this.compassState = new CompassState();
+            this.neopixelState = new NeoPixelState();
         }
 
         receiveMessage(msg: SimulatorMessage) {
@@ -64,11 +64,11 @@ namespace pxsim {
                     break;
                 case "serial":
                     let data = (<SimulatorSerialMessage>msg).data || "";
-                    this.serialCmp.recieveData(data);
+                    this.serialState.recieveData(data);
                     break;
                 case "radiopacket":
                     let packet = <SimulatorRadioPacketMessage>msg;
-                    this.radioCmp.recievePacket(packet);
+                    this.radioState.recievePacket(packet);
                     break;
             }
         }

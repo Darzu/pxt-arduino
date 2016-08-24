@@ -12,11 +12,11 @@ namespace pxsim.visuals {
         lightLevelOff: "#555"
     }
 
-    export class LightSensorSvg implements IBoardComponent<LightSensorCmp>{
+    export class LightSensorSvg implements IBoardComponent<LightSensorState>{
         private lightLevelButton: SVGCircleElement;
         private lightLevelGradient: SVGLinearGradientElement;
         private lightLevelText: SVGTextElement;
-        private state: LightSensorCmp;
+        private state: LightSensorState;
         private bus: EventBus;
         public element: SVGElement;
         public defs: SVGElement[];
@@ -30,7 +30,7 @@ namespace pxsim.visuals {
                 stroke-width: 3px;
             }`; 
 
-        public init(bus: EventBus, state: LightSensorCmp, svgEl: SVGSVGElement) {
+        public init(bus: EventBus, state: LightSensorState, svgEl: SVGSVGElement) {
             this.bus = bus;
             this.state = state;
             this.theme = defaultLightSensorTheme;

@@ -12,20 +12,20 @@ namespace pxsim.visuals {
         antenna: "#555"
     };
 
-    export class RadioSvg implements IBoardComponent<RadioCmp> {
+    export class RadioSvg implements IBoardComponent<RadioState> {
         private antenna: SVGPolylineElement;
         public style = `
             .sim-antenna {
                 stroke-width: 2px;
             }
             `;
-        private state: RadioCmp;
+        private state: RadioState;
         public element: SVGElement;
         public defs: SVGElement[];
         private bus: EventBus;  
         private theme: IRadioTheme;   
 
-        public init(bus: EventBus, state: RadioCmp) {
+        public init(bus: EventBus, state: RadioState) {
             this.state = state;
             this.bus = bus;
             this.defs = [];

@@ -38,7 +38,7 @@ namespace pxsim {
     export function panic(code: number) {
         console.log("PANIC:", code)
         led.setBrightness(255);
-        let img = board().ledMatrixCmp.image;
+        let img = board().ledMatrixState.image;
         img.clear();
         img.set(0, 4, 255);
         img.set(1, 3, 255);

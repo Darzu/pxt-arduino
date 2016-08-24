@@ -68,11 +68,11 @@ namespace pxsim.visuals {
             }
             `
 
-    export class LedMatrixSvg implements IBoardComponent<LedMatrixCmp> {
+    export class LedMatrixSvg implements IBoardComponent<LedMatrixState> {
         private background: SVGElement;
         private ledsOuter: SVGElement[];
         private leds: SVGElement[];
-        private state: LedMatrixCmp;
+        private state: LedMatrixState;
         private bus: EventBus;
         public element: SVGElement;
         public defs: SVGElement[];
@@ -83,7 +83,7 @@ namespace pxsim.visuals {
 
         public style = LED_MATRIX_STYLE;
 
-        public init(bus: EventBus, state: LedMatrixCmp) {
+        public init(bus: EventBus, state: LedMatrixState) {
             this.bus = bus;
             this.state = state;
             this.theme = defaultLedMatrixTheme;

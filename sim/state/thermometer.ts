@@ -1,5 +1,5 @@
 namespace pxsim {
-    export class ThermometerCmp {
+    export class ThermometerState {
         usesTemperature = false;
         temperature = 21;
 
@@ -9,10 +9,10 @@ namespace pxsim {
 namespace pxsim.input {
     export function temperature(): number {
         let b = board();
-        if (!b.thermometerCmp.usesTemperature) {
-            b.thermometerCmp.usesTemperature = true;
+        if (!b.thermometerState.usesTemperature) {
+            b.thermometerState.usesTemperature = true;
             runtime.queueDisplayUpdate();
         }
-        return b.thermometerCmp.temperature;
+        return b.thermometerState.temperature;
     }
 }

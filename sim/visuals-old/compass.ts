@@ -10,7 +10,7 @@ namespace pxsim.visuals {
         color: "green"
     }
 
-    export class CompassSvg implements IBoardComponent<CompassCmp> {
+    export class CompassSvg implements IBoardComponent<CompassState> {
         private head: SVGGElement; 
         private headInitialized = false;
         private headText: SVGTextElement;
@@ -19,11 +19,11 @@ namespace pxsim.visuals {
         public element: SVGElement;
         public defs: SVGElement[];
         private bus: EventBus;
-        private state: CompassCmp;
+        private state: CompassState;
         private theme: ICompassTheme;
         private svgEl: SVGSVGElement;
 
-        public init(bus: EventBus, state: CompassCmp, svgEl: SVGSVGElement) {
+        public init(bus: EventBus, state: CompassState, svgEl: SVGSVGElement) {
             this.bus = bus;
             this.state = state;
             this.svgEl = svgEl;

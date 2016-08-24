@@ -92,17 +92,17 @@ namespace pxsim.visuals {
                 pointer-events:none;
             }
             `;
-    export class ButtonPairSvg implements IBoardComponent<ButtonPairCmp> {
+    export class ButtonPairSvg implements IBoardComponent<ButtonPairState> {
         public element: SVGElement;
         public defs: SVGElement[];
         public style = BUTTON_PAIR_STYLE;
-        private state: ButtonPairCmp;
+        private state: ButtonPairState;
         private bus: EventBus;
         private aBtn: SVGGElement;
         private bBtn: SVGGElement;
         private abBtn: SVGGElement;
 
-        public init(bus: EventBus, state: ButtonPairCmp) {
+        public init(bus: EventBus, state: ButtonPairState) {
             this.state = state;
             this.bus = bus;
             this.defs = [];

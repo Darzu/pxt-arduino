@@ -12,7 +12,7 @@ namespace pxsim.visuals {
         systemLedFill: "#333"
     }
 
-    export class SerialSvg implements IBoardComponent<SerialCmp> {
+    export class SerialSvg implements IBoardComponent<SerialState> {
         private systemLed: SVGCircleElement;
 
         public style = `
@@ -20,13 +20,13 @@ namespace pxsim.visuals {
                 stroke-width: 1px;
             }`;
 
-        private state: SerialCmp;
+        private state: SerialState;
         public element: SVGElement;
         public defs: SVGElement[];
         private theme: ISerialTheme;
         private bus: EventBus;
 
-        public init(bus: EventBus, state: SerialCmp) {
+        public init(bus: EventBus, state: SerialState) {
             this.bus = bus;
             this.state = state;
             this.defs = [];

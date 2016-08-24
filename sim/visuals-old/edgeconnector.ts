@@ -15,11 +15,11 @@ namespace pxsim.visuals {
         pinActive: "#FF5500",
     };
 
-    export class EdgeConnectorSvg implements IBoardComponent<EdgeConnectorCmp> {
+    export class EdgeConnectorSvg implements IBoardComponent<EdgeConnectorState> {
         private pins: SVGElement[];
         private pinGradients: SVGLinearGradientElement[];
         private pinTexts: SVGTextElement[];
-        private state: EdgeConnectorCmp;
+        private state: EdgeConnectorState;
         private bus: EventBus;
         public defs: SVGElement[];
         public element: SVGElement;
@@ -49,7 +49,7 @@ namespace pxsim.visuals {
             els.forEach(e => (<any>e).style.visibility = "hidden")
         }
 
-        public init(bus: EventBus, state: EdgeConnectorCmp, svgEl: SVGSVGElement) {
+        public init(bus: EventBus, state: EdgeConnectorState, svgEl: SVGSVGElement) {
             this.bus = bus;
             this.state = state;
             this.theme = defaultEdgeConnectorTheme;

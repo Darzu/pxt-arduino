@@ -49,7 +49,7 @@ namespace pxsim {
         }
     }
 
-    export class EdgeConnectorCmp {
+    export class EdgeConnectorState {
         pins: Pin[];
 
         constructor() {

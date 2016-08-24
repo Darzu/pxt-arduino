@@ -15,11 +15,11 @@ namespace pxsim.visuals {
     const TMIN = -5;
     const TMAX = 50;
 
-    export class ThermometerSvg implements IBoardComponent<ThermometerCmp> {
+    export class ThermometerSvg implements IBoardComponent<ThermometerState> {
         private thermometerGradient: SVGLinearGradientElement;
         private thermometer: SVGRectElement;
         private thermometerText: SVGTextElement;
-        private state: ThermometerCmp;
+        private state: ThermometerState;
         private bus: EventBus;
         public element: SVGElement;
         public defs: SVGElement[];
@@ -33,7 +33,7 @@ namespace pxsim.visuals {
                 stroke-width: 3px;
             }`;
 
-        public init(bus: EventBus, state: ThermometerCmp, svgEl: SVGSVGElement) {
+        public init(bus: EventBus, state: ThermometerState, svgEl: SVGSVGElement) {
             this.defs = [];
             this.state = state;
             this.bus = bus;

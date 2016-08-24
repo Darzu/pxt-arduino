@@ -4,7 +4,7 @@ namespace pxsim {
         greyscale
     }
 
-    export class LedMatrixCmp {
+    export class LedMatrixState {
         image = createInternalImage(5);
         brigthness = 255;
         displayMode = DisplayMode.bw;
@@ -78,7 +78,7 @@ namespace pxsim {
     }
 
     export function createImageFromString(text: string): Image {
-        let font = board().ledMatrixCmp.font;
+        let font = board().ledMatrixState.font;
         let w = font.width;
         let sprite = createImage(6 * text.length - 1);
         let k = 0;
@@ -197,14 +197,14 @@ namespace pxsim.ImageMethods {
     export function showImage(leds: Image, offset: number) {        
         if (!leds) panic(PanicCode.MICROBIT_NULL_DEREFERENCE);
 
-        leds.copyTo(offset, 5, board().ledMatrixCmp.image, 0)
+        leds.copyTo(offset, 5, board().ledMatrixState.image, 0)
         runtime.queueDisplayUpdate()
     }
 
     export function plotImage(leds: Image, offset: number): void {        
         if (!leds) panic(PanicCode.MICROBIT_NULL_DEREFERENCE);
 
-        leds.copyTo(offset, 5, board().ledMatrixCmp.image, 0)
+        leds.copyTo(offset, 5, board().ledMatrixState.image, 0)
         runtime.queueDisplayUpdate()
     }
 
@@ -260,9 +260,9 @@ namespace pxsim.ImageMethods {
 
         let cb = getResume();
         let off = stride > 0 ? 0 : leds.width - 1;
-        let display = board().ledMatrixCmp.image;
+        let display = board().ledMatrixState.image;
 
-        board().ledMatrixCmp.animationQ.enqueue({
+        board().ledMatrixState.animationQ.enqueue({
             interval: interval,
             frame: () => {
                 //TODO: support right to left.
@@ -303,7 +303,7 @@ namespace pxsim.basic {
     }
 
     export function clearScreen() {                
-        board().ledMatrixCmp.image.clear();
+        board().ledMatrixState.image.clear();
         runtime.queueDisplayUpdate()
     }
 
@@ -318,40 +318,40 @@ namespace pxsim.basic {
 
 namespace pxsim.led {
     export function plot(x: number, y: number) {                
-        board().ledMatrixCmp.image.set(x, y, 255);
+        board().ledMatrixState.image.set(x, y, 255);
         runtime.queueDisplayUpdate()
     }
 
     export function unplot(x: number, y: number) {                
-        board().ledMatrixCmp.image.set(x, y, 0);
+        board().ledMatrixState.image.set(x, y, 0);
         runtime.queueDisplayUpdate()
     }
 
     export function point(x: number, y: number): boolean {                
-        return !!board().ledMatrixCmp.image.get(x, y);
+        return !!board().ledMatrixState.image.get(x, y);
     }
 
     export function brightness(): number {                
-        return board().ledMatrixCmp.brigthness;
+        return board().ledMatrixState.brigthness;
     }
 
     export function setBrightness(value: number): void {                
-        board().ledMatrixCmp.brigthness = value;
+        board().ledMatrixState.brigthness = value;
         runtime.queueDisplayUpdate()
     }
 
     export function stopAnimation(): void {                
-        board().ledMatrixCmp.animationQ.cancelAll();
+        board().ledMatrixState.animationQ.cancelAll();
     }
 
     export function setDisplayMode(mode: DisplayMode): void {                
-        board().ledMatrixCmp.displayMode = mode;
+        board().ledMatrixState.displayMode = mode;
         runtime.queueDisplayUpdate()
     }
 
     export function screenshot(): Image {                
         let img = createImage(5)
-        board().ledMatrixCmp.image.copyTo(0, 5, img, 0);
+        board().ledMatrixState.image.copyTo(0, 5, img, 0);
         return img;
     }
 }

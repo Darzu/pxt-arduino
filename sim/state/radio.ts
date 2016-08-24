@@ -75,7 +75,7 @@ namespace pxsim {
         }
     }
 
-    export class RadioCmp {
+    export class RadioState {
         bus: RadioBus;
 
         constructor(runtime: Runtime) {
@@ -90,7 +90,7 @@ namespace pxsim {
 
 namespace pxsim.radio {
     export function broadcastMessage(msg: number): void {
-        board().radioCmp.bus.broadcast(msg);
+        board().radioState.bus.broadcast(msg);
     }
 
     export function onBroadcastMessageReceived(msg: number, handler: RefAction): void {
@@ -98,57 +98,57 @@ namespace pxsim.radio {
     }
 
     export function setGroup(id: number): void {
-        board().radioCmp.bus.setGroup(id);
+        board().radioState.bus.setGroup(id);
     }
 
     export function setTransmitPower(power: number): void {
-        board().radioCmp.bus.setTransmitPower(power);
+        board().radioState.bus.setTransmitPower(power);
     }
 
     export function setTransmitSerialNumber(transmit: boolean): void {
-        board().radioCmp.bus.setTransmitSerialNumber(transmit);
+        board().radioState.bus.setTransmitSerialNumber(transmit);
     }
 
     export function sendNumber(value: number): void {
-        board().radioCmp.bus.datagram.send([value]);
+        board().radioState.bus.datagram.send([value]);
     }
 
     export function sendString(msg: string): void {
-        board().radioCmp.bus.datagram.send(msg);
+        board().radioState.bus.datagram.send(msg);
     }
 
     export function writeValueToSerial(): void {
         let b = board();
-        let v = b.radioCmp.bus.datagram.recv().data[0];
+        let v = b.radioState.bus.datagram.recv().data[0];
         b.writeSerial(`{v:${v}}`);
     }
 
     export function sendValue(name: string, value: number) {
-        board().radioCmp.bus.datagram.send([value]);
+        board().radioState.bus.datagram.send([value]);
     }
 
     export function receiveNumber(): number {
-        let buffer = board().radioCmp.bus.datagram.recv().data;
+        let buffer = board().radioState.bus.datagram.recv().data;
         if (buffer instanceof Array) return buffer[0];
 
         return 0;
     }
 
     export function receiveString(): string {
-        let buffer = board().radioCmp.bus.datagram.recv().data;
+        let buffer = board().radioState.bus.datagram.recv().data;
         if (typeof buffer === "string") return <string>buffer;
         return "";
     }
 
     export function receivedNumberAt(index: number): number {
-        let buffer = board().radioCmp.bus.datagram.recv().data;
+        let buffer = board().radioState.bus.datagram.recv().data;
         if (buffer instanceof Array) return buffer[index] || 0;
 
         return 0;
     }
 
     export function receivedSignalStrength(): number {
-        return board().radioCmp.bus.datagram.lastReceived.rssi;
+        return board().radioState.bus.datagram.lastReceived.rssi;
     }
 
     export function onDataReceived(handler: RefAction): void {

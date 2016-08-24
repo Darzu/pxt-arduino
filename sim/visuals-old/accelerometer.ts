@@ -14,10 +14,10 @@ namespace pxsim.visuals {
         gestureButtonUp: "#fff",
         gestureButtonDown: "#FFA500",
     };
-    export class AccelerometerSvg implements IBoardComponent<AccelerometerCmp> {
+    export class AccelerometerSvg implements IBoardComponent<AccelerometerState> {
         private shakeButton: SVGCircleElement;
         private shakeText: SVGTextElement;
-        private state: AccelerometerCmp;
+        private state: AccelerometerState;
         private bus: EventBus;
         public element: SVGElement;
         private theme: IAccelerometerTheme;
@@ -26,7 +26,7 @@ namespace pxsim.visuals {
         private enableTilt = false;
         private tiltTarget: SVGSVGElement;
 
-        public init(bus: EventBus, state: AccelerometerCmp) {
+        public init(bus: EventBus, state: AccelerometerState) {
             this.theme = defaultAccelerometerTheme;
             this.state = state;
             this.bus = bus;
