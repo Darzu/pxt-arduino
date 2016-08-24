@@ -1,5 +1,8 @@
 namespace pxsim.visuals {
+    // The distance between the center of two pins. This is the factor on which everything else is scaled.
     const PIN_DIST = 15;
+
+    // CSS styling for the breadboard
     const BLUE = "#1AA5D7";
     const RED = "#DD4BA0";
     const BREADBOARD_CSS = `
@@ -103,6 +106,7 @@ namespace pxsim.visuals {
         }
         `
     const PIN_HOVER_SCALAR = 1.3;
+    const PIN_LBL_SIZE = PIN_DIST * 0.7;
     const LABEL_HOVER_SCALAR = 1.3;
     const MID_RATIO = 0.66666666;
     const PIN_WIDTH = PIN_DIST / 2.5;
@@ -125,12 +129,8 @@ namespace pxsim.visuals {
     const MINUS_LBL_SIZE = PIN_DIST * 2;
     const POWER_LBL_OFFSET = PIN_DIST * 0.8;
     const MINUS_LBL_OFFSET = PIN_DIST * 0.07;
-    const COMPUTE_WIDTH = (pinDist: number) =>
-        pinDist * (MID_COLS + 3);
-    const COMPUTE_HEIGHT = (pinDist: number) =>
-        pinDist * (MID_ROWS + MID_ROW_GAPS.length + BAR_ROWS * 2 + 5.5);
-    const WIDTH = COMPUTE_WIDTH(PIN_DIST);
-    const HEIGHT = COMPUTE_HEIGHT(PIN_DIST);
+    const WIDTH = PIN_DIST * (MID_COLS + 3);
+    const HEIGHT = PIN_DIST * (MID_ROWS + MID_ROW_GAPS.length + BAR_ROWS * 2 + 5.5);
     const MID_HEIGHT = HEIGHT * MID_RATIO;
     const BAR_RATIO = (1.0 - MID_RATIO) * 0.5;
     const BAR_HEIGHT = HEIGHT * BAR_RATIO;
@@ -278,7 +278,6 @@ namespace pxsim.visuals {
 
     export class Breadboard {
         public bb: SVGGElement;
-        private styleEl: SVGStyleElement;
         public defs: SVGElement[] = [];
         public style: string;
 

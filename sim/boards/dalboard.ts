@@ -124,10 +124,8 @@ namespace pxsim.visuals {
     const TOP_MARGIN = 20;
     const MID_MARGIN = 40;
     const BOT_MARGIN = 20;
-    export const PIN_LBL_SIZE = PIN_DIST * 0.7;
+    const PIN_LBL_SIZE = PIN_DIST * 0.7;
     const PIN_LBL_HOVER_SIZE = PIN_LBL_SIZE * 1.5;
-    export const BREADBOARD_COLUMN_COUNT = 30;
-    export const BREADBOARD_ROW_COUNT = 12;
     const SQUARE_PIN_WIDTH = PIN_DIST*0.66666;
     const SQUARE_PIN_HOVER_WIDTH = PIN_DIST*0.66666 + PIN_DIST/3.0;
 
@@ -606,7 +604,7 @@ namespace pxsim.visuals {
         }
         private allocateColumns(cmpDefs: ComponentDefinition[]): number[] {
             let componentsCount = cmpDefs.length;
-            let totalAvailableSpace = BREADBOARD_COLUMN_COUNT;//TODO allow multiple breadboards
+            let totalAvailableSpace = 30;//TODO allow multiple breadboards
             let totalSpaceNeeded = cmpDefs.map(d => d.breadboardColumnsNeeded).reduce((p, n) => p + n, 0);
             let extraSpace = totalAvailableSpace - totalSpaceNeeded;
             if (extraSpace <= 0) {
@@ -734,7 +732,7 @@ namespace pxsim.visuals {
 
         private buildDom() {
             // breadboard
-            this.breadboard = new Breadboard({pinDistance: PIN_DIST})
+            this.breadboard = new Breadboard()
             this.g.appendChild(this.breadboard.bb);
             this.breadboard.defs.forEach(d => this.defs.appendChild(d));
             this.style.textContent += this.breadboard.style;

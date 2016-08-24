@@ -198,7 +198,7 @@ namespace pxsim.instructions {
         return {e: img, w: w, h: h, l: l, t};
     }
     function mkBBSvg(): visuals.SVGElAndSize {
-        let bb = new visuals.Breadboard({pinDistance: visuals.PIN_DIST});
+        let bb = new visuals.Breadboard();
         return bb.getSVGAndSize();
     }
     function wrapSvg(el: visuals.SVGElAndSize, opts: mkCmpDivOpts): HTMLElement { 
