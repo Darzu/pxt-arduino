@@ -1,7 +1,7 @@
 /// <reference path="../node_modules/pxt-core/typings/bluebird/bluebird.d.ts"/>
 /// <reference path="../node_modules/pxt-core/built/pxtsim.d.ts"/>
 /// <reference path="../libs/microbit/dal.d.ts"/>
-/// <reference path="./components/neopixel.ts"/>
+/// <reference path="./visuals/neopixel.ts"/>
 
 namespace pxsim {
     export interface PinBlockDefinition {

@@ -22,7 +22,7 @@ namespace pxsim.visuals {
         private state: CompassCmp;
         private theme: ICompassTheme;
         private svgEl: SVGSVGElement;
-    
+
         public init(bus: EventBus, state: CompassCmp, svgEl: SVGSVGElement) {
             this.bus = bus;
             this.state = state;

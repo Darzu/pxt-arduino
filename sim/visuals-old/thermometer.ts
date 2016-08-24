@@ -44,7 +44,7 @@ namespace pxsim.visuals {
         public moveToCoord(xy: Coord) {
             //TODO
         }
-        
+
         public updateTheme() {
             svg.setGradientColors(this.thermometerGradient, this.theme.background, this.theme.foreground);
         }

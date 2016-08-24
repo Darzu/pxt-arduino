@@ -25,7 +25,7 @@ namespace pxsim.visuals {
         public element: SVGElement;
         private theme: IEdgeConnectorTheme;
         private svgEl: SVGSVGElement;
-        
+
         public style = `
             .sim-pin:hover {
                 stroke:#D4AF37;
@@ -43,7 +43,7 @@ namespace pxsim.visuals {
             pointer-events: none;
             }`;
 
-        
+
         public hide() {
             let els =  this.pins.concat(this.pinGradients).concat(this.pinTexts);
             els.forEach(e => (<any>e).style.visibility = "hidden")
