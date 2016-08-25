@@ -476,19 +476,6 @@ namespace pxsim.visuals {
                 let lbl = this.allLabels[pinIdx];
                 this.pinNmToLbl[pin.col] = lbl;
             });
-
-            // wire colors
-            //TODO: handle all wire colors even ones not in WIRE_COLOR_MAP
-            for (let clr in WIRE_COLOR_MAP) {
-                this.style.textContent += `
-                .wire-stroke-${clr} {
-                    stroke: ${mapWireColor(clr)};
-                }
-                .wire-fill-${clr} {
-                    fill: ${mapWireColor(clr)};
-                }
-                `
-            }
         }
 
         public highlightLoc(pinNm: string) {

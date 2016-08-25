@@ -171,6 +171,16 @@ namespace pxsim.visuals {
                         visibility: visible;
                     }`
             }
+
+            // wire colors
+            this.styleEl.textContent += `
+                .wire-stroke-${color} {
+                    stroke: ${mapWireColor(color)};
+                }
+                .wire-fill-${color} {
+                    fill: ${mapWireColor(color)};
+                }
+                `
             return {endG: endG, end1: end1, end2: end2, wires: wires};
         }
 
