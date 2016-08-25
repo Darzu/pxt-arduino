@@ -14,7 +14,7 @@ namespace pxsim.visuals {
         gestureButtonUp: "#fff",
         gestureButtonDown: "#FFA500",
     };
-    export class AccelerometerSvg implements IBoardComponent<AccelerometerState> {
+    export class AccelerometerView implements IBoardComponent<AccelerometerState> {
         private shakeButton: SVGCircleElement;
         private shakeText: SVGTextElement;
         private state: AccelerometerState;

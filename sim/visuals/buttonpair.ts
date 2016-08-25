@@ -92,7 +92,7 @@ namespace pxsim.visuals {
                 pointer-events:none;
             }
             `;
-    export class ButtonPairSvg implements IBoardComponent<ButtonPairState> {
+    export class ButtonPairView implements IBoardComponent<ButtonPairState> {
         public element: SVGElement;
         public defs: SVGElement[];
         public style = BUTTON_PAIR_STYLE;

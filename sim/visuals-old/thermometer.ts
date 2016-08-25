@@ -15,7 +15,7 @@ namespace pxsim.visuals {
     const TMIN = -5;
     const TMAX = 50;
 
-    export class ThermometerSvg implements IBoardComponent<ThermometerState> {
+    export class ThermometerView implements IBoardComponent<ThermometerState> {
         private thermometerGradient: SVGLinearGradientElement;
         private thermometer: SVGRectElement;
         private thermometerText: SVGTextElement;

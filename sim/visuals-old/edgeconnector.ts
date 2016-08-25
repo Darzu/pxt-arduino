@@ -15,7 +15,7 @@ namespace pxsim.visuals {
         pinActive: "#FF5500",
     };
 
-    export class EdgeConnectorSvg implements IBoardComponent<EdgeConnectorState> {
+    export class EdgeConnectorView implements IBoardComponent<EdgeConnectorState> {
         private pins: SVGElement[];
         private pinGradients: SVGLinearGradientElement[];
         private pinTexts: SVGTextElement[];
@@ -147,7 +147,7 @@ namespace pxsim.visuals {
 
             return g;
         }
-        
+
         public attachEvents() {
             this.pins.forEach((pin, index) => {
                 if (!this.state.pins[index]) return;

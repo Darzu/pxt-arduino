@@ -12,7 +12,7 @@ namespace pxsim.visuals {
         systemLedFill: "#333"
     }
 
-    export class SerialSvg implements IBoardComponent<SerialState> {
+    export class SerialView implements IBoardComponent<SerialState> {
         private systemLed: SVGCircleElement;
 
         public style = `
@@ -64,7 +64,7 @@ namespace pxsim.visuals {
         }
 
         public updateState() {
-            
+
         }
 
         public attachEvents() {

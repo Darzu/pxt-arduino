@@ -54,7 +54,6 @@ namespace pxsim.visuals {
 }
 
 namespace pxsim.visuals {
-    console.log(PIN_DIST);
     const PIXEL_SPACING = PIN_DIST * 3;
     const PIXEL_RADIUS = PIN_DIST;
     const CANVAS_WIDTH = 1.2 * PIN_DIST;
@@ -180,7 +179,7 @@ namespace pxsim.visuals {
 
     export type NeoPixelStrip = {canvas: NeoPixelCanvas, part: SVGElAndSize};
 
-    export class NeoPixelSvg implements IBoardComponent<NeoPixelState> {
+    export class NeoPixelView implements IBoardComponent<NeoPixelState> {
         public style: string = `
             .sim-neopixel-canvas {
             }

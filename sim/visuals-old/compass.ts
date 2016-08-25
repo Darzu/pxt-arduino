@@ -10,8 +10,8 @@ namespace pxsim.visuals {
         color: "green"
     }
 
-    export class CompassSvg implements IBoardComponent<CompassState> {
-        private head: SVGGElement; 
+    export class CompassView implements IBoardComponent<CompassState> {
+        private head: SVGGElement;
         private headInitialized = false;
         private headText: SVGTextElement;
         private headPieces: SVGElement[];
