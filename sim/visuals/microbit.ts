@@ -146,9 +146,6 @@ namespace pxsim.visuals {
 
             //EXPERIMENTAl
             this.addPins();
-            this.style.textContent += this.breadboard.style;
-            this.breadboard.defs.forEach(d =>
-                this.defs.appendChild(d));
             this.g.appendChild(this.breadboard.bb);
             this.wireFactory = new WireFactory(this.underboard, this.g, [0, 400, 450, 450 + 15 * 21.5], this.style, this.getLocCoord.bind(this));
             this.allocator = new Allocator(this.boardDef, cmpsDef, this.getBBCoord.bind(this));

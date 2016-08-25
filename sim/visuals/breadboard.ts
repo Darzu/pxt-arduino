@@ -280,9 +280,9 @@ namespace pxsim.visuals {
         group?: string
     };
     export class Breadboard {
-        public bb: SVGGElement;
-        public defs: SVGElement[] = [];
-        public style: string;
+        public bb: SVGSVGElement;
+        private styleEl: SVGStyleElement;
+        private defs: SVGDefsElement;
 
         //truth
         private allPins: GridPin[] = [];
@@ -293,12 +293,14 @@ namespace pxsim.visuals {
         private rowColToLbls: Map<Map<GridLabel[]>> = {};
 
         constructor() {
-            this.style = BREADBOARD_CSS;
             this.buildDom();
         }
 
         public updateLocation(x: number, y: number) {
-            translateEl(this.bb, [x, y]);
+            svg.hydrate(this.bb, {
+                x: `${x}px`,
+                y: `${y}px`,
+            });
         }
 
         public getPin(row: string, col: string): GridPin {
@@ -318,9 +320,16 @@ namespace pxsim.visuals {
         }
 
         private buildDom() {
-            //wrapper
-            this.bb = <SVGGElement>svg.elt("g");
-            svg.addClass(this.bb, "sim-bb");
+            this.bb = <SVGSVGElement>svg.elt("svg", {
+                "version": "1.0",
+                "viewBox": `0 0 ${WIDTH} ${HEIGHT}`,
+                "class": `sim-bb`,
+                "width": WIDTH,
+                "height": HEIGHT,
+            });
+            this.styleEl = <SVGStyleElement>svg.child(this.bb, "style", {});
+            this.styleEl.textContent += BREADBOARD_CSS;
+            this.defs = <SVGDefsElement>svg.child(this.bb, "defs", {});
 
             //background
             svg.child(this.bb, "rect", { class: "sim-bb-background", width: WIDTH, height: HEIGHT, rx: BACKGROUND_ROUNDING, ry: BACKGROUND_ROUNDING});
@@ -329,7 +338,7 @@ namespace pxsim.visuals {
             let channelGid = "sim-bb-channel-grad";
             let channelGrad = <SVGLinearGradientElement>svg.elt("linearGradient")
             svg.hydrate(channelGrad, { id: channelGid, x1: "0%", y1: "0%", x2: "0%", y2: "100%" });
-            this.defs.push(channelGrad);
+            this.defs.appendChild(channelGrad);
             let channelDark = "#AAA";
             let channelLight = "#CCC";
             let stop1 = svg.child(channelGrad, "stop", { offset: "0%", style: `stop-color: ${channelDark};` })

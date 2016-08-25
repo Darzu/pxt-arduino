@@ -236,8 +236,6 @@ namespace pxsim.visuals {
             // breadboard
             this.breadboard = new Breadboard()
             this.g.appendChild(this.breadboard.bb);
-            this.breadboard.defs.forEach(d => this.defs.appendChild(d));
-            this.style.textContent += this.breadboard.style;
             let bbSize = this.breadboard.getSVGAndSize();
             let [bbWidth, bbHeight] = [bbSize.w, bbSize.h];
             const bbX = (BOARD_BASE_WIDTH - bbWidth) / 2;
