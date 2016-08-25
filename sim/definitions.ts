@@ -11,8 +11,8 @@ namespace pxsim {
     }
     export interface BoardDefinition {
         visual: {
-            image: string,
-            outlineImage: string,
+            image?: string,
+            outlineImage?: string,
             width: number,
             height: number,
             pinDist: number,
