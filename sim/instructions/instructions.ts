@@ -359,7 +359,7 @@ namespace pxsim.instructions {
     };
     function mkBoardProps(board: visuals.DalBoardSvg, cmpNames: string[]): BoardProps {
         let def = board.boardDef;
-        let allAlloc = board.allocateAll(cmpNames);
+        let allAlloc = board.allocator.allocateAll(cmpNames);
         let [basicWires, cmpsAndWiring] = allAlloc;
         let stepToWires: WireInstance[][] = [];
         let stepToCmps: ComponentInstance[][] = [];
