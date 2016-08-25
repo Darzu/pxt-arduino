@@ -454,7 +454,7 @@ namespace pxsim.instructions {
             let wires = props.stepToWires[i];
             if (wires) {
                 wires.forEach(w => {
-                    let wEls = board.addWire(w)
+                    let wire = board.addWire(w)
                     //last step
                     if (i === step) {
                         //location highlights
@@ -470,19 +470,8 @@ namespace pxsim.instructions {
                         } else {
                             board.highlightLoc((<BoardLoc>w.end).pin);
                         }
-
-                        //underboard wires
-                        wEls.wires.forEach(e => {
-                            (<any>e).style["visibility"] = "visible";
-                        });
-
-                        //un greyed out
-                        [wEls.end1, wEls.end2].forEach(e => {
-                            svg.addClass(e, "notgrayed");
-                        });
-                        wEls.wires.forEach(e => {
-                            svg.addClass(e, "notgrayed");
-                        });
+                        //highlight wire
+                        board.highlightWire(wire);
                     }
                 });
             }

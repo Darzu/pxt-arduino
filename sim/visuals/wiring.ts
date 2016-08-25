@@ -17,10 +17,10 @@ namespace pxsim.visuals {
             stroke-dasharray: ${PIN_DIST / 10.0},${PIN_DIST / 1.5};
             /*stroke-opacity: 0.4;*/
         }
-        .grayed .sim-bb-wire-end:not(.notgrayed) {
+        .grayed .sim-bb-wire-end:not(.highlight) {
             stroke: #777;
         }
-        .grayed .sim-bb-wire:not(.notgrayed) {
+        .grayed .sim-bb-wire:not(.highlight) {
             stroke: #CCC;
         }
         .sim-bb-wire-ends-g:hover .sim-bb-wire-end {
@@ -28,6 +28,12 @@ namespace pxsim.visuals {
         }
         `;
 
+    export interface Wire {
+        endG: SVGGElement;
+        end1: SVGElement;
+        end2: SVGElement;
+        wires: SVGElement[];
+    }
 
     let nextWireId = 0; //TODO remove
 
@@ -36,14 +42,16 @@ namespace pxsim.visuals {
         private underboard: SVGGElement;
         private overboard: SVGGElement;
         private boardEdges: number[];
+        private getLocCoord: (loc: Loc) => Coord;
         public styleEl: SVGStyleElement;
 
-        constructor(underboard: SVGGElement, overboard: SVGGElement, boardEdges: number[], styleEl: SVGStyleElement) {
+        constructor(underboard: SVGGElement, overboard: SVGGElement, boardEdges: number[], styleEl: SVGStyleElement, getLocCoord: (loc: Loc) => Coord) {
             this.styleEl = styleEl;
             this.styleEl.textContent += WIRES_CSS;
             this.underboard = underboard;
             this.overboard = overboard;
             this.boardEdges = boardEdges;
+            this.getLocCoord = getLocCoord;
         }
 
         private indexOfMin(vs: number[]): number {
@@ -104,7 +112,7 @@ namespace pxsim.visuals {
             (<any>w).style["stroke-width"] = `${endW}px`;
             return w;
         }
-        public drawWire(pin1: Coord, pin2: Coord, clr: string): {endG: SVGGElement, end1: SVGElement, end2: SVGElement, wires: SVGElement[]} {
+        private drawWire(pin1: Coord, pin2: Coord, color: string): Wire {
             let wires: SVGElement[] = [];
             let g = svg.child(this.overboard, "g", {class: "sim-bb-wire-group"});
             const closestPointOffBoard = (p: [number, number]): [number, number] => {
@@ -118,31 +126,31 @@ namespace pxsim.visuals {
                 return [p[0], y];
             }
             let wireId = nextWireId++;
-            let end1 = this.mkWireEnd(pin1, clr);
-            let end2 = this.mkWireEnd(pin2, clr);
+            let end1 = this.mkWireEnd(pin1, color);
+            let end2 = this.mkWireEnd(pin2, color);
             let endG = <SVGGElement>svg.child(g, "g", {class: "sim-bb-wire-ends-g"});
             endG.appendChild(end1);
             endG.appendChild(end2);
             let edgeIdx1 = this.closestEdgeIdx(pin1);
             let edgeIdx2 = this.closestEdgeIdx(pin2);
             if (edgeIdx1 == edgeIdx2) {
-                let seg = this.mkWireSeg(pin1, pin2, clr);
+                let seg = this.mkWireSeg(pin1, pin2, color);
                 g.appendChild(seg);
                 wires.push(seg);
             } else {
                 let offP1 = closestPointOffBoard(pin1);
                 let offP2 = closestPointOffBoard(pin2);
-                let offSeg1 = this.mkWireSeg(pin1, offP1, clr);
-                let offSeg2 = this.mkWireSeg(pin2, offP2, clr);
+                let offSeg1 = this.mkWireSeg(pin1, offP1, color);
+                let offSeg2 = this.mkWireSeg(pin2, offP2, color);
                 let midSeg: SVGElement;
                 let midSegHover: SVGElement;
                 let isBetweenMiddleTwoEdges = (edgeIdx1 == 1 || edgeIdx1 == 2) && (edgeIdx2 == 1 || edgeIdx2 == 2);
                 if (isBetweenMiddleTwoEdges) {
-                    midSeg = this.mkCurvedWireSeg(offP1, offP2, clr);
-                    midSegHover = this. mkCurvedWireSeg(offP1, offP2, clr);
+                    midSeg = this.mkCurvedWireSeg(offP1, offP2, color);
+                    midSegHover = this. mkCurvedWireSeg(offP1, offP2, color);
                 } else {
-                    midSeg = this.mkWireSeg(offP1, offP2, clr);
-                    midSegHover = this.mkWireSeg(offP1, offP2, clr);
+                    midSeg = this.mkWireSeg(offP1, offP2, color);
+                    midSegHover = this.mkWireSeg(offP1, offP2, color);
                 }
                 svg.addClass(midSegHover, "sim-bb-wire-hover");
                 g.appendChild(offSeg1);
@@ -164,6 +172,13 @@ namespace pxsim.visuals {
                     }`
             }
             return {endG: endG, end1: end1, end2: end2, wires: wires};
+        }
+
+        public addWire(start: Loc, end: Loc, color: string): Wire {
+            let startLoc = this.getLocCoord(start);
+            let endLoc = this.getLocCoord(end);
+            let wireEls = this.drawWire(startLoc, endLoc, color);
+            return wireEls;
         }
     }
 }

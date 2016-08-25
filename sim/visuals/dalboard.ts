@@ -260,7 +260,7 @@ namespace pxsim.visuals {
             this.boardBotEdge = TOP_MARGIN + this.boardDim.height;
             this.boardEdges = [this.boardTopEdge, this.boardBotEdge, bbY, bbY + bbHeight]
 
-            this.wireFactory = new WireFactory(this.underboard, this.g, this.boardEdges, this.style);
+            this.wireFactory = new WireFactory(this.underboard, this.g, this.boardEdges, this.style, this.getLocCoord.bind(this));
 
             this.buildDom();
 
@@ -274,7 +274,7 @@ namespace pxsim.visuals {
             }
         }
 
-        private getGPIOCoord(pinNm: string): Coord {
+        private getBoardPinCoord(pinNm: string): Coord {
             let pin = this.pinNmToPin[pinNm];
             if (!pin)
                 return null;
@@ -288,14 +288,14 @@ namespace pxsim.visuals {
             return [x + this.bbX, y + this.bbY];
         }
 
-        public getPinCoord(loc: Loc): Coord {
+        public getLocCoord(loc: Loc): Coord {
             let coord: Coord;
             if (loc.type === "breadboard") {
                 let [row, col] = (<BBLoc>loc).rowCol;
                 coord = this.getBBCoord(row, col);
             } else {
                 let pinNm = (<BoardLoc>loc).pin;
-                coord = this.getGPIOCoord(pinNm);
+                coord = this.getBoardPinCoord(pinNm);
             }
             if (!coord) {
                 console.error("Unknown location: " + name)
@@ -555,6 +555,10 @@ namespace pxsim.visuals {
             }
             return [basicWires, cmpsAndWires];
         }
+
+        public addWire(inst: WireInstance): Wire {
+            return this.wireFactory.addWire(inst.start, inst.end, inst.color);
+        }
         public addAll(basicWiresAndCmpsAndWires: [WireInstance[], [ComponentInstance, WireInstance[]][]]) {
             let [basicWires, cmpsAndWires] = basicWiresAndCmpsAndWires;
             basicWires.forEach(w => this.addWire(w));
@@ -565,12 +569,6 @@ namespace pxsim.visuals {
             });
         }
 
-        public addWire(w: WireInstance): {endG: SVGGElement, end1: SVGElement, end2: SVGElement, wires: SVGElement[]} {
-            let startLoc = this.getPinCoord(w.start);
-            let endLoc = this.getPinCoord(w.end);
-            let wireEls = this.wireFactory.drawWire(startLoc, endLoc, w.color);
-            return wireEls;
-        }
         public addComponent(cmpDesc: ComponentInstance): IBoardComponent<any> {
             let cnstr = builtinComponentSimVisual[cmpDesc.builtinSimVisual];
             let stateFn = builtinComponentSimState[cmpDesc.builtinSimSate];
@@ -754,6 +752,21 @@ namespace pxsim.visuals {
                 svg.addClass(pin.el, "highlight");
                 svg.addClass(pin.hoverEl, "highlight");
             }
+        }
+
+        public highlightWire(wire: Wire) {
+            //underboard wires
+            wire.wires.forEach(e => {
+                (<any>e).style["visibility"] = "visible";
+            });
+
+            //un greyed out
+            [wire.end1, wire.end2].forEach(e => {
+                svg.addClass(e, "highlight");
+            });
+            wire.wires.forEach(e => {
+                svg.addClass(e, "highlight");
+            });
         }
     }
 }
