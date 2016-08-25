@@ -124,7 +124,7 @@ namespace pxsim.instructions {
     }
     function mkWireEnd(p: [number, number], top: boolean, clr: string): visuals.SVGElAndSize {
         const endW = visuals.PIN_DIST / 4.0;
-        let k = visuals.WIRE_WIDTH * .6;
+        let k = visuals.PIN_DIST * 0.24;
         let [cx, cy] = p;
         let o = top ? -1 : 1;
         let g = svg.elt("g")
