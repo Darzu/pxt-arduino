@@ -2,6 +2,7 @@
 /// <reference path="../../node_modules/pxt-core/built/pxtsim.d.ts"/>
 /// <reference path="../../node_modules/pxt-core/built/pxtrunner.d.ts"/>
 /// <reference path="../../libs/microbit/dal.d.ts"/>
+/// <reference path="../visuals/dalboard.ts"/>
 
 //HACK: allows instructions.html to access pxtblocks without requiring simulator.html to import blocks as well
 if (!(<any>window).pxt) (<any>window).pxt = {};
