@@ -3,6 +3,7 @@
 /// <reference path="../../libs/microbit/shims.d.ts"/>
 /// <reference path="../../libs/microbit/enums.d.ts"/>
 /// <reference path="../state/neopixel.ts"/>
+/// <reference path="../simlib.ts"/>
 
 namespace pxsim.visuals {
     //TODO: determine this from static analysis
@@ -53,6 +54,7 @@ namespace pxsim.visuals {
 }
 
 namespace pxsim.visuals {
+    console.log(PIN_DIST);
     const PIXEL_SPACING = PIN_DIST * 3;
     const PIXEL_RADIUS = PIN_DIST;
     const CANVAS_WIDTH = 1.2 * PIN_DIST;
