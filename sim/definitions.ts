@@ -50,14 +50,17 @@ namespace pxsim {
         builtinSimVisual?: string,
     }
     export type WireInstance = {
-        start: LocationInstance,
-        end: LocationInstance,
+        start: Loc,
+        end: Loc,
         color: string,
         assemblyStep: number
     };
-    export type BreadboardLocation = [string, string];
-    export type DALBoardLocation = string;
-    export type LocationInstance = ["breadboard", BreadboardLocation] | ["dalboard", DALBoardLocation];
+
+    export type BBRowCol = [/*row*/string, /*column*/string];
+    export type BoardPin = string;
+    export type BBLoc = {type: "breadboard", rowCol: BBRowCol};
+    export type BoardLoc = {type: "dalboard", pin: BoardPin};
+    export type Loc = BBLoc | BoardLoc;
 
     export const ARDUINO_ZERO: BoardDefinition = {
         visual: {

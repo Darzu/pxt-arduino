@@ -458,17 +458,17 @@ namespace pxsim.instructions {
                     //last step
                     if (i === step) {
                         //location highlights
-                        if (w.start[0] == "breadboard") {
-                            let [row, col] = <BreadboardLocation>w.start[1];
+                        if (w.start.type == "breadboard") {
+                            let [row, col] = (<BBLoc>w.start).rowCol;
                             let lbls = board.breadboard.highlightLoc(row, col);
                         } else {
-                            board.highlightLoc(<DALBoardLocation>w.start[1]);
+                            board.highlightLoc((<BoardLoc>w.start).pin);
                         }
-                        if (w.end[0] == "breadboard") {
-                            let [row, col] = <BreadboardLocation>w.end[1];
+                        if (w.end.type == "breadboard") {
+                            let [row, col] = (<BBLoc>w.end).rowCol;
                             let lbls = board.breadboard.highlightLoc(row, col);
                         } else {
-                            board.highlightLoc(<DALBoardLocation>w.end[1]);
+                            board.highlightLoc((<BoardLoc>w.end).pin);
                         }
 
                         //underboard wires
@@ -490,13 +490,13 @@ namespace pxsim.instructions {
             if (cmps) {
                 cmps.forEach(cmpInst => {
                     let cmp = board.addComponent(cmpInst)
-                    let [row, col]: BreadboardLocation = [`${cmpInst.breadboardStartRow}`, `${cmpInst.breadboardStartColumn}`];
+                    let [row, col]: BBRowCol = [`${cmpInst.breadboardStartRow}`, `${cmpInst.breadboardStartColumn}`];
                     //last step
                     if (i === step) {
                         board.breadboard.highlightLoc(row, col);
                         if (cmpInst.builtinPartVisual === "buttonpair") {
                             //TODO: don't specialize this
-                            let [row2, col2]: BreadboardLocation = [`${cmpInst.breadboardStartRow}`, `${cmpInst.breadboardStartColumn + 3}`];
+                            let [row2, col2]: BBRowCol = [`${cmpInst.breadboardStartRow}`, `${cmpInst.breadboardStartColumn + 3}`];
                             board.breadboard.highlightLoc(row2, col2);
                         }
                         svg.addClass(cmp.element, "notgrayed");
@@ -583,11 +583,17 @@ namespace pxsim.instructions {
         addClass(reqsDiv, "reqs-div")
         panel.appendChild(reqsDiv);
         let wires = (props.stepToWires[step] || []);
+        let mkLabel = (loc: Loc) => {
+            if (loc.type === "breadboard")
+                return bbLocToCoordStr((<BBLoc>loc).rowCol);
+            else
+                return (<BoardLoc>loc).pin;
+        };
         wires.forEach(w => {
             let cmp = mkCmpDiv("wire", {
-                top: bbLocToCoordStr(<BreadboardLocation>w.end[1]),
+                top: mkLabel(w.end),
                 topSize: LOC_LBL_SIZE,
-                bot: bbLocToCoordStr(<BreadboardLocation>w.start[1]),
+                bot: mkLabel(w.start),
                 botSize: LOC_LBL_SIZE,
                 wireClr: w.color,
                 cmpHeight: REQ_WIRE_HEIGHT
@@ -597,11 +603,11 @@ namespace pxsim.instructions {
         });
         let cmps = (props.stepToCmps[step] || []);
         cmps.forEach(c => {
-            let l: BreadboardLocation = [`${c.breadboardStartRow}`, `${c.breadboardStartColumn}`];
+            let l: BBRowCol = [`${c.breadboardStartRow}`, `${c.breadboardStartColumn}`];
             let locs = [l];
             if (c.builtinPartVisual === "buttonpair") {
                 //TODO: don't special case this
-                let l2: BreadboardLocation = [`${c.breadboardStartRow}`, `${c.breadboardStartColumn + 3}`];
+                let l2: BBRowCol = [`${c.breadboardStartRow}`, `${c.breadboardStartColumn + 3}`];
                 locs.push(l2);
             }
             locs.forEach((l, i) => {

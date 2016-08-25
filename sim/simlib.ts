@@ -25,7 +25,7 @@ namespace pxsim {
         return res;
     }
 
-    export function bbLocToCoordStr(loc: BreadboardLocation) {
+    export function bbLocToCoordStr(loc: BBRowCol) {
         let [row, col] = loc;
         return `(${row},${col})`
     }

@@ -133,7 +133,7 @@ namespace pxsim.visuals {
     const BAR_TOP_GRID_Y = (BAR_HEIGHT - BAR_GRID_HEIGHT) / 2.0;
     const BAR_BOT_GRID_X = BAR_TOP_GRID_X;
     const BAR_BOT_GRID_Y = BAR_TOP_GRID_Y + BAR_HEIGHT + MID_HEIGHT;
-    // Individual pins 
+    // Individual pins
     const PIN_HOVER_SCALAR = 1.3;
     const PIN_WIDTH = PIN_DIST / 2.5;
     const PIN_ROUNDING = PIN_DIST / 7.5;
@@ -420,7 +420,7 @@ namespace pxsim.visuals {
             //tooltip
             this.allPins.forEach(pin => {
                 let {el, row, col, hoverEl} = pin
-                let title = bbLocToCoordStr([row, col]);
+                let title = `(${row},${col})`;
                 svg.hydrate(el, {title: title});
                 svg.hydrate(hoverEl, {title: title});
             })

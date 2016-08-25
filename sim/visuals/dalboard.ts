@@ -209,12 +209,12 @@ namespace pxsim.visuals {
 
         private availablePowerPins = {
             top: {
-                threeVolt: mkRange(26, 51).map(n => <BreadboardLocation>["+", `${n}`]),
-                ground: mkRange(26, 51).map(n => <BreadboardLocation>["-", `${n}`]),
+                threeVolt: mkRange(26, 51).map(n => <BBRowCol>["+", `${n}`]),
+                ground: mkRange(26, 51).map(n => <BBRowCol>["-", `${n}`]),
             },
             bottom: {
-                threeVolt: mkRange(1, 26).map(n => <BreadboardLocation>["+", `${n}`]),
-                ground: mkRange(1, 26).map(n => <BreadboardLocation>["-", `${n}`]),
+                threeVolt: mkRange(1, 26).map(n => <BBRowCol>["+", `${n}`]),
+                ground: mkRange(1, 26).map(n => <BBRowCol>["-", `${n}`]),
             },
         };
 
@@ -288,13 +288,13 @@ namespace pxsim.visuals {
             return [x + this.bbX, y + this.bbY];
         }
 
-        public getPinCoord(loc: LocationInstance): Coord {
+        public getPinCoord(loc: Loc): Coord {
             let coord: Coord;
-            if (loc[0] === "breadboard") {
-                let [row, col] = <BreadboardLocation>loc[1];
+            if (loc.type === "breadboard") {
+                let [row, col] = (<BBLoc>loc).rowCol;
                 coord = this.getBBCoord(row, col);
             } else {
-                let pinNm = <DALBoardLocation>loc[1];
+                let pinNm = (<BoardLoc>loc).pin;
                 coord = this.getGPIOCoord(pinNm);
             }
             if (!coord) {
@@ -314,10 +314,10 @@ namespace pxsim.visuals {
 
         private allocateLocation(location: LocationDefinition,
             opts: {
-                nearestBBPin?: BreadboardLocation,
+                nearestBBPin?: BBRowCol,
                 startColumn?: number,
                 availableGPIOPins?: string[],
-            }): LocationInstance
+            }): Loc
         {
             if (location === "ground" || location === "threeVolt") {
                 U.assert(!!opts.nearestBBPin);
@@ -335,7 +335,7 @@ namespace pxsim.visuals {
                     //TODO
                 }
                 let nearTop = findClosestCoordIdx(nearestCoord, firstTopAndBot) == 0;
-                let pins: BreadboardLocation[];
+                let pins: BBRowCol[];
                 if (nearTop) {
                     if (location === "ground") {
                         pins = this.availablePowerPins.top.ground;
@@ -362,17 +362,17 @@ namespace pxsim.visuals {
                     this.availablePowerPins.bottom.ground.splice(pinIdx, 1);
                     this.availablePowerPins.bottom.threeVolt.splice(pinIdx, 1);
                 }
-                return ["breadboard", pin];
+                return {type: "breadboard", rowCol: pin};
             } else if (location[0] === "breadboard") {
                 U.assert(!!opts.startColumn);
                 let row = <string>location[1];
                 let col = (<number>location[2] + opts.startColumn).toString();
-                return ["breadboard", [row, col]]
+                return {type: "breadboard", rowCol: [row, col]}
             } else if (location[0] === "GPIO") {
                 U.assert(!!opts.availableGPIOPins);
                 let idx = <number>location[1];
                 let pin = opts.availableGPIOPins[idx];
-                return ["dalboard", pin];
+                return {type: "dalboard", pin: pin};
             } else {
                 //TODO
                 U.assert(false);
@@ -390,8 +390,8 @@ namespace pxsim.visuals {
                 console.log("No available 3.3V pin on board!");
                 //TODO
             }
-            let topLeft: BreadboardLocation = ["-", "26"];
-            let botLeft: BreadboardLocation = ["-", "1"];
+            let topLeft: BBRowCol = ["-", "26"];
+            let botLeft: BBRowCol = ["-", "1"];
             const GROUND_COLOR = "blue";
             const POWER_COLOR = "red";
             const wires: WireInstance[] = [
@@ -399,13 +399,13 @@ namespace pxsim.visuals {
                  end: this.allocateLocation("ground", {nearestBBPin: botLeft}),
                  color: GROUND_COLOR, assemblyStep: 0},
                 {start: this.allocateLocation("ground", {nearestBBPin: topLeft}),
-                 end: ["dalboard", boardGround],
+                 end: {type: "dalboard", pin: boardGround},
                 color: GROUND_COLOR, assemblyStep: 0},
                 {start: this.allocateLocation("threeVolt", {nearestBBPin: topLeft}),
                  end: this.allocateLocation("threeVolt", {nearestBBPin: botLeft}),
                  color: POWER_COLOR, assemblyStep: 1},
                 {start: this.allocateLocation("threeVolt", {nearestBBPin: topLeft}),
-                 end: ["dalboard", threeVoltPin],
+                 end: {type: "dalboard", pin: threeVoltPin},
                 color: POWER_COLOR, assemblyStep: 1},
             ];
             return wires;
@@ -419,11 +419,17 @@ namespace pxsim.visuals {
             let ends = [wireDef.start, wireDef.end];
             let endIsPower = ends.map(e => e === "ground" || e === "threeVolt");
             let endInsts = ends.map((e, idx) => !endIsPower[idx] ? this.allocateLocation(e, opts) : null)
-            endInsts = endInsts.map((e, idx) => e ? e : this.allocateLocation(ends[idx], {
-                    nearestBBPin: <BreadboardLocation>endInsts[1 - idx][1],
+            endInsts = endInsts.map((e, idx) => {
+                if (e)
+                    return e;
+                let locInst = <BBLoc>endInsts[1 - idx];
+                let l = this.allocateLocation(ends[idx], {
+                    nearestBBPin: locInst.rowCol,
                     startColumn: opts.startColumn,
                     availableGPIOPins: opts.availableGPIOPins
-                }));
+                });
+                return l;
+            });
             return {start: endInsts[0], end: endInsts[1], color: wireDef.color, assemblyStep: wireDef.assemblyStep};
         }
         private allocateGPIOPins(cmpDefs: ComponentDefinition[]): string[][][] {
