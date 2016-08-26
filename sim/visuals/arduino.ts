@@ -10,6 +10,7 @@ namespace pxsim.visuals {
         boardDef: BoardDefinition;
         disableTilt?: boolean;
         activeComponents: string[];
+        fnArgs?: any;
         componentDefinitions: Map<ComponentDefinition>;
     }
 
@@ -179,8 +180,8 @@ namespace pxsim.visuals {
         `;
 
     let nextBoardId = 0;
-    export class DalBoardSvg {
-        public element: SVGSVGElement;
+    export class ArduinoSvg {
+        public hostElement: SVGSVGElement;
         private style: SVGStyleElement;
         private defs: SVGDefsElement;
         private g: SVGGElement;
@@ -213,8 +214,8 @@ namespace pxsim.visuals {
             this.boardDim = getBoardDimensions(<BoardImageDefinition>this.boardDef.visual);
             this.board = this.props.runtime.board as pxsim.DalBoard;
             this.board.updateView = () => this.updateState();
-            this.element = <SVGSVGElement>svg.elt("svg")
-            svg.hydrate(this.element, {
+            this.hostElement = <SVGSVGElement>svg.elt("svg")
+            svg.hydrate(this.hostElement, {
                 "version": "1.0",
                 "viewBox": `0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`,
                 "enable-background": `new 0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`,
@@ -222,15 +223,15 @@ namespace pxsim.visuals {
                 "x": "0px",
                 "y": "0px"
             });
-            this.style = <SVGStyleElement>svg.child(this.element, "style", {});
+            this.style = <SVGStyleElement>svg.child(this.hostElement, "style", {});
             this.style.textContent += BOARD_SYTLE;
-            this.defs = <SVGDefsElement>svg.child(this.element, "defs", {});
+            this.defs = <SVGDefsElement>svg.child(this.hostElement, "defs", {});
             this.g = <SVGGElement>svg.elt("g");
-            this.element.appendChild(this.g);
+            this.hostElement.appendChild(this.g);
             this.underboard = <SVGGElement>svg.child(this.g, "g", {class: "sim-underboard"});
             this.components = [];
             this.componentDefs = props.componentDefinitions;
-            this.allocator = new Allocator(this.boardDef, this.componentDefs, this.getBBCoord.bind(this));
+            this.allocator = new Allocator(this.boardDef, this.componentDefs, this.props.fnArgs, this.getBBCoord.bind(this));
 
             // breadboard
             this.breadboard = new Breadboard()
@@ -318,7 +319,7 @@ namespace pxsim.visuals {
             let cnstr = builtinComponentSimVisual[cmpDesc.builtinSimVisual];
             let stateFn = builtinComponentSimState[cmpDesc.builtinSimSate];
             let cmp = cnstr();
-            cmp.init(this.board.bus, stateFn(this.board), this.element);
+            cmp.init(this.board.bus, stateFn(this.board), this.hostElement);
             this.components.push(cmp);
             this.g.appendChild(cmp.element);
             if (cmp.defs)
@@ -345,8 +346,8 @@ namespace pxsim.visuals {
 
             this.components.forEach(c => c.updateState());
 
-            if (!runtime || runtime.dead) svg.addClass(this.element, "grayscale");
-            else svg.removeClass(this.element, "grayscale");
+            if (!runtime || runtime.dead) svg.addClass(this.hostElement, "grayscale");
+            else svg.removeClass(this.hostElement, "grayscale");
         }
 
         private buildDom() {

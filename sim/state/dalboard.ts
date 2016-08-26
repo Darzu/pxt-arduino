@@ -66,20 +66,27 @@ namespace pxsim {
             let cmpsList = msg.parts;
             cmpsList.sort();
             let cmpDefs = COMPONENT_DEFINITIONS; //TODO: read from pxt.json/pxttarget.json
+            let fnArgs = msg.fnArgs;
 
-            //TODO: allow other visualizations
-            // let view = new visuals.DalBoardSvg({
-            //     boardDef: boardDef,
-            //     activeComponents: cmpsList,
-            //     componentDefinitions: cmpDefs,
-            //     runtime: runtime
-            // })
-            let view = new visuals.MicrobitBoardSvg({
-                runtime: runtime,
-                theme: visuals.randomTheme(),
-                activeComponents: cmpsList,
-                disableTilt: false
-            });
+            let mb = true;
+            let view: visuals.ArduinoSvg | visuals.MicrobitBoardSvg;
+            if (mb) {
+                view = new visuals.MicrobitBoardSvg({
+                    runtime: runtime,
+                    theme: visuals.randomTheme(),
+                    activeComponents: cmpsList,
+                    fnArgs: fnArgs,
+                    disableTilt: false
+                });
+            } else {
+                view = new visuals.ArduinoSvg({
+                    boardDef: boardDef,
+                    activeComponents: cmpsList,
+                    componentDefinitions: cmpDefs,
+                    runtime: runtime,
+                    fnArgs: fnArgs
+                })
+            }
 
             document.body.innerHTML = ""; // clear children
             document.body.appendChild(view.hostElement);

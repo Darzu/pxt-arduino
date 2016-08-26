@@ -24,17 +24,22 @@ namespace pxsim {
         threeVoltPins: string[],
         attachPowerOnRight?: boolean,
     }
-    export type ComponentDefinition = {
+    export interface FactoryFunctionDefinition {
+        fn: string,
+        pinArgPosition: number,
+    }
+    export interface ComponentDefinition {
         breadboardColumnsNeeded: number,
         breadboardStartRow: string,
         gpioPinsNeeded?: number | number[],
         wires: WireDefinition[],
         assemblyStep: number,
+        factoryFunctions?: FactoryFunctionDefinition[],
         builtinPartVisual?: string,
         builtinSimSate?: string,
         builtinSimVisual?: string,
     }
-    export type WireDefinition = {
+    export interface WireDefinition {
         start: LocationDefinition,
         end: LocationDefinition,
         color: string,
@@ -43,7 +48,7 @@ namespace pxsim {
     export type LocationDefinition =
         ["breadboard", string, number] | ["GPIO", number] | "ground" | "threeVolt";
 
-    export type ComponentInstance = {
+    export interface ComponentInstance {
         breadboardStartColumn: number,
         breadboardStartRow: string,
         assemblyStep: number,
@@ -51,7 +56,7 @@ namespace pxsim {
         builtinSimSate?: string,
         builtinSimVisual?: string,
     }
-    export type WireInstance = {
+    export interface WireInstance {
         start: Loc,
         end: Loc,
         color: string,
@@ -60,8 +65,8 @@ namespace pxsim {
 
     export type BBRowCol = [/*row*/string, /*column*/string];
     export type BoardPin = string;
-    export type BBLoc = {type: "breadboard", rowCol: BBRowCol};
-    export type BoardLoc = {type: "dalboard", pin: BoardPin};
+    export interface BBLoc {type: "breadboard", rowCol: BBRowCol};
+    export interface BoardLoc {type: "dalboard", pin: BoardPin};
     export type Loc = BBLoc | BoardLoc;
 
     export const ARDUINO_ZERO: BoardDefinition = {
@@ -127,6 +132,9 @@ namespace pxsim {
             breadboardColumnsNeeded: 5,
             breadboardStartRow: "h",
             gpioPinsNeeded: 1,
+            factoryFunctions: [
+                { fn: "neopixel.create", pinArgPosition: 0 }
+            ],
             assemblyStep: 0,
             builtinPartVisual: "neopixel",
             builtinSimSate: "neopixel",

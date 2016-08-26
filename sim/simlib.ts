@@ -15,9 +15,7 @@ namespace pxsim {
     export function board() {
         return runtime.board as DalBoard;
     }
-}
-
-namespace pxsim {
+    
     export function mkRange(a: number, b: number): number[] {
         let res: number[] = [];
         for (; a < b; a++)
@@ -28,6 +26,13 @@ namespace pxsim {
     export function bbLocToCoordStr(loc: BBRowCol) {
         let [row, col] = loc;
         return `(${row},${col})`
+    }
+
+
+    export function parseQueryString(): (key: string) => string {
+        let qs = window.location.search.substring(1);
+        let getQsVal = (key: string) => decodeURIComponent((qs.split(`${key}=`)[1] || "").split("&")[0] || "").replace(/\+/g, " ");
+        return getQsVal;
     }
 }
 
@@ -187,7 +192,13 @@ namespace pxsim.visuals {
         return WIRE_COLOR_MAP[clr] || clr;
     }
 
-    export interface SVGAndSize<T extends SVGElement> {el: T, y: number, x: number, w: number, h: number};
+    export interface SVGAndSize<T extends SVGElement> {
+        el: T,
+        y: number,
+        x: number,
+        w: number,
+        h: number
+    };
     export type SVGElAndSize = SVGAndSize<SVGElement>;
 
     export const PIN_DIST = 15;

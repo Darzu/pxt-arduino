@@ -3,6 +3,7 @@ namespace pxsim.visuals {
     export class Allocator {
         private boardDef: BoardDefinition;
         private cmpDefs: Map<ComponentDefinition>;
+        private fnArgs: any;
         private getBBCoord: (loc: BBRowCol) => Coord;
 
         private availablePowerPins = {
@@ -16,9 +17,10 @@ namespace pxsim.visuals {
             },
         };
 
-        constructor(boardDef: BoardDefinition, cmpDefs: Map<ComponentDefinition>, getBBCoord: (loc: BBRowCol) => Coord) {
+        constructor(boardDef: BoardDefinition, cmpDefs: Map<ComponentDefinition>, fnArgs: any, getBBCoord: (loc: BBRowCol) => Coord) {
             this.boardDef = boardDef;
             this.cmpDefs = cmpDefs;
+            this.fnArgs = fnArgs;
             this.getBBCoord = getBBCoord;
         }
 

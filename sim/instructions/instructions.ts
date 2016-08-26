@@ -2,7 +2,7 @@
 /// <reference path="../../node_modules/pxt-core/built/pxtsim.d.ts"/>
 /// <reference path="../../node_modules/pxt-core/built/pxtrunner.d.ts"/>
 /// <reference path="../../libs/microbit/dal.d.ts"/>
-/// <reference path="../visuals/dalboard.ts"/>
+/// <reference path="../visuals/arduino.ts"/>
 /// <reference path="../visuals/wiring.ts"/>
 
 //HACK: allows instructions.html to access pxtblocks without requiring simulator.html to import blocks as well
@@ -298,7 +298,7 @@ namespace pxsim.instructions {
         colorToWires: Map<WireInstance[]>,
         allWireColors: string[],
     };
-    function mkBoardProps(board: visuals.DalBoardSvg, cmpNames: string[]): BoardProps {
+    function mkBoardProps(board: visuals.ArduinoSvg, cmpNames: string[]): BoardProps {
         let def = board.boardDef;
         let allAlloc = board.allocator.allocateAll(cmpNames);
         let [basicWires, cmpsAndWiring] = allAlloc;
@@ -349,22 +349,22 @@ namespace pxsim.instructions {
         };
     }
     function mkBoard(boardDef: BoardDefinition, cmpDefs: Map<ComponentDefinition>,
-        width: number, buildMode: boolean = false): visuals.DalBoardSvg {
-        let board = new visuals.DalBoardSvg({
+        width: number, buildMode: boolean = false): visuals.ArduinoSvg {
+        let board = new visuals.ArduinoSvg({
             runtime: pxsim.runtime,
             boardDef: boardDef,
             activeComponents: [],
             componentDefinitions: cmpDefs,
         })
-        svg.hydrate(board.element, {
+        svg.hydrate(board.hostElement, {
             "width": width,
         });
-        svg.addClass(board.element, "board-svg");
+        svg.addClass(board.hostElement, "board-svg");
         if (buildMode) {
             svg.hydrate(board.background, {
                 "href": `${(<BoardImageDefinition>boardDef.visual).outlineImage}`
             })
-            svg.addClass(board.element, "sim-board-outline")
+            svg.addClass(board.hostElement, "sim-board-outline")
             let bb = board.breadboard.bb;
             svg.addClass(bb, "sim-bb-outline")
             let style = <SVGStyleElement>svg.child(bb, "style", {});
@@ -386,9 +386,9 @@ namespace pxsim.instructions {
 
         return board;
     }
-    function drawSteps(board: visuals.DalBoardSvg, step: number, props: BoardProps) {
+    function drawSteps(board: visuals.ArduinoSvg, step: number, props: BoardProps) {
         if (step > 0) {
-            svg.addClass(board.element, "grayed");
+            svg.addClass(board.hostElement, "grayed");
         }
 
         for (let i = 0; i <= step; i++) {
@@ -496,7 +496,7 @@ namespace pxsim.instructions {
         //board
         let board = mkBoard(props.boardDef, props.cmpDefs, BOARD_WIDTH, true)
         drawSteps(board, step, props);
-        panel.appendChild(board.element);
+        panel.appendChild(board.hostElement);
 
         //number
         let numDiv = document.createElement("div");
@@ -559,7 +559,7 @@ namespace pxsim.instructions {
         let panel = document.getElementById("front-panel");
 
         let board = mkBoard(boardDef, cmpDefs, FRONT_PAGE_BOARD_WIDTH);
-        panel.appendChild(board.element);
+        panel.appendChild(board.hostElement);
 
         let props = mkBoardProps(board, cmps);
         board.addAll(props.allAlloc);
@@ -573,17 +573,12 @@ namespace pxsim.instructions {
         addClass(panel, "back-panel");
         let board = mkBoard(props.boardDef, props.cmpDefs, BACK_PAGE_BOARD_WIDTH, false)
         board.addAll(props.allAlloc);
-        panel.appendChild(board.element);
+        panel.appendChild(board.hostElement);
 
         return panel;
     }
-    function parseQs(): (key: string) => string {
-        let qs = window.location.search.substring(1);
-        let getQsVal = (key: string) => decodeURIComponent((qs.split(`${key}=`)[1] || "").split("&")[0] || "").replace(/\+/g, " ");
-        return getQsVal;
-    }
     export function drawInstructions() {
-        let getQsVal = parseQs();
+        let getQsVal = parseQueryString();
 
         //project name
         let name = getQsVal("name") || "Untitled";
@@ -622,6 +617,10 @@ namespace pxsim.instructions {
         //parts list
         let parts = (getQsVal("parts") || "").split(" ");
         parts.sort();
+
+        //fn args
+        let fnArgs = JSON.parse((getQsVal("fnArgs") || "{}"));
+        //TODO:
 
         //init runtime
         const COMP_CODE = "";

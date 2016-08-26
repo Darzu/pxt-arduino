@@ -87,6 +87,7 @@ namespace pxsim.visuals {
         theme?: IBoardTheme;
         disableTilt?: boolean;
         activeComponents: string[];
+        fnArgs?: any;
     }
 
     const pointerEvents = !!(window as any).PointerEvent ? {
@@ -180,7 +181,7 @@ namespace pxsim.visuals {
                 let pinDist = compRes.scaleUnit;
 
                 this.wireFactory = new WireFactory(under, over, edges, this.style, this.getLocCoord.bind(this));
-                this.allocator = new Allocator(boardDef, cmpsDef, this.getBBCoord.bind(this));
+                this.allocator = new Allocator(boardDef, cmpsDef, this.props.fnArgs, this.getBBCoord.bind(this));
                 if (cmps.length) {
                     let alloc = this.allocator.allocateAll(cmps);
                     this.addAll(alloc);
