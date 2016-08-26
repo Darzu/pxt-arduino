@@ -1,6 +1,6 @@
 namespace pxsim.visuals {
     const WIRE_WIDTH = PIN_DIST / 2.5;
-    const BB_WIRE_SMOOTH = 0.6;
+    const BB_WIRE_SMOOTH = 0.7;
     const INSTR_WIRE_SMOOTH = 0.8;
     const WIRE_PART_CURVE_OFF = 15;
     const WIRE_PART_LENGTH = 100;
@@ -16,7 +16,7 @@ namespace pxsim.visuals {
             fill:#333;
         }
         .sim-bb-wire-bare-end {
-            fill: #bbb;
+            fill: #ccc;
         }
         .sim-bb-wire-hover {
             stroke-width: ${WIRE_WIDTH}px;
@@ -30,10 +30,13 @@ namespace pxsim.visuals {
         .grayed .sim-bb-wire:not(.highlight) {
             stroke: #CCC;
         }
-        .sim-bb-wire-ends-g:hover .sim-bb-wire-end,
-        .sim-bb-wire-ends-g:hover .sim-bb-wire-bare-end {
+        .sim-bb-wire-ends-g:hover .sim-bb-wire-end {
             stroke: red;
             fill: red;
+        }
+        .sim-bb-wire-ends-g:hover .sim-bb-wire-bare-end {
+            stroke: #FFF;
+            fill: #FFF;
         }
         `;
 
@@ -89,8 +92,8 @@ namespace pxsim.visuals {
         let [x1, y1] = p1;
         let [x2, y2] = p2
         let yLen = (y2 - y1);
-        let c1: [number, number] = [x1, y1 + yLen * .6];
-        let c2: [number, number] = [x2, y2 - yLen * .6];
+        let c1: [number, number] = [x1, y1 + yLen * smooth];
+        let c2: [number, number] = [x2, y2 - yLen * smooth];
         let w = <SVGPathElement>svg.mkPath("sim-bb-wire", `M${coordStr(p1)} C${coordStr(c1)} ${coordStr(c2)} ${coordStr(p2)}`);
         svg.addClass(w, `wire-stroke-${clrClass}`);
         return w;
@@ -131,17 +134,22 @@ namespace pxsim.visuals {
         let o = top ? -1 : 1;
         let g = svg.elt("g")
 
-        let el = svg.elt("rect");
-        let h1 = k * 6;
-        let w1 = k * 2.2;
+        let el = svg.elt("polygon");
+        let h1 = k * 10.0;
+        let w1 = k * 3.2;
         let x1 = cx - w1 / 2;
         let y1 = cy - (h1 / 2);
-        svg.hydrate(el, {x: x1, y: y1, width: w1, height: h1, rx: 0.5, ry: 0.5, class: "sim-bb-wire-end"});
+        let mkPnt = (xy: Coord) => `${xy[0]},${xy[1]}`;
+        let mkPnts = (...xys: Coord[]) => xys.map(xy => mkPnt(xy)).join(" ");
+        svg.hydrate(el, {
+            points: mkPnts([x1+w1*.15, y1], [x1 + w1*.85, y1], [x1 + w1, y1 + h1*.7], [x1 + w1*.75, y1 + h1], [x1+w1*.25, y1 + h1], [x1, y1 + h1*.7])
+        });
+        svg.hydrate(el, {rx: 0.5, ry: 0.5, class: "sim-bb-wire-end"});
         (<any>el).style["stroke-width"] = `${endW}px`;
 
         let el2 = svg.elt("rect");
-        let h2 = k * 3;
-        let w2 = k * 1.2;
+        let h2 = k * 3.5;
+        let w2 = k * 3;
         let cy2 = cy + o * (h1 / 2 + h2 / 2);
         let x2 = cx - w2 / 2;
         let y2 = cy2 - (h2 / 2);
@@ -282,9 +290,9 @@ namespace pxsim.visuals {
             //let end2 = mkInPinEnd(pin2, clrClass);
             let pin2orig = pin2;
             let [x2, y2] = pin2;
-            pin2 = [x2, y2 + 25];
+            pin2 = [x2, y2 + 40];
             [x2, y2] = pin2;
-            let endCoord2: Coord = [x2, y2 - 10]
+            let endCoord2: Coord = [x2, y2 - 17]
             let end2AndSize = mkOpenEnd(endCoord2, true, color);//HACK
             let end2 = end2AndSize.el;
             let endG = <SVGGElement>svg.child(g, "g", {class: "sim-bb-wire-ends-g"});
@@ -318,8 +326,8 @@ namespace pxsim.visuals {
                 // wires.push(offSeg2);
                 this.underboard.appendChild(midSeg);
                 wires.push(midSeg);
-                g.appendChild(midSegHover);
-                wires.push(midSegHover);
+                //g.appendChild(midSegHover);
+                //wires.push(midSegHover);
                 //set hover mechanism
                 let wireIdClass = `sim-bb-wire-id-${wireId}`;
                 const setId = (e: SVGElement) => svg.addClass(e, wireIdClass);
