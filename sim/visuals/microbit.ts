@@ -164,7 +164,7 @@ namespace pxsim.visuals {
                 el2: this.breadboard.getSVGAndSize(),
                 scaleUnit2: this.breadboard.getPinDist(),
                 margin: [10, 0, 10, 0],
-                middleMargin: 60,
+                middleMargin: 80,
                 maxWidth: 299,
                 maxHeight: 433,
             });
