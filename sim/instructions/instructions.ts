@@ -43,6 +43,7 @@ namespace pxsim.instructions {
     const NUM_BOX_SIZE = 60;
     const NUM_FONT = 40;
     const NUM_MARGIN = 5;
+    const FRONT_PAGE_BOARD_WIDTH = 200;
     const STYLE = `
             ${visuals.BOARD_SYTLE}
             .instr-panel {
@@ -289,7 +290,7 @@ namespace pxsim.instructions {
     type BoardProps = {
         boardDef: BoardDefinition,
         cmpDefs: Map<ComponentDefinition>,
-        allAlloc: [WireInstance[], [ComponentInstance, WireInstance[]][]],
+        allAlloc: AllocatorResult,
         stepToWires: WireInstance[][],
         stepToCmps: ComponentInstance[][]
         allWires: WireInstance[],
@@ -298,25 +299,24 @@ namespace pxsim.instructions {
         colorToWires: Map<WireInstance[]>,
         allWireColors: string[],
     };
-    function mkBoardProps(board: visuals.ArduinoSvg, cmpNames: string[]): BoardProps {
-        let def = board.boardDef;
-        let allAlloc = board.allocator.allocateAll(cmpNames);
-        let [basicWires, cmpsAndWiring] = allAlloc;
+    function mkBoardProps(allocOpts: AllocatorOpts): BoardProps {
+        let allocRes = allocateDefinitions(allocOpts);
+        let {powerWires, components} = allocRes;
         let stepToWires: WireInstance[][] = [];
         let stepToCmps: ComponentInstance[][] = [];
-        basicWires.forEach(w => {
+        powerWires.forEach(w => {
             let step = w.assemblyStep + 1;
             (stepToWires[step] || (stepToWires[step] = [])).push(w)
         });
         let getMaxStep = (ns: {assemblyStep: number}[]) => ns.reduce((m, n) => Math.max(m, n.assemblyStep), 0);
-        let stepOffset = getMaxStep(basicWires) + 2;
-        cmpsAndWiring.forEach(cAndWs => {
-            let [c, ws] = cAndWs;
-            let cStep = c.assemblyStep + stepOffset;
+        let stepOffset = getMaxStep(powerWires) + 2;
+        components.forEach(cAndWs => {
+            let {component, wires} = cAndWs;
+            let cStep = component.assemblyStep + stepOffset;
             let arr = stepToCmps[cStep] || (stepToCmps[cStep] = []);
-            arr.push(c);
-            let wSteps = ws.map(w => w.assemblyStep + stepOffset);
-            ws.forEach((w, i) => {
+            arr.push(component);
+            let wSteps = wires.map(w => w.assemblyStep + stepOffset);
+            wires.forEach((w, i) => {
                 let wStep = wSteps[i];
                 let arr = stepToWires[wStep] || (stepToWires[wStep] = []);
                 arr.push(w);
@@ -324,8 +324,8 @@ namespace pxsim.instructions {
             stepOffset = Math.max(cStep, wSteps.reduce((m, n) => Math.max(m, n), 0)) + 1;
         });
         let lastStep = stepOffset - 1;
-        let allCmps = cmpsAndWiring.map(p => p[0]);
-        let allWires = basicWires.concat(cmpsAndWiring.map(p => p[1]).reduce((p, n) => p.concat(n), []));
+        let allCmps = components.map(p => p.component);
+        let allWires = powerWires.concat(components.map(p => p.wires).reduce((p, n) => p.concat(n), []));
         let colorToWires: Map<WireInstance[]> = {}
         let allWireColors: string[] = [];
         allWires.forEach(w => {
@@ -336,9 +336,9 @@ namespace pxsim.instructions {
             colorToWires[w.color].push(w);
         });
         return {
-            boardDef: board.boardDef,
-            cmpDefs: board.componentDefs,
-            allAlloc: allAlloc,
+            boardDef: allocOpts.boardDef,
+            cmpDefs: allocOpts.cmpDefs,
+            allAlloc: allocRes,
             stepToWires: stepToWires,
             stepToCmps: stepToCmps,
             allWires: allWires,
@@ -348,8 +348,7 @@ namespace pxsim.instructions {
             allWireColors: allWireColors,
         };
     }
-    function mkBoard(boardDef: BoardDefinition, cmpDefs: Map<ComponentDefinition>,
-        width: number, buildMode: boolean = false): visuals.ArduinoSvg {
+    function mkBoard(boardDef: BoardDefinition, cmpDefs: Map<ComponentDefinition>, width: number, buildMode: boolean = false): visuals.ArduinoSvg {
         let board = new visuals.ArduinoSvg({
             runtime: pxsim.runtime,
             boardDef: boardDef,
@@ -554,15 +553,12 @@ namespace pxsim.instructions {
 
         return panel;
     }
-    function updateFrontPanel(boardDef: BoardDefinition, cmpDefs: Map<ComponentDefinition>, cmps: string[]): [HTMLElement, BoardProps] {
-        const FRONT_PAGE_BOARD_WIDTH = 200;
+    function updateFrontPanel(props: BoardProps): [HTMLElement, BoardProps] {
         let panel = document.getElementById("front-panel");
 
-        let board = mkBoard(boardDef, cmpDefs, FRONT_PAGE_BOARD_WIDTH);
-        panel.appendChild(board.hostElement);
-
-        let props = mkBoardProps(board, cmps);
+        let board = mkBoard(props.boardDef, props.cmpDefs, FRONT_PAGE_BOARD_WIDTH, false);
         board.addAll(props.allAlloc);
+        panel.appendChild(board.hostElement);
 
         return [panel, props];
     }
@@ -620,7 +616,6 @@ namespace pxsim.instructions {
 
         //fn args
         let fnArgs = JSON.parse((getQsVal("fnArgs") || "{}"));
-        //TODO:
 
         //init runtime
         const COMP_CODE = "";
@@ -638,8 +633,18 @@ namespace pxsim.instructions {
         let boardDef = ARDUINO_ZERO;
         let cmpDefs = COMPONENT_DEFINITIONS;
 
+        //props
+        let dummyBreadboard = new visuals.Breadboard();
+        let props = mkBoardProps({
+            boardDef: boardDef,
+            cmpDefs: cmpDefs,
+            cmpList: parts,
+            fnArgs: fnArgs,
+            getBBCoord: dummyBreadboard.getCoord.bind(dummyBreadboard)
+        });
+
         //front page
-        let [frontPanel, props] = updateFrontPanel(boardDef, cmpDefs, parts);
+        let frontPanel = updateFrontPanel(props);
 
         //all required parts
         let partsPanel = mkPartsPanel(props);

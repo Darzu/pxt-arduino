@@ -135,7 +135,6 @@ namespace pxsim.visuals {
 
         //EXPERIMENTAl
         private wireFactory: WireFactory;
-        private allocator: Allocator;
         private breadboard: Breadboard;
         private components: IBoardComponent<any>[] = [];
         private pinNmToCoord: Map<Coord> = {};
@@ -181,16 +180,19 @@ namespace pxsim.visuals {
                 let pinDist = compRes.scaleUnit;
 
                 this.wireFactory = new WireFactory(under, over, edges, this.style, this.getLocCoord.bind(this));
-                this.allocator = new Allocator(boardDef, cmpsDef, this.props.fnArgs, this.getBBCoord.bind(this));
-                if (cmps.length) {
-                    let alloc = this.allocator.allocateAll(cmps);
-                    this.addAll(alloc);
-                }
+                let allocRes = allocateDefinitions({
+                    boardDef: boardDef,
+                    cmpDefs: cmpsDef,
+                    fnArgs: this.props.fnArgs,
+                    getBBCoord: this.getBBCoord.bind(this),
+                    cmpList: cmps,
+                });
+                this.addAll(allocRes);
             } else {
                 svg.hydrate(this.hostElement, {
                     width: 299,
                     height: 433,
-                }); 
+                });
             }
 
             this.updateTheme();
@@ -204,8 +206,7 @@ namespace pxsim.visuals {
             return this.fromMBCoord(coord);
         }
         private getBBCoord(rowCol: BBRowCol): Coord {
-            let [row, col] = rowCol;
-            let bbCoord = this.breadboard.getCoord(row, col);
+            let bbCoord = this.breadboard.getCoord(rowCol);
             if (!bbCoord)
                 return null;
             return this.fromBBCoord(bbCoord);
@@ -228,13 +229,13 @@ namespace pxsim.visuals {
         public addWire(inst: WireInstance): Wire {
             return this.wireFactory.addWire(inst.start, inst.end, inst.color, true);
         }
-        public addAll(basicWiresAndCmpsAndWires: [WireInstance[], [ComponentInstance, WireInstance[]][]]) {
-            let [basicWires, cmpsAndWires] = basicWiresAndCmpsAndWires;
-            basicWires.forEach(w => this.addWire(w));
-            cmpsAndWires.forEach((cAndWs, idx) => {
-                let [cmpDef, wireDefs] = cAndWs;
-                wireDefs.forEach(w => this.addWire(w));
-                this.addComponent(cmpDef);
+        public addAll(basicWiresAndCmpsAndWires: AllocatorResult) {
+            let {powerWires, components} = basicWiresAndCmpsAndWires;
+            powerWires.forEach(w => this.addWire(w));
+            components.forEach((cAndWs, idx) => {
+                let {component, wires} = cAndWs;
+                wires.forEach(w => this.addWire(w));
+                this.addComponent(component);
             });
         }
         public addComponent(cmpDesc: ComponentInstance): IBoardComponent<any> {

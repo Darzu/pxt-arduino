@@ -1,11 +1,38 @@
 
-namespace pxsim.visuals {
-    export class Allocator {
-        private boardDef: BoardDefinition;
-        private cmpDefs: Map<ComponentDefinition>;
-        private fnArgs: any;
-        private getBBCoord: (loc: BBRowCol) => Coord;
+namespace pxsim {
+    export interface AllocatorOpts {
+        boardDef: BoardDefinition,
+        cmpDefs: Map<ComponentDefinition>,
+        fnArgs: any,
+        getBBCoord: (loc: BBRowCol) => visuals.Coord,
+        cmpList: string[]
+    };
+    export interface AllocatedComponent {
+        component: ComponentInstance,
+        wires: WireInstance[]
+    }
+    export interface AllocatorResult {
+        powerWires: WireInstance[],
+        components: AllocatedComponent[]
+    }
 
+    interface AllocLocOpts {
+        nearestBBPin?: BBRowCol,
+        startColumn?: number,
+        availableGPIOPins?: string[],
+    };
+    interface AllocWireOpts {
+        startColumn: number,
+        availableGPIOPins: string[],
+    }
+    interface AllocBlock {
+        cmpIdx: number,
+        blkIdx: number,
+        gpioNeeded: number,
+        gpioAssigned: string[]
+    }
+    class Allocator {
+        private opts: AllocatorOpts;
         private availablePowerPins = {
             top: {
                 threeVolt: mkRange(26, 51).map(n => <BBRowCol>["+", `${n}`]),
@@ -17,35 +44,26 @@ namespace pxsim.visuals {
             },
         };
 
-        constructor(boardDef: BoardDefinition, cmpDefs: Map<ComponentDefinition>, fnArgs: any, getBBCoord: (loc: BBRowCol) => Coord) {
-            this.boardDef = boardDef;
-            this.cmpDefs = cmpDefs;
-            this.fnArgs = fnArgs;
-            this.getBBCoord = getBBCoord;
+        constructor(opts: AllocatorOpts) {
+            this.opts = opts;
         }
 
-        private allocateLocation(location: LocationDefinition,
-            opts: {
-                nearestBBPin?: BBRowCol,
-                startColumn?: number,
-                availableGPIOPins?: string[],
-            }): Loc
-        {
+        private allocateLocation(location: LocationDefinition, opts: AllocLocOpts): Loc {
             if (location === "ground" || location === "threeVolt") {
                 U.assert(!!opts.nearestBBPin);
                 let nearLoc = opts.nearestBBPin;
-                let nearestCoord = this.getBBCoord(nearLoc);
+                let nearestCoord = this.opts.getBBCoord(nearLoc);
                 let firstTopAndBot = [
                     this.availablePowerPins.top.ground[0] || this.availablePowerPins.top.threeVolt[0],
                     this.availablePowerPins.bottom.ground[0] || this.availablePowerPins.bottom.threeVolt[0]
                 ].map(loc => {
-                    return this.getBBCoord(loc);
+                    return this.opts.getBBCoord(loc);
                 });
                 if (!firstTopAndBot[0] || !firstTopAndBot[1]) {
                     console.debug(`No more available "${location}" locations!`);
                     //TODO
                 }
-                let nearTop = findClosestCoordIdx(nearestCoord, firstTopAndBot) == 0;
+                let nearTop = visuals.findClosestCoordIdx(nearestCoord, firstTopAndBot) == 0;
                 let pins: BBRowCol[];
                 if (nearTop) {
                     if (location === "ground") {
@@ -61,9 +79,9 @@ namespace pxsim.visuals {
                     }
                 }
                 let pinCoords = pins.map(rowCol => {
-                    return this.getBBCoord(rowCol);
+                    return this.opts.getBBCoord(rowCol);
                 });
-                let pinIdx = findClosestCoordIdx(nearestCoord, pinCoords);
+                let pinIdx = visuals.findClosestCoordIdx(nearestCoord, pinCoords);
                 let pin = pins[pinIdx];
                 if (nearTop) {
                     this.availablePowerPins.top.ground.splice(pinIdx, 1);
@@ -89,13 +107,13 @@ namespace pxsim.visuals {
                 return null;
             }
         }
-        public allocateBasicWires(): WireInstance[] {
-            let boardGround = this.boardDef.groundPins[0] || null;
+        private allocateBasicWires(): WireInstance[] {
+            let boardGround = this.opts.boardDef.groundPins[0] || null;
             if (!boardGround) {
                 console.log("No available ground pin on board!");
                 //TODO
             }
-            let threeVoltPin = this.boardDef.threeVoltPins[0] || null;
+            let threeVoltPin = this.opts.boardDef.threeVoltPins[0] || null;
             if (!threeVoltPin) {
                 console.log("No available 3.3V pin on board!");
                 //TODO
@@ -105,7 +123,7 @@ namespace pxsim.visuals {
             let topRight: BBRowCol = ["-", "50"];
             let botRight: BBRowCol = ["-", "25"];
             let top: BBRowCol, bot: BBRowCol;
-            if (this.boardDef.attachPowerOnRight) {
+            if (this.opts.boardDef.attachPowerOnRight) {
                 top = topRight;
                 bot = botRight;
             } else {
@@ -130,12 +148,7 @@ namespace pxsim.visuals {
             ];
             return wires;
         }
-        public allocateWire(wireDef: WireDefinition,
-            opts: {
-                startColumn: number,
-                availableGPIOPins: string[],
-            }): WireInstance
-        {
+        private allocateWire(wireDef: WireDefinition, opts: AllocWireOpts): WireInstance {
             let ends = [wireDef.start, wireDef.end];
             let endIsPower = ends.map(e => e === "ground" || e === "threeVolt");
             let endInsts = ends.map((e, idx) => !endIsPower[idx] ? this.allocateLocation(e, opts) : null)
@@ -154,7 +167,7 @@ namespace pxsim.visuals {
         }
         private allocateGPIOPins(cmpDefs: ComponentDefinition[]): string[][][] {
             // determine blocks needed
-            let blockAssignments: {cmpIdx: number, blkIdx: number, gpioNeeded: number, gpioAssigned: string[]}[] = [];
+            let blockAssignments: AllocBlock[] = [];
             cmpDefs.forEach((def, idx) => {
                 if (def) {
                     if (typeof def.gpioPinsNeeded === "number") {
@@ -178,7 +191,7 @@ namespace pxsim.visuals {
             let sortAvailableGPIOBlocks = () => availableGPIOBlocks.sort((a, b) => b.length - a.length); //largest blocks first
             // allocate each block
             let copyDoubleArray = (a: string[][]) => a.map(b => b.map(p => p));
-            let availableGPIOBlocks = copyDoubleArray(this.boardDef.gpioPinBlocks);
+            let availableGPIOBlocks = copyDoubleArray(this.opts.boardDef.gpioPinBlocks);
             if (0 < blockAssignments.length && 0 < availableGPIOBlocks.length) {
                 do {
                     sortBlockAssignments();
@@ -243,7 +256,7 @@ namespace pxsim.visuals {
             });
             return cmpStartCol;
         }
-        public allocateComponent(cmpDef: ComponentDefinition, startColumn: number): ComponentInstance {
+        private allocateComponent(cmpDef: ComponentDefinition, startColumn: number): ComponentInstance {
             return {
                 breadboardStartColumn: startColumn,
                 breadboardStartRow: cmpDef.breadboardStartRow,
@@ -253,7 +266,7 @@ namespace pxsim.visuals {
                 builtinSimVisual: cmpDef.builtinSimVisual,
             };
         }
-        public allocateComponentsAndWiring(cmpDefs: ComponentDefinition[]): [ComponentInstance, WireInstance[]][] {
+        private allocateComponentsAndWiring(cmpDefs: ComponentDefinition[]): AllocatedComponent[] {
             let cmpGPIOPinBlocks = this.allocateGPIOPins(cmpDefs);
             let availableGPIOPins = cmpGPIOPinBlocks.map(blks => blks.reduce((p, n) => p.concat(n), []));
             let cmpStartCol = this.allocateColumns(cmpDefs);
@@ -262,18 +275,28 @@ namespace pxsim.visuals {
                 startColumn: cmpStartCol[idx],
             })));
             let cmps = cmpDefs.map((c, idx) => this.allocateComponent(c, cmpStartCol[idx]));
-            let cmpsAndWires = cmps.map((c, idx) => <[ComponentInstance, WireInstance[]]>[c, wires[idx]]);
+            let cmpsAndWires: AllocatedComponent[] = cmps.map((c, idx) => {
+                return {component: c, wires: wires[idx]}
+            });
             return cmpsAndWires;
         }
-        public allocateAll(cmps: string[]): [WireInstance[], [ComponentInstance, WireInstance[]][]] {
+        public allocateAll(): AllocatorResult {
+            let cmps = this.opts.cmpList;
             let basicWires: WireInstance[] = [];
-            let cmpsAndWires: [ComponentInstance, WireInstance[]][] = [];
+            let cmpsAndWires: AllocatedComponent[] = [];
             if (cmps.length > 0) {
                 basicWires = this.allocateBasicWires();
-                let cmpDefs = cmps.map(c => this.cmpDefs[c] || null).filter(d => !!d);
+                let cmpDefs = cmps.map(c => this.opts.cmpDefs[c] || null).filter(d => !!d);
                 cmpsAndWires = this.allocateComponentsAndWiring(cmpDefs);
             }
-            return [basicWires, cmpsAndWires];
+            return {
+                powerWires: basicWires, 
+                components: cmpsAndWires
+            };
         }
+    }
+
+    export function allocateDefinitions(opts: AllocatorOpts): AllocatorResult {
+        return new Allocator(opts).allocateAll();
     }
 }

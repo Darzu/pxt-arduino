@@ -312,7 +312,8 @@ namespace pxsim.visuals {
                 return null;
             return pin;
         }
-        public getCoord(row: string, col: string): Coord {
+        public getCoord(rowCol: BBRowCol): Coord {
+            let [row, col] = rowCol;
             let pin = this.getPin(row, col);
             if (!pin)
                 return null;
@@ -450,7 +451,7 @@ namespace pxsim.visuals {
             const mkBBLabelAtPin = (row: string, col: string, xOffset: number, yOffset: number, txt: string, group?: string): GridLabel => {
                 let size = PIN_LBL_SIZE;
                 let rotation = LBL_ROTATION;
-                let loc = this.getCoord(row, col);
+                let loc = this.getCoord([row, col]);
                 let [cx, cy] = loc;
                 let t = mkBBLabel(cx + xOffset, cy + yOffset, size, rotation, txt, group);
                 return t;
