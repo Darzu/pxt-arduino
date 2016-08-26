@@ -88,8 +88,11 @@ namespace pxsim.visuals {
         // wires
         private mkCurvedWireSeg = (p1: [number, number], p2: [number, number], clrClass: string): SVGPathElement => {
             const coordStr = (xy: [number, number]): string => {return `${xy[0]}, ${xy[1]}`};
-            let c1: [number, number] = [p1[0], p2[1]];
-            let c2: [number, number] = [p2[0], p1[1]];
+            let [x1, y1] = p1;
+            let [x2, y2] = p2
+            let yLen = (y2 - y1);
+            let c1: [number, number] = [x1, y1 + yLen * .6];
+            let c2: [number, number] = [x2, y2 - yLen * .6];
             let w = <SVGPathElement>svg.mkPath("sim-bb-wire", `M${coordStr(p1)} C${coordStr(c1)} ${coordStr(c2)} ${coordStr(p2)}`);
             svg.addClass(w, `wire-stroke-${clrClass}`);
             return w;

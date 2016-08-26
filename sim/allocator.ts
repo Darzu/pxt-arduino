@@ -98,8 +98,8 @@ namespace pxsim.visuals {
                 console.log("No available 3.3V pin on board!");
                 //TODO
             }
-            let topLeft: BBRowCol = ["-", "26"];
-            let botLeft: BBRowCol = ["-", "1"];
+            let topLeft: BBRowCol = ["-", "50"];
+            let botLeft: BBRowCol = ["-", "25"];
             const GROUND_COLOR = "blue";
             const POWER_COLOR = "red";
             const wires: WireInstance[] = [

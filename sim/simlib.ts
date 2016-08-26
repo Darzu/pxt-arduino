@@ -80,9 +80,9 @@ namespace pxsim.visuals {
         U.assert(a.x == 0 && a.y == 0 && b.x == 0 && b.y == 0, "el1 and el2 x,y offsets not supported");
         let setXY = (e: SVGSVGElement, x: number, y: number) => svg.hydrate(e, {x: x, y: y});
         let setWH = (e: SVGSVGElement, w: number, h: number) => svg.hydrate(e, {width: w, height: h});
-        let scaleUnit = opts.scaleUnit1;
-        let aScalar = 1.0;
-        let bScalar = opts.scaleUnit1 / opts.scaleUnit2;
+        let scaleUnit = opts.scaleUnit2;
+        let aScalar = opts.scaleUnit2 / opts.scaleUnit1;
+        let bScalar = 1.0;
         let aw = a.w * aScalar;
         let ah = a.h * aScalar;
         setWH(a.el, aw, ah);
