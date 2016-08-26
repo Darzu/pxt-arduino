@@ -79,14 +79,14 @@ namespace pxsim.visuals {
         let img = <SVGImageElement>svg.elt("image");
         svg.hydrate(img, {class: "sim-neopixel-strip", x: l, y: t, width: w, height: h,
             href: `/static/arduino/${NEOPIXEL_PART_IMG}`});
-        return {e: img, l: l, t: t, w: w, h: h};
+        return {el: img, x: l, y: t, w: w, h: h};
     }
     export class NeoPixel implements SVGAndSize<SVGCircleElement> {
-        public e: SVGCircleElement;
+        public el: SVGCircleElement;
         public w: number;
         public h: number;
-        public l: number;
-        public t: number;
+        public x: number;
+        public y: number;
         public cx: number;
         public cy: number;
 
@@ -95,11 +95,11 @@ namespace pxsim.visuals {
             let r = PIXEL_RADIUS;
             let [cx, cy] = xy;
             svg.hydrate(circle, {cx: cx, cy: cy, r: r, class: "sim-neopixel"});
-            this.e = circle;
+            this.el = circle;
             this.w = r * 2;
             this.h = r * 2;
-            this.l = cx - r;
-            this.t = cy - r;
+            this.x = cx - r;
+            this.y = cy - r;
             this.cx = cx;
             this.cy = cy;
         }
@@ -109,7 +109,7 @@ namespace pxsim.visuals {
             let [h, s, l] = hsl;
             //We ignore luminosity since it doesn't map well to real-life brightness
             let fill = `hsl(${h}, ${s}%, 70%)`;
-            this.e.setAttribute("fill", fill);
+            this.el.setAttribute("fill", fill);
         }
     }
 
@@ -148,11 +148,11 @@ namespace pxsim.visuals {
                 if (!pixel) {
                     let cxy: Coord = [0, CANVAS_VIEW_PADDING + i * PIXEL_SPACING];
                     pixel = this.pixels[i] = new NeoPixel(cxy);
-                    this.canvas.appendChild(pixel.e);
+                    this.canvas.appendChild(pixel.el);
                 }
                 let color = colors[i];
                 pixel.setRgb(color);
-                svg.hydrate(pixel.e, {title: `offset: ${i}`});
+                svg.hydrate(pixel.el, {title: `offset: ${i}`});
             }
 
             //show the canvas if it's hidden
@@ -234,13 +234,13 @@ namespace pxsim.visuals {
                 if (s) {
                     let [x, y] = xy;
                     s.canvas.setLoc([x + CANVAS_LEFT, y + CANVAS_TOP]);
-                    svg.hydrate(s.part.e, {transform: `translate(${x} ${y})`}); //TODO: update part's l,h, etc.
+                    svg.hydrate(s.part.el, {transform: `translate(${x} ${y})`}); //TODO: update part's l,h, etc.
                 }
             });
         }
         public mkStrip(pin: DigitalPin) {
             let part = mkNeoPixelPart();
-            this.stripsGroup.appendChild(part.e);
+            this.stripsGroup.appendChild(part.el);
             let canvas = new NeoPixelCanvas(pin);
             let canvasG = svg.child(this.stripsGroup, "g", {class: "sim-neopixel-canvas-parent"});
             canvasG.appendChild(canvas.canvas);

@@ -158,7 +158,7 @@ namespace pxsim.visuals {
             this.hostElement = this.element;
             this.recordPinCoords();
             let compRes = composeSVG({
-                el1: {e: this.element, t: 0, l: 0, w: MB_WIDTH, h: MB_HEIGHT},
+                el1: {el: this.element, y: 0, x: 0, w: MB_WIDTH, h: MB_HEIGHT},
                 scaleUnit1: littlePinDist * 1.7,
                 el2: this.breadboard.getSVGAndSize(),
                 scaleUnit2: this.breadboard.getPinDist(),

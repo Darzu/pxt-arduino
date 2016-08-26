@@ -374,7 +374,7 @@ namespace pxsim.visuals {
                     width: width,
                     height: width,
                 });
-                return {e: el, w: width, h: width, l: 0, t: 0};
+                return {el: el, w: width, h: width, x: 0, y: 0};
             }
             const mkSquareHoverPin = (): SVGElAndSize => {
                 let el = svg.elt("rect");
@@ -384,7 +384,7 @@ namespace pxsim.visuals {
                     width: width,
                     height: width
                 });
-                return {e: el, w: width, h: width, l: 0, t: 0};
+                return {el: el, w: width, h: width, x: 0, y: 0};
             }
             const mkPinBlockGrid = (pinBlock: PinBlockDefinition, blockIdx: number) => {
                 let xOffset = this.boardDim.xOff + this.boardDim.scaleFn(pinBlock.x) + PIN_DIST / 2.0;

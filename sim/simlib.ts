@@ -77,7 +77,7 @@ namespace pxsim.visuals {
     }
     export function composeSVG(opts: ComposeOpts): ComposeResult {
         let [a, b] = [opts.el1, opts.el2];
-        U.assert(a.l == 0 && a.t == 0 && b.l == 0 && b.t == 0, "el1 and el2 x,y offsets not supported");
+        U.assert(a.x == 0 && a.y == 0 && b.x == 0 && b.y == 0, "el1 and el2 x,y offsets not supported");
         let setXY = (e: SVGSVGElement, x: number, y: number) => svg.hydrate(e, {x: x, y: y});
         let setWH = (e: SVGSVGElement, w: number, h: number) => svg.hydrate(e, {width: w, height: h});
         let scaleUnit = opts.scaleUnit1;
@@ -85,19 +85,19 @@ namespace pxsim.visuals {
         let bScalar = opts.scaleUnit1 / opts.scaleUnit2;
         let aw = a.w * aScalar;
         let ah = a.h * aScalar;
-        setWH(a.e, aw, ah);
+        setWH(a.el, aw, ah);
         let bw = b.w * bScalar;
         let bh = b.h * bScalar;
-        setWH(b.e, bw, bh);
+        setWH(b.el, bw, bh);
         let [mt, mr, mb, ml] = opts.margin;
         let mm = opts.middleMargin;
         let innerW = Math.max(aw, bw);
         let ax = mr + (innerW - aw) / 2.0;
         let ay = mt;
-        setXY(a.e, ax, ay);
+        setXY(a.el, ax, ay);
         let bx = mr + (innerW - bw) / 2.0;
         let by = ay + ah + mm;
-        setXY(b.e, bx, by);
+        setXY(b.el, bx, by);
         let edges = [ay, ay + ah, by, by + bh];
         let w = mr + innerW + ml;
         let h = mt + ah + mm + bh + mb;
@@ -109,8 +109,8 @@ namespace pxsim.visuals {
         setWH(host, opts.maxWidth, opts.maxHeight);
         setXY(host, 0, 0);
         let under = <SVGGElement>svg.child(host, "g");
-        host.appendChild(a.e);
-        host.appendChild(b.e);
+        host.appendChild(a.el);
+        host.appendChild(b.el);
         let over = <SVGGElement>svg.child(host, "g");
         let toHostCoord1 = (xy: Coord): Coord => {
             let [x, y] = xy;
@@ -187,7 +187,7 @@ namespace pxsim.visuals {
         return WIRE_COLOR_MAP[clr] || clr;
     }
 
-    export interface SVGAndSize<T extends SVGElement> {e: T, t: number, l: number, w: number, h: number};
+    export interface SVGAndSize<T extends SVGElement> {el: T, y: number, x: number, w: number, h: number};
     export type SVGElAndSize = SVGAndSize<SVGElement>;
 
     export const PIN_DIST = 15;

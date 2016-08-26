@@ -120,7 +120,7 @@ namespace pxsim.instructions {
         let c2: [number, number] = [x2, y2 - yLen * .8];
         let e = <SVGPathElement>svg.mkPath("sim-bb-wire", `M${coordStr(p1)} C${coordStr(c1)} ${coordStr(c2)} ${coordStr(p2)}`);
         (<any>e).style["stroke"] = clr;
-        return {e: e, l: Math.min(x1, x2), t: Math.min(y1, y2), w: Math.abs(x1 - x2), h: Math.abs(y1 - y2)};
+        return {el: e, x: Math.min(x1, x2), y: Math.min(y1, y2), w: Math.abs(x1 - x2), h: Math.abs(y1 - y2)};
     }
     function mkWireEnd(p: [number, number], top: boolean, clr: string): visuals.SVGElAndSize {
         const endW = visuals.PIN_DIST / 4.0;
@@ -148,7 +148,7 @@ namespace pxsim.instructions {
 
         g.appendChild(el2);
         g.appendChild(el);
-        return {e: g, l: x1 - endW, t: Math.min(y1, y2), w: w1 + endW * 2, h: h1 + h2};
+        return {el: g, x: x1 - endW, y: Math.min(y1, y2), w: w1 + endW * 2, h: h1 + h2};
     }
     function mkWire(cp: [number, number], clr: string): visuals.SVGAndSize<SVGGElement> {
         let g = <SVGGElement>svg.elt("g");
@@ -160,14 +160,14 @@ namespace pxsim.instructions {
         let e1 = mkWireEnd(p1, true, clr);
         let s = mkWireSeg(p1, p2, clr);
         let e2 = mkWireEnd(p2, false, clr);
-        g.appendChild(s.e);
-        g.appendChild(e1.e);
-        g.appendChild(e2.e);
-        let l = Math.min(e1.l, e2.l);
-        let r = Math.max(e1.l + e1.w, e2.l + e2.w);
-        let t = Math.min(e1.t, e2.t);
-        let b = Math.max(e1.t + e1.h, e2.t + e2.h);
-        return {e: g, l: l, t: t, w: r - l, h: b - t};
+        g.appendChild(s.el);
+        g.appendChild(e1.el);
+        g.appendChild(e2.el);
+        let l = Math.min(e1.x, e2.x);
+        let r = Math.max(e1.x + e1.w, e2.x + e2.w);
+        let t = Math.min(e1.y, e2.y);
+        let b = Math.max(e1.y + e1.h, e2.y + e2.h);
+        return {el: g, x: l, y: t, w: r - l, h: b - t};
     }
     type mkCmpDivOpts = {
         top?: string,
@@ -196,7 +196,7 @@ namespace pxsim.instructions {
             height: def.height,
             "href": `${def.image}`});
 
-        return {e: img, w: w, h: h, l: l, t};
+        return {el: img, w: w, h: h, x: l, y: t};
     }
     function mkBBSvg(): visuals.SVGElAndSize {
         let bb = new visuals.Breadboard();
@@ -211,9 +211,9 @@ namespace pxsim.instructions {
         let cmpSvgEl = <SVGSVGElement>document.createElementNS("http://www.w3.org/2000/svg", "svg");
         svgEl.appendChild(cmpSvgEl);
 
-        cmpSvgEl.appendChild(el.e);
+        cmpSvgEl.appendChild(el.el);
         let cmpSvgAtts = {
-            "viewBox": `${el.l} ${el.t} ${el.w} ${el.h}`,
+            "viewBox": `${el.x} ${el.y} ${el.w} ${el.h}`,
             "preserveAspectRatio": "xMidYMid",
         };
         dims.w = el.w;

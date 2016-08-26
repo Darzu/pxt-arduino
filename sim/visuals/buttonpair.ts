@@ -48,7 +48,7 @@ namespace pxsim.visuals {
         let innerBtn = svg.child(btng, "circle", { class: innerCls, cx: btnCX, cy: btnCY, r: btnR });
 
         //return
-        return { e: btng, t: top, l: left, w: plateW, h: plateH + 2 * tabSize };
+        return { el: btng, y: top, x: left, w: plateW, h: plateH + 2 * tabSize };
     }
     export const BUTTON_PAIR_STYLE = `
             .sim-button {
@@ -131,8 +131,8 @@ namespace pxsim.visuals {
         public updateTheme() {}
 
         private mkBtns() {
-            this.aBtn = mkBtnSvg([0, 0]).e;
-            this.bBtn = mkBtnSvg([0, 0]).e;
+            this.aBtn = mkBtnSvg([0, 0]).el;
+            this.bBtn = mkBtnSvg([0, 0]).el;
 
             const mkVirtualBtn = () => {
                 const numPins = 2;

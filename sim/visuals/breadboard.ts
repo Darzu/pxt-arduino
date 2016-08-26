@@ -210,9 +210,9 @@ namespace pxsim.visuals {
                 const addEl = (pin: SVGElAndSize) => {
                     let pinX = cx - pin.w * 0.5;
                     let pinY = cy - pin.h * 0.5;
-                    svg.hydrate(pin.e, {x: pinX, y: pinY});
-                    grid.appendChild(pin.e);
-                    return pin.e;
+                    svg.hydrate(pin.el, {x: pinX, y: pinY});
+                    grid.appendChild(pin.el);
+                    return pin.el;
                 }
                 let el = addEl(opts.mkPin());
                 let hoverEl = addEl(opts.mkHoverPin());
@@ -239,7 +239,7 @@ namespace pxsim.visuals {
             width: width,
             height: width
         });
-        return {e: el, w: width, h: width, l: 0, t: 0};
+        return {el: el, w: width, h: width, x: 0, y: 0};
     }
     function mkBBHoverPin(): SVGElAndSize {
         let el = svg.elt("rect");
@@ -251,7 +251,7 @@ namespace pxsim.visuals {
             width: width,
             height: width,
         });
-        return {e: el, w: width, h: width, l: 0, t: 0};
+        return {el: el, w: width, h: width, x: 0, y: 0};
     }
     export interface GridLabel {
         el: SVGTextElement,
@@ -622,7 +622,7 @@ namespace pxsim.visuals {
         }
 
         public getSVGAndSize(): SVGAndSize<SVGSVGElement> {
-            return {e: this.bb, t: 0, l: 0, w: WIDTH, h: HEIGHT};
+            return {el: this.bb, y: 0, x: 0, w: WIDTH, h: HEIGHT};
         }
 
         public highlightLoc(row: string, col: string) {
