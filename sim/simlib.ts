@@ -56,6 +56,66 @@ namespace pxsim.visuals {
         svg.hydrate(el, {transform: `translate(${xy[0]} ${xy[1]})`});
     }
 
+    export interface ComposeOpts {
+        el1: SVGAndSize<SVGSVGElement>,
+        scaleUnit1: number,
+        el2: SVGAndSize<SVGSVGElement>,
+        scaleUnit2: number,
+        margin: [number, number, number, number],
+        middleMargin: number,
+    }
+    export interface ComposeResult {
+        host: SVGSVGElement,
+        scaleUnit: number,
+        under: SVGGElement,
+        over: SVGGElement,
+        edges: number[],
+    }
+    export function composeSVG(opts: ComposeOpts): ComposeResult {
+        let [a, b] = [opts.el1, opts.el2];
+        U.assert(a.l == 0 && a.t == 0 && b.l == 0 && b.t == 0, "el1 and el2 x,y offsets not supported");
+        let setXY = (e: SVGSVGElement, x: number, y: number) => svg.hydrate(e, {x: x, y: y});
+        let setWH = (e: SVGSVGElement, w: number, h: number) => svg.hydrate(e, {width: w, height: h});
+        let scaleUnit = opts.scaleUnit1;
+        let bScalar = opts.scaleUnit1 / opts.scaleUnit2;
+        let aw = a.w;
+        let ah = a.h;
+        setWH(a.e, aw, ah);
+        let bw = b.w * bScalar;
+        let bh = b.h * bScalar;
+        setWH(b.e, bw, bh);
+        let [mt, mr, mb, ml] = opts.margin;
+        let mm = opts.middleMargin;
+        let innerW = Math.max(aw, bw);
+        let ax = mr + (innerW - aw) / 2.0;
+        let ay = mt;
+        setXY(a.e, ax, ay);
+        let bx = mr + (innerW - bw) / 2.0;
+        let by = ay + ah + mm;
+        setXY(b.e, bx, by);
+        let edges = [ay, ay + ah, by, by + bh];
+        let w = mr + innerW + ml;
+        let h = mt + ah + mm + bh + mb;
+        let host = <SVGSVGElement>svg.elt("svg", {
+            "version": "1.0",
+            "viewBox": `0 0 ${w} ${h}`,
+            "class": `sim-bb`,
+        });
+        setWH(host, w, h);
+        setXY(host, 0, 0);
+        let under = <SVGGElement>svg.child(host, "g");
+        host.appendChild(a.e);
+        host.appendChild(b.e);
+        let over = <SVGGElement>svg.child(host, "g");
+        return {
+            under: under,
+            over: over,
+            host: host,
+            edges: edges,
+            scaleUnit: scaleUnit,
+        };
+    }
+
     export type Coord = [number, number];
     export function findDistSqrd(a: Coord, b: Coord): number {
         let x = a[0] - b[0];
