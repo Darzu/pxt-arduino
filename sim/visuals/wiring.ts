@@ -60,8 +60,9 @@ namespace pxsim.visuals {
             .replace(/\s/g, "");
     }
     export enum WireEndStyle {
-        InPin,
-        Open
+        BBJumper,
+        OpenJumper,
+        Croc,
     }
     export interface WireOpts { //TODO: use throughout
         color?: string,
@@ -75,9 +76,9 @@ namespace pxsim.visuals {
         let p1: visuals.Coord = [cx - offset, cy - WIRE_PART_LENGTH / 2];
         let p2: visuals.Coord = [cx + offset, cy + WIRE_PART_LENGTH / 2];
         clr = visuals.mapWireColor(clr);
-        let e1 = mkOpenEnd(p1, true, clr);
+        let e1 = mkOpenJumperEnd(p1, true, clr);
         let s = mkWirePartSeg(p1, p2, clr);
-        let e2 = mkOpenEnd(p2, false, clr);
+        let e2 = mkOpenJumperEnd(p2, false, clr);
         g.appendChild(s.el);
         g.appendChild(e1.el);
         g.appendChild(e2.el);
@@ -116,7 +117,7 @@ namespace pxsim.visuals {
         svg.addClass(w, `wire-stroke-${clrClass}`);
         return w;
     }
-    function mkInPinEnd(p: [number, number], clrClass: string): SVGElement {
+    function mkBBJumperEnd(p: [number, number], clrClass: string): SVGElement {
         const endW = PIN_DIST / 4;
         let w = svg.elt("circle");
         let x = p[0];
@@ -127,29 +128,78 @@ namespace pxsim.visuals {
         (<any>w).style["stroke-width"] = `${endW}px`;
         return w;
     }
-    function mkOpenEnd(p: [number, number], top: boolean, clr: string): SVGElAndSize {
-        const endW = visuals.PIN_DIST / 4.0;
+    function mkOpenJumperEnd(p: [number, number], top: boolean, clr: string): visuals.SVGElAndSize {
         let k = visuals.PIN_DIST * 0.24;
+        let plasticLength = k * 10;
+        let plasticWidth = k * 2;
+        let metalLength = k * 6;
+        let metalWidth = k;
+        const strokeWidth = visuals.PIN_DIST / 4.0;
+        let [cx, cy] = p;
+        let o = top ? -1 : 1;
+        let g = svg.elt("g")
+
+        let el = svg.elt("rect");
+        let h1 = plasticLength;
+        let w1 = plasticWidth;
+        let x1 = cx - w1 / 2;
+        let y1 = cy - (h1 / 2);
+        svg.hydrate(el, {x: x1, y: y1, width: w1, height: h1, rx: 0.5, ry: 0.5, class: "sim-bb-wire-end"});
+        (<any>el).style["stroke-width"] = `${strokeWidth}px`;
+
+        let el2 = svg.elt("rect");
+        let h2 = metalLength;
+        let w2 = metalWidth;
+        let cy2 = cy + o * (h1 / 2 + h2 / 2);
+        let x2 = cx - w2 / 2;
+        let y2 = cy2 - (h2 / 2);
+        svg.hydrate(el2, {x: x2, y: y2, width: w2, height: h2, class: "sim-bb-wire-bare-end"});
+        (<any>el2).style["fill"] = `#bbb`;
+
+        g.appendChild(el2);
+        g.appendChild(el);
+        return {el: g, x: x1 - strokeWidth, y: Math.min(y1, y2), w: w1 + strokeWidth * 2, h: h1 + h2};
+    }
+    function mkCrocEnd(p: [number, number], top: boolean, clr: string): SVGElAndSize {
+        //TODO: merge with mkOpenJumperEnd()
+        let k = visuals.PIN_DIST * 0.24;
+        const plasticWidth = k * 4;
+        const plasticLength = k * 10.0;
+        const metalWidth = k * 3.5;
+        const metalHeight = k * 3.5;
+        const pointScalar = .15;
+        const baseScalar = .3;
+        const taperScalar = .7;
+        const strokeWidth = visuals.PIN_DIST / 4.0;
         let [cx, cy] = p;
         let o = top ? -1 : 1;
         let g = svg.elt("g")
 
         let el = svg.elt("polygon");
-        let h1 = k * 10.0;
-        let w1 = k * 4;
+        let h1 = plasticLength;
+        let w1 = plasticWidth;
         let x1 = cx - w1 / 2;
         let y1 = cy - (h1 / 2);
         let mkPnt = (xy: Coord) => `${xy[0]},${xy[1]}`;
         let mkPnts = (...xys: Coord[]) => xys.map(xy => mkPnt(xy)).join(" ");
+        const topScalar = top ? pointScalar : baseScalar;
+        const midScalar = top ? taperScalar : (1 - taperScalar);
+        const botScalar = top ? baseScalar : pointScalar;
         svg.hydrate(el, {
-            points: mkPnts([x1+w1*.15, y1], [x1 + w1*.85, y1], [x1 + w1, y1 + h1*.7], [x1 + w1*.7, y1 + h1], [x1+w1*.30, y1 + h1], [x1, y1 + h1*.7])
+            points: mkPnts(
+                [x1 + w1 * topScalar, y1], //TL
+                [x1 + w1 * (1 - topScalar), y1], //TR
+                [x1 + w1, y1 + h1 * midScalar], //MR
+                [x1 + w1 * (1 - botScalar), y1 + h1], //BR
+                [x1 + w1 * botScalar, y1 + h1], //BL
+                [x1, y1 + h1 * midScalar]) //ML
         });
         svg.hydrate(el, {rx: 0.5, ry: 0.5, class: "sim-bb-wire-end"});
-        (<any>el).style["stroke-width"] = `${endW}px`;
+        (<any>el).style["stroke-width"] = `${strokeWidth}px`;
 
         let el2 = svg.elt("rect");
-        let h2 = k * 3.5;
-        let w2 = k * 3.5;
+        let h2 = metalWidth;
+        let w2 = metalHeight;
         let cy2 = cy + o * (h1 / 2 + h2 / 2);
         let x2 = cx - w2 / 2;
         let y2 = cy2 - (h2 / 2);
@@ -157,7 +207,7 @@ namespace pxsim.visuals {
 
         g.appendChild(el2);
         g.appendChild(el);
-        return {el: g, x: x1 - endW, y: Math.min(y1, y2), w: w1 + endW * 2, h: h1 + h2};
+        return {el: g, x: x1 - strokeWidth, y: Math.min(y1, y2), w: w1 + strokeWidth * 2, h: h1 + h2};
     }
 
     //TODO: make this stupid class obsolete
@@ -212,8 +262,8 @@ namespace pxsim.visuals {
             }
             let wireId = nextWireId++;
             let clrClass = cssEncodeColor(color);
-            let end1 = mkInPinEnd(pin1, clrClass);
-            let end2 = mkInPinEnd(pin2, clrClass);
+            let end1 = mkBBJumperEnd(pin1, clrClass);
+            let end2 = mkBBJumperEnd(pin2, clrClass);
             let endG = <SVGGElement>svg.child(g, "g", {class: "sim-bb-wire-ends-g"});
             endG.appendChild(end1);
             endG.appendChild(end2);
@@ -271,7 +321,10 @@ namespace pxsim.visuals {
 
             return {endG: endG, end1: end1, end2: end2, wires: wires};
         }
-        private drawWire2(pin1: Coord, pin2: Coord, color: string): Wire {
+        private drawWireWithCrocs(pin1: Coord, pin2: Coord, color: string): Wire {
+            //TODO: merge with drawWire()
+            const PIN_Y_OFF = 40;
+            const CROC_Y_OFF = -17;
             let wires: SVGElement[] = [];
             let g = svg.child(this.overboard, "g", {class: "sim-bb-wire-group"});
             const closestPointOffBoard = (p: [number, number]): [number, number] => {
@@ -286,14 +339,13 @@ namespace pxsim.visuals {
             }
             let wireId = nextWireId++;
             let clrClass = cssEncodeColor(color);
-            let end1 = mkInPinEnd(pin1, clrClass);
-            //let end2 = mkInPinEnd(pin2, clrClass);
+            let end1 = mkBBJumperEnd(pin1, clrClass);
             let pin2orig = pin2;
             let [x2, y2] = pin2;
-            pin2 = [x2, y2 + 40];
+            pin2 = [x2, y2 + PIN_Y_OFF];//HACK
             [x2, y2] = pin2;
-            let endCoord2: Coord = [x2, y2 - 17]
-            let end2AndSize = mkOpenEnd(endCoord2, true, color);//HACK
+            let endCoord2: Coord = [x2, y2 + CROC_Y_OFF]
+            let end2AndSize = mkCrocEnd(endCoord2, true, color);
             let end2 = end2AndSize.el;
             let endG = <SVGGElement>svg.child(g, "g", {class: "sim-bb-wire-ends-g"});
             endG.appendChild(end1);
@@ -354,12 +406,12 @@ namespace pxsim.visuals {
             return {endG: endG, end1: end1, end2: end2, wires: wires};
         }
 
-        public addWire(start: Loc, end: Loc, color: string): Wire {
+        public addWire(start: Loc, end: Loc, color: string, withCrocs: boolean = false): Wire {
             let startLoc = this.getLocCoord(start);
             let endLoc = this.getLocCoord(end);
             let wireEls: Wire;
-            if (end.type === "dalboard") {
-                wireEls = this.drawWire2(startLoc, endLoc, color);
+            if (withCrocs) {
+                wireEls = this.drawWireWithCrocs(startLoc, endLoc, color);
             } else {
                 wireEls = this.drawWire(startLoc, endLoc, color);
             }

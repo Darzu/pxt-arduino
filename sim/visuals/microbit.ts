@@ -225,7 +225,7 @@ namespace pxsim.visuals {
             return coord;
         }
         public addWire(inst: WireInstance): Wire {
-            return this.wireFactory.addWire(inst.start, inst.end, inst.color);
+            return this.wireFactory.addWire(inst.start, inst.end, inst.color, true);
         }
         public addAll(basicWiresAndCmpsAndWires: [WireInstance[], [ComponentInstance, WireInstance[]][]]) {
             let [basicWires, cmpsAndWires] = basicWiresAndCmpsAndWires;
