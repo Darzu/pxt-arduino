@@ -63,6 +63,8 @@ namespace pxsim.visuals {
         scaleUnit2: number,
         margin: [number, number, number, number],
         middleMargin: number,
+        maxWidth: number,
+        maxHeight: number,
     }
     export interface ComposeResult {
         host: SVGSVGElement,
@@ -70,6 +72,8 @@ namespace pxsim.visuals {
         under: SVGGElement,
         over: SVGGElement,
         edges: number[],
+        toHostCoord1: (xy: Coord) => Coord,
+        toHostCoord2: (xy: Coord) => Coord,
     }
     export function composeSVG(opts: ComposeOpts): ComposeResult {
         let [a, b] = [opts.el1, opts.el2];
@@ -77,9 +81,10 @@ namespace pxsim.visuals {
         let setXY = (e: SVGSVGElement, x: number, y: number) => svg.hydrate(e, {x: x, y: y});
         let setWH = (e: SVGSVGElement, w: number, h: number) => svg.hydrate(e, {width: w, height: h});
         let scaleUnit = opts.scaleUnit1;
+        let aScalar = 1.0;
         let bScalar = opts.scaleUnit1 / opts.scaleUnit2;
-        let aw = a.w;
-        let ah = a.h;
+        let aw = a.w * aScalar;
+        let ah = a.h * aScalar;
         setWH(a.e, aw, ah);
         let bw = b.w * bScalar;
         let bh = b.h * bScalar;
@@ -101,18 +106,28 @@ namespace pxsim.visuals {
             "viewBox": `0 0 ${w} ${h}`,
             "class": `sim-bb`,
         });
-        setWH(host, w, h);
+        setWH(host, opts.maxWidth, opts.maxHeight);
         setXY(host, 0, 0);
         let under = <SVGGElement>svg.child(host, "g");
         host.appendChild(a.e);
         host.appendChild(b.e);
         let over = <SVGGElement>svg.child(host, "g");
+        let toHostCoord1 = (xy: Coord): Coord => {
+            let [x, y] = xy;
+            return [x * aScalar + ax, y * aScalar + ay];
+        };
+        let toHostCoord2 = (xy: Coord): Coord => {
+            let [x, y] = xy;
+            return [x * bScalar + bx, y * bScalar + by];
+        };
         return {
             under: under,
             over: over,
             host: host,
             edges: edges,
             scaleUnit: scaleUnit,
+            toHostCoord1: toHostCoord1,
+            toHostCoord2: toHostCoord2,
         };
     }
 

@@ -37,8 +37,10 @@ namespace pxsim.visuals {
         "P18, +3v3",
         "P19, I2C - SCL",
         "P20, I2C - SDA",
-        "GND", "GND", "+3v3", "GND"];
-
+        "GND", "GND", "+3v3", "GND"
+    ];
+    const MB_WIDTH = 498;
+    const MB_HEIGHT = 406;
     export interface IBoardTheme {
         accent?: string;
         display?: string;
@@ -99,6 +101,7 @@ namespace pxsim.visuals {
         };
 
     export class MicrobitBoardSvg {
+        public hostElement: SVGSVGElement;
         public element: SVGSVGElement;
         private style: SVGStyleElement;
         private defs: SVGDefsElement;
@@ -132,17 +135,13 @@ namespace pxsim.visuals {
         private wireFactory: WireFactory;
         private allocator: Allocator;
         private breadboard: Breadboard;
-        private underboard: SVGGElement;
-        private boardDef: BoardDefinition;
         private components: IBoardComponent<any>[] = [];
         private pinNmToCoord: Map<Coord> = {};
+        private fromBBCoord: (xy: Coord) => Coord;
+        private fromMBCoord: (xy: Coord) => Coord;
         private MICROBIT_DEF: BoardDefinition = {
             visual: "microbit",
-            gpioPinBlocks: [
-                ["P0"],
-                ["P1"],
-                ["P2"],
-            ],
+            gpioPinBlocks: [["P0"], ["P1"], ["P2"], ],
             groundPins: ["GND"],
             threeVoltPins: ["+3v3"],
         }
@@ -152,44 +151,54 @@ namespace pxsim.visuals {
             this.state.updateView = () => this.updateState();
 
             //EXPERIMENTAl
-            this.boardDef = this.MICROBIT_DEF; //TODO
+            let boardDef = this.MICROBIT_DEF; //TODO
             let cmpsDef: Map<ComponentDefinition> = COMPONENT_DEFINITIONS;
             this.breadboard = new Breadboard();
-            this.breadboard.updateLocation(0, 450);
-
             this.buildDom();
-            this.updateTheme();
-            this.updateState();
-            this.attachEvents();
-
-            //EXPERIMENTAl
+            this.hostElement = this.element;
             this.recordPinCoords();
-            this.g.appendChild(this.breadboard.bb);
-            this.wireFactory = new WireFactory(this.underboard, this.g, [0, 400, 450, 450 + 15 * 21.5], this.style, this.getLocCoord.bind(this));
-            this.allocator = new Allocator(this.boardDef, cmpsDef, this.getBBCoord.bind(this));
+            let compRes = composeSVG({
+                el1: {e: this.element, t: 0, l: 0, w: MB_WIDTH, h: MB_HEIGHT},
+                scaleUnit1: littlePinDist * 1.7,
+                el2: this.breadboard.getSVGAndSize(),
+                scaleUnit2: this.breadboard.getPinDist(),
+                margin: [20, 0, 20, 0],
+                middleMargin: 40,
+                maxWidth: 299,
+                maxHeight: 433,
+            });
+            let under = compRes.under;
+            let over = compRes.over;
+            this.hostElement = compRes.host;
+            let edges = compRes.edges;
+            this.fromMBCoord = compRes.toHostCoord1;
+            this.fromBBCoord = compRes.toHostCoord2;
+            let pinDist = compRes.scaleUnit;
+
+            this.wireFactory = new WireFactory(under, over, edges, this.style, this.getLocCoord.bind(this));
+            this.allocator = new Allocator(boardDef, cmpsDef, this.getBBCoord.bind(this));
             let cmps = ["neopixel"];
             if (cmps.length) {
                 let alloc = this.allocator.allocateAll(cmps);
                 this.addAll(alloc);
             }
-            // let compRes = composeSVG({
-            //     el1: {e: this.element, t: 0, l: 0, w: },
-            //     el2: this.breadboard.getSVGAndSize(),
 
-            // });
+            this.updateTheme();
+            this.updateState();
+            this.attachEvents();
         }
 
         //EXPERIMENTAl
         private getBoardPinCoord(pinNm: string): Coord {
-            return this.pinNmToCoord[pinNm];
+            let coord = this.pinNmToCoord[pinNm];
+            return this.fromMBCoord(coord);
         }
         private getBBCoord(rowCol: BBRowCol): Coord {
             let [row, col] = rowCol;
             let bbCoord = this.breadboard.getCoord(row, col);
             if (!bbCoord)
                 return null;
-            let [x, y] = bbCoord;
-            return [x + 0, y + 450];
+            return this.fromBBCoord(bbCoord);
         }
         public getLocCoord(loc: Loc): Coord {
             let coord: Coord;
@@ -224,7 +233,7 @@ namespace pxsim.visuals {
             let cmp = cnstr();
             cmp.init(this.state.bus, stateFn(this.state), this.element);
             this.components.push(cmp);
-            this.g.appendChild(cmp.element);
+            this.hostElement.appendChild(cmp.element);
             if (cmp.defs)
                 cmp.defs.forEach(d => this.defs.appendChild(d));
             this.style.textContent += cmp.style || "";
@@ -511,12 +520,12 @@ namespace pxsim.visuals {
             this.element = <SVGSVGElement>svg.elt("svg")
             svg.hydrate(this.element, {
                 "version": "1.0",
-                "viewBox":`0 0 ${BOARD_BASE_WIDTH} ${BOARD_BASE_HEIGHT + 200}`,
+                "viewBox": `0 0 ${MB_WIDTH} ${MB_HEIGHT}`,
                 "class": "sim",
                 "x": "0px",
                 "y": "0px",
-                "width": 270,
-                "height": 500,
+                "width": MB_WIDTH + "px",
+                "height": MB_HEIGHT + "px",
             });
             this.style = <SVGStyleElement>svg.child(this.element, "style", {});
             this.style.textContent = `
@@ -632,10 +641,7 @@ namespace pxsim.visuals {
 
             `;
 
-
             this.defs = <SVGDefsElement>svg.child(this.element, "defs", {});
-            this.underboard = <SVGGElement>svg.elt("g");
-            this.element.appendChild(this.underboard);
             this.g = <SVGGElement>svg.elt("g");
             this.element.appendChild(this.g);
 

@@ -13,8 +13,8 @@ namespace pxsim.visuals {
         componentDefinitions: Map<ComponentDefinition>;
     }
 
-    export const BOARD_BASE_WIDTH = 498;
-    export const BOARD_BASE_HEIGHT = 725;
+    export const VIEW_WIDTH = 498;
+    export const VIEW_HEIGHT = 725;
     const TOP_MARGIN = 20;
     const MID_MARGIN = 40;
     const BOT_MARGIN = 20;
@@ -37,7 +37,7 @@ namespace pxsim.visuals {
             scaleFn: scaleFn,
             height: scaleFn(vis.height),
             width: width,
-            xOff: (BOARD_BASE_WIDTH - width) / 2.0,
+            xOff: (VIEW_WIDTH - width) / 2.0,
             yOff: TOP_MARGIN
         }
     }
@@ -216,8 +216,8 @@ namespace pxsim.visuals {
             this.element = <SVGSVGElement>svg.elt("svg")
             svg.hydrate(this.element, {
                 "version": "1.0",
-                "viewBox": `0 0 ${BOARD_BASE_WIDTH} ${BOARD_BASE_HEIGHT}`,
-                "enable-background": `new 0 0 ${BOARD_BASE_WIDTH} ${BOARD_BASE_HEIGHT}`,
+                "viewBox": `0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`,
+                "enable-background": `new 0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`,
                 "class": `sim sim-board-id-${this.id}`,
                 "x": "0px",
                 "y": "0px"
@@ -237,7 +237,7 @@ namespace pxsim.visuals {
             this.g.appendChild(this.breadboard.bb);
             let bbSize = this.breadboard.getSVGAndSize();
             let [bbWidth, bbHeight] = [bbSize.w, bbSize.h];
-            const bbX = (BOARD_BASE_WIDTH - bbWidth) / 2;
+            const bbX = (VIEW_WIDTH - bbWidth) / 2;
             this.bbX = bbX;
             const bbY = TOP_MARGIN + this.boardDim.height + MID_MARGIN;
             this.bbY = bbY;

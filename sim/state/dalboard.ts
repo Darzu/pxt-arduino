@@ -81,7 +81,7 @@ namespace pxsim {
             });
 
             document.body.innerHTML = ""; // clear children
-            document.body.appendChild(view.element);
+            document.body.appendChild(view.hostElement);
 
             return Promise.resolve();
         }

@@ -319,13 +319,17 @@ namespace pxsim.visuals {
             return [pin.cx, pin.cy];
         }
 
+        public getPinDist() {
+            return PIN_DIST;
+        }
+
         private buildDom() {
             this.bb = <SVGSVGElement>svg.elt("svg", {
                 "version": "1.0",
                 "viewBox": `0 0 ${WIDTH} ${HEIGHT}`,
                 "class": `sim-bb`,
-                "width": WIDTH,
-                "height": HEIGHT,
+                "width": WIDTH + "px",
+                "height": HEIGHT + "px",
             });
             this.styleEl = <SVGStyleElement>svg.child(this.bb, "style", {});
             this.styleEl.textContent += BREADBOARD_CSS;
@@ -617,7 +621,7 @@ namespace pxsim.visuals {
             groups.forEach(g => this.bb.appendChild(g)); //attach to breadboard
         }
 
-        public getSVGAndSize(): SVGElAndSize {
+        public getSVGAndSize(): SVGAndSize<SVGSVGElement> {
             return {e: this.bb, t: 0, l: 0, w: WIDTH, h: HEIGHT};
         }
 
