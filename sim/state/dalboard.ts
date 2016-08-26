@@ -68,17 +68,17 @@ namespace pxsim {
             let cmpDefs = COMPONENT_DEFINITIONS; //TODO: read from pxt.json/pxttarget.json
 
             //TODO: allow other visualizations
-            let view = new visuals.DalBoardSvg({
-                boardDef: boardDef,
-                activeComponents: cmpsList,
-                componentDefinitions: cmpDefs,
-                runtime: runtime
-            })
-            // let view = new visuals.MicrobitBoardSvg({
-            //     runtime: runtime,
-            //     theme: visuals.randomTheme(),
-            //     disableTilt: false
-            // });
+            // let view = new visuals.DalBoardSvg({
+            //     boardDef: boardDef,
+            //     activeComponents: cmpsList,
+            //     componentDefinitions: cmpDefs,
+            //     runtime: runtime
+            // })
+            let view = new visuals.MicrobitBoardSvg({
+                runtime: runtime,
+                theme: visuals.randomTheme(),
+                disableTilt: false
+            });
 
             document.body.innerHTML = ""; // clear children
             document.body.appendChild(view.element);

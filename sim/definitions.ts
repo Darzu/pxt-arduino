@@ -9,15 +9,16 @@ namespace pxsim {
         y: number,
         labels: string[]
     }
+    export interface BoardImageDefinition {
+        image?: string,
+        outlineImage?: string,
+        width: number,
+        height: number,
+        pinDist: number,
+        pinBlocks: PinBlockDefinition[],
+    };
     export interface BoardDefinition {
-        visual: {
-            image?: string,
-            outlineImage?: string,
-            width: number,
-            height: number,
-            pinDist: number,
-            pinBlocks: PinBlockDefinition[],
-        },
+        visual: BoardImageDefinition | string,
         gpioPinBlocks: string[][],
         groundPins: string[],
         threeVoltPins: string[],

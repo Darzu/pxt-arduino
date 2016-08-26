@@ -30,8 +30,7 @@ namespace pxsim.visuals {
         xOff: number,
         yOff: number
     };
-    export function getBoardDimensions(b: BoardDefinition): ComputedBoardDimensions {
-        let vis = b.visual;
+    export function getBoardDimensions(vis: BoardImageDefinition): ComputedBoardDimensions {
         let scaleFn = (n: number) => n * (PIN_DIST / vis.pinDist);
         let width = scaleFn(vis.width);
         return {
@@ -211,7 +210,7 @@ namespace pxsim.visuals {
         constructor(public props: IBoardSvgProps) {
             this.id = nextBoardId++;
             this.boardDef = props.boardDef;
-            this.boardDim = getBoardDimensions(this.boardDef);
+            this.boardDim = getBoardDimensions(<BoardImageDefinition>this.boardDef.visual);
             this.board = this.props.runtime.board as pxsim.DalBoard;
             this.board.updateView = () => this.updateState();
             this.element = <SVGSVGElement>svg.elt("svg")
@@ -362,7 +361,7 @@ namespace pxsim.visuals {
             // main board
             this.background = svg.child(this.g, "image",
                 { class: "sim-board", x: this.boardDim.xOff, y: this.boardDim.yOff, width: this.boardDim.width, height: this.boardDim.height,
-                    "href": `${this.boardDef.visual.image}`});
+                    "href": `${(<BoardImageDefinition>this.boardDef.visual).image}`});
             let backgroundCover = this.mkGrayCover(this.boardDim.xOff, this.boardDim.yOff, this.boardDim.width, this.boardDim.height);
             this.g.appendChild(backgroundCover);
 
@@ -412,7 +411,7 @@ namespace pxsim.visuals {
                 svg.addClass(gridRes.g, "sim-board-pin-group");
                 return gridRes;
             };
-            let pinBlocks = this.boardDef.visual.pinBlocks.map(mkPinBlockGrid);
+            let pinBlocks = (<BoardImageDefinition>this.boardDef.visual).pinBlocks.map(mkPinBlockGrid);
             pinBlocks.forEach(blk => blk.allPins.forEach(p => {
                 this.allPins.push(p);
             }));

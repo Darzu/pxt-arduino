@@ -1,6 +1,43 @@
 namespace pxsim.visuals {
-
-    const svg = pxsim.svg;
+    const pins4onXs = [66.7, 79.1, 91.4, 103.7, 164.3, 176.6, 188.9, 201.3, 213.6, 275.2, 287.5, 299.8, 312.1, 324.5, 385.1, 397.4, 409.7, 422];
+    const pins4onMids = pins4onXs.map(x => x + 5);
+    const littlePinDist = pins4onMids[1] - pins4onMids[0];
+    const bigPinWidth = pins4onMids[4] - pins4onMids[3];
+    const pin0mid = pins4onXs[0] - bigPinWidth / 2.0;
+    const pin3mid = pin0mid - bigPinWidth / 2.0;
+    const pin1mid = pins4onMids[3] + bigPinWidth / 2.0;
+    const pin2mid = pins4onMids[8] + bigPinWidth / 2.0;
+    const pin3Vmid = pins4onMids[13] + bigPinWidth / 2.0;
+    const pinGNDmid = pins4onMids[pins4onMids.length - 1] + bigPinWidth / 2.0;
+    const pinGND2mid = pinGNDmid + bigPinWidth / 2.0;
+    const pinMids = [pin0mid, pin1mid, pin2mid, pin3mid].concat(pins4onXs).concat([pinGNDmid, pin3Vmid, pinGND2mid]);
+    const pinNames = [
+        "P0", "P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P10",
+        "P11", "P12", "P13", "P14", "P15", "P16", "P17", "P18", "P19", "P20",
+        "GND0", "GND", "+3v3", "GND1"];
+    const pinTitles = [
+        "P0, ANALOG IN",
+        "P1, ANALOG IN",
+        "P2, ANALOG IN",
+        "P3, ANALOG IN, LED Col 1",
+        "P4, ANALOG IN, LED Col 2",
+        "P5, BUTTON A",
+        "P6, LED Col 9",
+        "P7, LED Col 8",
+        "P8",
+        "P9, LED Col 7",
+        "P10, ANALOG IN, LED Col 3",
+        "P11, BUTTON B",
+        "P12, RESERVED ACCESSIBILITY",
+        "P13, SPI - SCK",
+        "P14, SPI - MISO",
+        "P15, SPI - MOSI",
+        "P16, SPI - Chip Select",
+        "P17, +3v3",
+        "P18, +3v3",
+        "P19, I2C - SCL",
+        "P20, I2C - SDA",
+        "GND", "GND", "+3v3", "GND"];
 
     export interface IBoardTheme {
         accent?: string;
@@ -97,35 +134,17 @@ namespace pxsim.visuals {
         private breadboard: Breadboard;
         private underboard: SVGGElement;
         private boardDef: BoardDefinition;
-        private boardDim: ComputedBoardDimensions;
         private components: IBoardComponent<any>[] = [];
-        private allPins: GridPin[] = [];
-        private pinNmToPin: Map<GridPin> = {};
+        private pinNmToCoord: Map<Coord> = {};
         private MICROBIT_DEF: BoardDefinition = {
-            /*
-            top: 200, right: 25.6
-            top: 200, right: 25.6 + 51.8
-            top: 200, right: 25.6 + 51.8 * 2
-            */
-            visual: {
-                width: 269.2,
-                height: 219.5,
-                pinDist: 7.3,
-                pinBlocks: [
-                    {x: 25.6, y: 180, labels: ["P0"]},
-                    {x: 25.6 + 51.8, y: 180, labels: ["P1"]},
-                    {x: 25.6 + 51.8 * 2, y: 180, labels: ["P2"]},
-                    {x: 25.6 + 51.8 * 3, y: 180, labels: ["3V"]},
-                    {x: 25.6 + 51.8 * 4, y: 180, labels: ["GND"]},
-                ],
-            },
+            visual: "microbit",
             gpioPinBlocks: [
                 ["P0"],
                 ["P1"],
                 ["P2"],
             ],
             groundPins: ["GND"],
-            threeVoltPins: ["3V"],
+            threeVoltPins: ["+3v3"],
         }
 
         constructor(public props: IBoardProps) {
@@ -137,7 +156,6 @@ namespace pxsim.visuals {
             let cmpsDef: Map<ComponentDefinition> = COMPONENT_DEFINITIONS;
             this.breadboard = new Breadboard();
             this.breadboard.updateLocation(0, 450);
-            this.boardDim = getBoardDimensions(this.boardDef);
 
             this.buildDom();
             this.updateTheme();
@@ -145,7 +163,7 @@ namespace pxsim.visuals {
             this.attachEvents();
 
             //EXPERIMENTAl
-            this.addPins();
+            this.recordPinCoords();
             this.g.appendChild(this.breadboard.bb);
             this.wireFactory = new WireFactory(this.underboard, this.g, [0, 400, 450, 450 + 15 * 21.5], this.style, this.getLocCoord.bind(this));
             this.allocator = new Allocator(this.boardDef, cmpsDef, this.getBBCoord.bind(this));
@@ -154,14 +172,16 @@ namespace pxsim.visuals {
                 let alloc = this.allocator.allocateAll(cmps);
                 this.addAll(alloc);
             }
+            // let compRes = composeSVG({
+            //     el1: {e: this.element, t: 0, l: 0, w: },
+            //     el2: this.breadboard.getSVGAndSize(),
+
+            // });
         }
 
         //EXPERIMENTAl
         private getBoardPinCoord(pinNm: string): Coord {
-            let pin = this.pinNmToPin[pinNm];
-            if (!pin)
-                return null;
-            return [pin.cx, pin.cy];
+            return this.pinNmToCoord[pinNm];
         }
         private getBBCoord(rowCol: BBRowCol): Coord {
             let [row, col] = rowCol;
@@ -219,75 +239,11 @@ namespace pxsim.visuals {
             cmp.updateState();
             return cmp;
         }
-        public addPins() {
-            const PIN_LBL_SIZE = PIN_DIST * 0.7;
-            const PIN_LBL_HOVER_SIZE = PIN_LBL_SIZE * 1.5;
-            const SQUARE_PIN_WIDTH = PIN_DIST * 0.66666;
-            const SQUARE_PIN_HOVER_WIDTH = PIN_DIST * 0.66666 + PIN_DIST / 3.0;
-            // ----- pins
-            const mkSquarePin = (): SVGElAndSize => {
-                let el = svg.elt("rect");
-                let width = SQUARE_PIN_WIDTH;
-                svg.hydrate(el, {
-                    class: "sim-board-pin",
-                    width: width,
-                    height: width,
-                });
-                return {e: el, w: width, h: width, l: 0, t: 0};
-            }
-            const mkSquareHoverPin = (): SVGElAndSize => {
-                let el = svg.elt("rect");
-                let width = SQUARE_PIN_HOVER_WIDTH;
-                svg.hydrate(el, {
-                    class: "sim-board-pin-hover",
-                    width: width,
-                    height: width
-                });
-                return {e: el, w: width, h: width, l: 0, t: 0};
-            }
-            const mkPinBlockGrid = (pinBlock: PinBlockDefinition, blockIdx: number) => {
-                let xOffset = this.boardDim.xOff + this.boardDim.scaleFn(pinBlock.x) + PIN_DIST / 2.0;
-                let yOffset = this.boardDim.yOff + this.boardDim.scaleFn(pinBlock.y) + PIN_DIST / 2.0;
-                let rowCount = 1;
-                let colCount = pinBlock.labels.length;
-                let getColName = (colIdx: number) => pinBlock.labels[colIdx];
-                let getRowName = () => `${blockIdx + 1}`
-                let getGroupName = () => pinBlock.labels.join(" ");
-                let gridRes = mkGrid({
-                    xOffset: xOffset,
-                    yOffset: yOffset,
-                    rowCount: rowCount,
-                    colCount: colCount,
-                    pinDist: PIN_DIST,
-                    mkPin: mkSquarePin,
-                    mkHoverPin: mkSquareHoverPin,
-                    getRowName: getRowName,
-                    getColName: getColName,
-                    getGroupName: getGroupName,
-                });
-                let pins = gridRes.allPins;
-                let pinsG = gridRes.g;
-                svg.addClass(gridRes.g, "sim-board-pin-group");
-                return gridRes;
-            };
-            let pinBlocks = this.boardDef.visual.pinBlocks.map(mkPinBlockGrid);
-            pinBlocks.forEach(blk => blk.allPins.forEach(p => {
-                this.allPins.push(p);
-            }));
-            //tooltip
-            this.allPins.forEach(p => {
-                let tooltip = p.col;
-                svg.hydrate(p.el, {title: tooltip});
-                svg.hydrate(p.hoverEl, {title: tooltip});
-            });
-            //attach pins
-            this.allPins.forEach(p => {
-                this.g.appendChild(p.el);
-                this.g.appendChild(p.hoverEl);
-            });
-            //catalog pins
-            this.allPins.forEach(p => {
-                this.pinNmToPin[p.col] = p;
+        public recordPinCoords() {
+            const pinsY = 356.7 + 40;
+            pinNames.forEach((nm, i) => {
+                let x = pinMids[i];
+                this.pinNmToCoord[nm] = [x, pinsY];
             });
         }
 
@@ -730,38 +686,19 @@ namespace pxsim.visuals {
                 "M16.5,341.2c0,0.4-0.1,0.9-0.1,1.3v60.7c4.1,1.7,8.6,2.7,12.9,2.7h34.4v-64.7h0.3c0,0,0-0.1,0-0.1c0-13-10.6-23.6-23.7-23.6C27.2,317.6,16.5,328.1,16.5,341.2z M21.2,341.6c0-10.7,8.7-19.3,19.3-19.3c10.7,0,19.3,8.7,19.3,19.3c0,10.7-8.6,19.3-19.3,19.3C29.9,360.9,21.2,352.2,21.2,341.6z",
                 "M139.1,317.3c-12.8,0-22.1,10.3-23.1,23.1V406h46.2v-65.6C162.2,327.7,151.9,317.3,139.1,317.3zM139.3,360.1c-10.7,0-19.3-8.6-19.3-19.3c0-10.7,8.6-19.3,19.3-19.3c10.7,0,19.3,8.7,19.3,19.3C158.6,351.5,150,360.1,139.3,360.1z",
                 "M249,317.3c-12.8,0-22.1,10.3-23.1,23.1V406h46.2v-65.6C272.1,327.7,261.8,317.3,249,317.3z M249.4,360.1c-10.7,0-19.3-8.6-19.3-19.3c0-10.7,8.6-19.3,19.3-19.3c10.7,0,19.3,8.7,19.3,19.3C268.7,351.5,260.1,360.1,249.4,360.1z"
-            ].map((p, pi) => svg.path(this.g, "sim-pin sim-pin-touch", p, `P${pi}, ANALOG IN`));
+            ].map((p, pi) => svg.path(this.g, "sim-pin sim-pin-touch", p));
 
             // P3
-            this.pins.push(svg.path(this.g, "sim-pin", "M0,357.7v19.2c0,10.8,6.2,20.2,14.4,25.2v-44.4H0z", "P3, ANALOG IN, LED Col 1"));
+            this.pins.push(svg.path(this.g, "sim-pin", "M0,357.7v19.2c0,10.8,6.2,20.2,14.4,25.2v-44.4H0z"));
 
-            [66.7, 79.1, 91.4, 103.7, 164.3, 176.6, 188.9, 201.3, 213.6, 275.2, 287.5, 299.8, 312.1, 324.5, 385.1, 397.4, 409.7, 422].forEach(x => {
+            pins4onXs.forEach(x => {
                 this.pins.push(svg.child(this.g, "rect", { x: x, y: 356.7, width: 10, height: 50, class: "sim-pin" }));
             })
-            svg.title(this.pins[4], "P4, ANALOG IN, LED Col 2")
-            svg.title(this.pins[5], "P5, BUTTON A")
-            svg.title(this.pins[6], "P6, LED Col 9")
-            svg.title(this.pins[7], "P7, LED Col 8")
-            svg.title(this.pins[8], "P8")
-            svg.title(this.pins[9], "P9, LED Col 7")
-            svg.title(this.pins[10], "P10, ANALOG IN, LED Col 3")
-            svg.title(this.pins[11], "P11, BUTTON B")
-            svg.title(this.pins[12], "P12, RESERVED ACCESSIBILITY")
-            svg.title(this.pins[13], "P13, SPI - SCK")
-            svg.title(this.pins[14], "P14, SPI - MISO")
-            svg.title(this.pins[15], "P15, SPI - MOSI")
-            svg.title(this.pins[16], "P16, SPI - Chip Select")
-            svg.title(this.pins[17], "P17, +3v3")
-            svg.title(this.pins[18], "P18, +3v3")
-            svg.title(this.pins[19], "P19, I2C - SCL")
-            svg.title(this.pins[20], "P20, I2C - SDA")
-            svg.title(this.pins[21], "GND")
+            this.pins.push(svg.path(this.g, "sim-pin", "M483.6,402c8.2-5,14.4-14.4,14.4-25.1v-19.2h-14.4V402z"));
+            this.pins.push(svg.path(this.g, "sim-pin", "M359.9,317.3c-12.8,0-22.1,10.3-23.1,23.1V406H383v-65.6C383,327.7,372.7,317.3,359.9,317.3z M360,360.1c-10.7,0-19.3-8.6-19.3-19.3c0-10.7,8.6-19.3,19.3-19.3c10.7,0,19.3,8.7,19.3,19.3C379.3,351.5,370.7,360.1,360,360.1z"));
+            this.pins.push(svg.path(this.g, "sim-pin", "M458,317.6c-13,0-23.6,10.6-23.6,23.6c0,0,0,0.1,0,0.1h0V406H469c4.3,0,8.4-1,12.6-2.7v-60.7c0-0.4,0-0.9,0-1.3C481.6,328.1,471,317.6,458,317.6z M457.8,360.9c-10.7,0-19.3-8.6-19.3-19.3c0-10.7,8.6-19.3,19.3-19.3c10.7,0,19.3,8.7,19.3,19.3C477.1,352.2,468.4,360.9,457.8,360.9z"));
 
-            this.pins.push(svg.path(this.g, "sim-pin", "M483.6,402c8.2-5,14.4-14.4,14.4-25.1v-19.2h-14.4V402z", "GND"));
-
-            this.pins.push(svg.path(this.g, "sim-pin", "M359.9,317.3c-12.8,0-22.1,10.3-23.1,23.1V406H383v-65.6C383,327.7,372.7,317.3,359.9,317.3z M360,360.1c-10.7,0-19.3-8.6-19.3-19.3c0-10.7,8.6-19.3,19.3-19.3c10.7,0,19.3,8.7,19.3,19.3C379.3,351.5,370.7,360.1,360,360.1z", "+3v3"));
-            this.pins.push(svg.path(this.g, "sim-pin", "M458,317.6c-13,0-23.6,10.6-23.6,23.6c0,0,0,0.1,0,0.1h0V406H469c4.3,0,8.4-1,12.6-2.7v-60.7c0-0.4,0-0.9,0-1.3C481.6,328.1,471,317.6,458,317.6z M457.8,360.9c-10.7,0-19.3-8.6-19.3-19.3c0-10.7,8.6-19.3,19.3-19.3c10.7,0,19.3,8.7,19.3,19.3C477.1,352.2,468.4,360.9,457.8,360.9z", "GND"));
-
+            this.pins.forEach((p, i) => svg.hydrate(p, {title: pinTitles[i]}));
 
             this.pinGradients = this.pins.map((pin, i) => {
                 let gid = "gradient-pin-" + i
@@ -771,6 +708,7 @@ namespace pxsim.visuals {
             })
 
             this.pinTexts = [67, 165, 275].map(x => <SVGTextElement>svg.child(this.g, "text", { class: "sim-text-pin", x: x, y: 345 }));
+
             this.buttonsOuter = []; this.buttons = [];
 
             const outerBtn = (left: number, top: number) => {

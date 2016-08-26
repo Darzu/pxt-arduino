@@ -183,18 +183,18 @@ namespace pxsim.instructions {
         cmpHeight?: number,
         cmpScale?: number
     };
-    function mkBoardImgSvg(def: BoardDefinition): visuals.SVGElAndSize {
+    function mkBoardImgSvg(def: BoardImageDefinition): visuals.SVGElAndSize {
         let img = svg.elt( "image");
         let [l, t] = [0, 0];
-        let w = def.visual.width;
-        let h = def.visual.height;
+        let w = def.width;
+        let h = def.height;
         svg.hydrate(img, {
             class: "sim-board",
             x: l,
             y: t,
-            width: def.visual.width,
-            height: def.visual.height,
-            "href": `${def.visual.image}`});
+            width: def.width,
+            height: def.height,
+            "href": `${def.image}`});
 
         return {e: img, w: w, h: h, l: l, t};
     }
@@ -421,7 +421,7 @@ namespace pxsim.instructions {
         svg.addClass(board.element, "board-svg");
         if (buildMode) {
             svg.hydrate(board.background, {
-                "href": `${boardDef.visual.outlineImage}`
+                "href": `${(<BoardImageDefinition>boardDef.visual).outlineImage}`
             })
             svg.addClass(board.element, "sim-board-outline")
             let bb = board.breadboard.bb;
@@ -510,7 +510,7 @@ namespace pxsim.instructions {
         const WIRE_SCALE = 0.23;
 
         // board and breadboard
-        let boardImg = mkBoardImgSvg(props.boardDef);
+        let boardImg = mkBoardImgSvg(<BoardImageDefinition>props.boardDef.visual);
         let board = wrapSvg(boardImg, {left: QUANT_LBL(1), leftSize: QUANT_LBL_SIZE, cmpScale: BOARD_SCALE});
         panel.appendChild(board);
         let bbRaw = mkBBSvg();
