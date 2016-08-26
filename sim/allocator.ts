@@ -98,21 +98,31 @@ namespace pxsim.visuals {
                 console.log("No available 3.3V pin on board!");
                 //TODO
             }
-            let topLeft: BBRowCol = ["-", "50"];
-            let botLeft: BBRowCol = ["-", "25"];
+            let topLeft: BBRowCol = ["-", "26"];
+            let botLeft: BBRowCol = ["-", "1"];
+            let topRight: BBRowCol = ["-", "50"];
+            let botRight: BBRowCol = ["-", "25"];
+            let top: BBRowCol, bot: BBRowCol;
+            if (this.boardDef.attachPowerOnRight) {
+                top = topRight;
+                bot = botRight;
+            } else {
+                top = topLeft;
+                bot = botLeft;
+            }
             const GROUND_COLOR = "blue";
             const POWER_COLOR = "red";
             const wires: WireInstance[] = [
-                {start: this.allocateLocation("ground", {nearestBBPin: topLeft}),
-                 end: this.allocateLocation("ground", {nearestBBPin: botLeft}),
+                {start: this.allocateLocation("ground", {nearestBBPin: top}),
+                 end: this.allocateLocation("ground", {nearestBBPin: bot}),
                  color: GROUND_COLOR, assemblyStep: 0},
-                {start: this.allocateLocation("ground", {nearestBBPin: topLeft}),
+                {start: this.allocateLocation("ground", {nearestBBPin: top}),
                  end: {type: "dalboard", pin: boardGround},
                 color: GROUND_COLOR, assemblyStep: 0},
-                {start: this.allocateLocation("threeVolt", {nearestBBPin: topLeft}),
-                 end: this.allocateLocation("threeVolt", {nearestBBPin: botLeft}),
+                {start: this.allocateLocation("threeVolt", {nearestBBPin: top}),
+                 end: this.allocateLocation("threeVolt", {nearestBBPin: bot}),
                  color: POWER_COLOR, assemblyStep: 1},
-                {start: this.allocateLocation("threeVolt", {nearestBBPin: topLeft}),
+                {start: this.allocateLocation("threeVolt", {nearestBBPin: top}),
                  end: {type: "dalboard", pin: threeVoltPin},
                 color: POWER_COLOR, assemblyStep: 1},
             ];

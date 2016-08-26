@@ -209,7 +209,7 @@ namespace pxsim.visuals {
             this.stripsGroup = <SVGGElement>svg.elt("g");
             this.element = this.stripsGroup;
 
-            this.mkStrip(7); //TODO: don't hardcode this
+            this.mkStrip(9); //TODO: don't hardcode this
         }
         private getStripsList() {
             let strips: NeoPixelStrip[] = [];

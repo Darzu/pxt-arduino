@@ -22,6 +22,7 @@ namespace pxsim {
         gpioPinBlocks: string[][],
         groundPins: string[],
         threeVoltPins: string[],
+        attachPowerOnRight?: boolean,
     }
     export type ComponentDefinition = {
         breadboardColumnsNeeded: number,

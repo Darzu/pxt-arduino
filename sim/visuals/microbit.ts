@@ -144,6 +144,7 @@ namespace pxsim.visuals {
             gpioPinBlocks: [["P0"], ["P1"], ["P2"], ],
             groundPins: ["GND"],
             threeVoltPins: ["+3v3"],
+            attachPowerOnRight: true,
         }
 
         constructor(public props: IBoardProps) {
