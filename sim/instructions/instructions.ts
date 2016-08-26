@@ -3,6 +3,7 @@
 /// <reference path="../../node_modules/pxt-core/built/pxtrunner.d.ts"/>
 /// <reference path="../../libs/microbit/dal.d.ts"/>
 /// <reference path="../visuals/dalboard.ts"/>
+/// <reference path="../visuals/wiring.ts"/>
 
 //HACK: allows instructions.html to access pxtblocks without requiring simulator.html to import blocks as well
 if (!(<any>window).pxt) (<any>window).pxt = {};
@@ -20,8 +21,6 @@ namespace pxsim.instructions {
     const REQ_WIRE_HEIGHT = 45;
     const REQ_CMP_HEIGHT = 55;
     const REQ_CMP_SCALE = 0.5;
-    const WIRE_CURVE_OFF = 15;
-    const WIRE_LENGTH = 100;
     type Orientation = "landscape" | "portrait";
     const ORIENTATION: Orientation = "portrait";
     const PPI = 96.0;
@@ -110,64 +109,6 @@ namespace pxsim.instructions {
         svg.hydrate(el, { x: x, y: y, style: `font-size:${size}px;` });
         el.textContent = txt;
         return el;
-    }
-    function mkWireSeg(p1: [number, number], p2: [number, number], clr: string): visuals.SVGAndSize<SVGPathElement> {
-        const coordStr = (xy: [number, number]): string => {return `${xy[0]}, ${xy[1]}`};
-        let [x1, y1] = p1;
-        let [x2, y2] = p2
-        let yLen = (y2 - y1);
-        let c1: [number, number] = [x1, y1 + yLen * .8];
-        let c2: [number, number] = [x2, y2 - yLen * .8];
-        let e = <SVGPathElement>svg.mkPath("sim-bb-wire", `M${coordStr(p1)} C${coordStr(c1)} ${coordStr(c2)} ${coordStr(p2)}`);
-        (<any>e).style["stroke"] = clr;
-        return {el: e, x: Math.min(x1, x2), y: Math.min(y1, y2), w: Math.abs(x1 - x2), h: Math.abs(y1 - y2)};
-    }
-    function mkWireEnd(p: [number, number], top: boolean, clr: string): visuals.SVGElAndSize {
-        const endW = visuals.PIN_DIST / 4.0;
-        let k = visuals.PIN_DIST * 0.24;
-        let [cx, cy] = p;
-        let o = top ? -1 : 1;
-        let g = svg.elt("g")
-
-        let el = svg.elt("rect");
-        let h1 = k * 10;
-        let w1 = k * 2;
-        let x1 = cx - w1 / 2;
-        let y1 = cy - (h1 / 2);
-        svg.hydrate(el, {x: x1, y: y1, width: w1, height: h1, rx: 0.5, ry: 0.5, class: "sim-bb-wire-end"});
-        (<any>el).style["stroke-width"] = `${endW}px`;
-
-        let el2 = svg.elt("rect");
-        let h2 = k * 6;
-        let w2 = k;
-        let cy2 = cy + o * (h1 / 2 + h2 / 2);
-        let x2 = cx - w2 / 2;
-        let y2 = cy2 - (h2 / 2);
-        svg.hydrate(el2, {x: x2, y: y2, width: w2, height: h2});
-        (<any>el2).style["fill"] = `#bbb`;
-
-        g.appendChild(el2);
-        g.appendChild(el);
-        return {el: g, x: x1 - endW, y: Math.min(y1, y2), w: w1 + endW * 2, h: h1 + h2};
-    }
-    function mkWire(cp: [number, number], clr: string): visuals.SVGAndSize<SVGGElement> {
-        let g = <SVGGElement>svg.elt("g");
-        let [cx, cy] = cp;
-        let offset = WIRE_CURVE_OFF;
-        let p1: visuals.Coord = [cx - offset, cy - WIRE_LENGTH / 2];
-        let p2: visuals.Coord = [cx + offset, cy + WIRE_LENGTH / 2];
-        clr = visuals.mapWireColor(clr);
-        let e1 = mkWireEnd(p1, true, clr);
-        let s = mkWireSeg(p1, p2, clr);
-        let e2 = mkWireEnd(p2, false, clr);
-        g.appendChild(s.el);
-        g.appendChild(e1.el);
-        g.appendChild(e2.el);
-        let l = Math.min(e1.x, e2.x);
-        let r = Math.max(e1.x + e1.w, e2.x + e2.w);
-        let t = Math.min(e1.y, e2.y);
-        let b = Math.max(e1.y + e1.h, e2.y + e2.h);
-        return {el: g, x: l, y: t, w: r - l, h: b - t};
     }
     type mkCmpDivOpts = {
         top?: string,
@@ -338,7 +279,7 @@ namespace pxsim.instructions {
     function mkCmpDiv(type: "wire" | string, opts: mkCmpDivOpts): HTMLElement {
         let el: visuals.SVGElAndSize;
         if (type == "wire") {
-            el = mkWire([0, 0], opts.wireClr || "red");
+            el = visuals.mkWirePart([0, 0], opts.wireClr || "red");
         } else {
             let cnstr = builtinComponentPartVisual[type];
             el = cnstr([0, 0]);
