@@ -77,6 +77,7 @@ namespace pxsim {
             let view = new visuals.MicrobitBoardSvg({
                 runtime: runtime,
                 theme: visuals.randomTheme(),
+                activeComponents: cmpsList,
                 disableTilt: false
             });
 

@@ -86,6 +86,7 @@ namespace pxsim.visuals {
         runtime: pxsim.Runtime;
         theme?: IBoardTheme;
         disableTilt?: boolean;
+        activeComponents: string[];
     }
 
     const pointerEvents = !!(window as any).PointerEvent ? {
@@ -158,30 +159,37 @@ namespace pxsim.visuals {
             this.buildDom();
             this.hostElement = this.element;
             this.recordPinCoords();
-            let compRes = composeSVG({
-                el1: {el: this.element, y: 0, x: 0, w: MB_WIDTH, h: MB_HEIGHT},
-                scaleUnit1: littlePinDist * 1.7,
-                el2: this.breadboard.getSVGAndSize(),
-                scaleUnit2: this.breadboard.getPinDist(),
-                margin: [0, 0, 10, 0],
-                middleMargin: 80,
-                maxWidth: 299,
-                maxHeight: 433,
-            });
-            let under = compRes.under;
-            let over = compRes.over;
-            this.hostElement = compRes.host;
-            let edges = compRes.edges;
-            this.fromMBCoord = compRes.toHostCoord1;
-            this.fromBBCoord = compRes.toHostCoord2;
-            let pinDist = compRes.scaleUnit;
+            let cmps = props.activeComponents.filter(a => a === "neopixel");
+            if (0 < cmps.length) {
+                let compRes = composeSVG({
+                    el1: {el: this.element, y: 0, x: 0, w: MB_WIDTH, h: MB_HEIGHT},
+                    scaleUnit1: littlePinDist * 1.7,
+                    el2: this.breadboard.getSVGAndSize(),
+                    scaleUnit2: this.breadboard.getPinDist(),
+                    margin: [0, 0, 10, 0],
+                    middleMargin: 80,
+                    maxWidth: 299,
+                    maxHeight: 433,
+                });
+                let under = compRes.under;
+                let over = compRes.over;
+                this.hostElement = compRes.host;
+                let edges = compRes.edges;
+                this.fromMBCoord = compRes.toHostCoord1;
+                this.fromBBCoord = compRes.toHostCoord2;
+                let pinDist = compRes.scaleUnit;
 
-            this.wireFactory = new WireFactory(under, over, edges, this.style, this.getLocCoord.bind(this));
-            this.allocator = new Allocator(boardDef, cmpsDef, this.getBBCoord.bind(this));
-            let cmps = ["neopixel"];
-            if (cmps.length) {
-                let alloc = this.allocator.allocateAll(cmps);
-                this.addAll(alloc);
+                this.wireFactory = new WireFactory(under, over, edges, this.style, this.getLocCoord.bind(this));
+                this.allocator = new Allocator(boardDef, cmpsDef, this.getBBCoord.bind(this));
+                if (cmps.length) {
+                    let alloc = this.allocator.allocateAll(cmps);
+                    this.addAll(alloc);
+                }
+            } else {
+                svg.hydrate(this.hostElement, {
+                    width: 299,
+                    height: 433,
+                }); 
             }
 
             this.updateTheme();
