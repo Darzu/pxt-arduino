@@ -410,7 +410,7 @@ namespace pxsim.visuals {
             let startLoc = this.getLocCoord(start);
             let endLoc = this.getLocCoord(end);
             let wireEls: Wire;
-            if (withCrocs) {
+            if (withCrocs && end.type == "dalboard") {
                 wireEls = this.drawWireWithCrocs(startLoc, endLoc, color);
             } else {
                 wireEls = this.drawWire(startLoc, endLoc, color);
