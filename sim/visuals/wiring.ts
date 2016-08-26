@@ -47,8 +47,6 @@ namespace pxsim.visuals {
         wires: SVGElement[];
     }
 
-    let nextWireId = 0; //TODO remove
-
     function cssEncodeColor(color: string): string {
         //HACK/TODO: do real CSS encoding.
         return color
@@ -247,6 +245,7 @@ namespace pxsim.visuals {
             return this.boardEdges[this.closestEdgeIdx(p)];
         }
 
+        private nextWireId = 0;
         private drawWire(pin1: Coord, pin2: Coord, color: string): Wire {
             let wires: SVGElement[] = [];
             let g = svg.child(this.overboard, "g", {class: "sim-bb-wire-group"});
@@ -260,7 +259,7 @@ namespace pxsim.visuals {
                     y = e + offset;
                 return [p[0], y];
             }
-            let wireId = nextWireId++;
+            let wireId = this.nextWireId++;
             let clrClass = cssEncodeColor(color);
             let end1 = mkBBJumperEnd(pin1, clrClass);
             let end2 = mkBBJumperEnd(pin2, clrClass);
@@ -337,7 +336,7 @@ namespace pxsim.visuals {
                     y = e + offset;
                 return [p[0], y];
             }
-            let wireId = nextWireId++;
+            let wireId = this.nextWireId++;
             let clrClass = cssEncodeColor(color);
             let end1 = mkBBJumperEnd(pin1, clrClass);
             let pin2orig = pin2;
