@@ -136,20 +136,20 @@ namespace pxsim.visuals {
 
         let el = svg.elt("polygon");
         let h1 = k * 10.0;
-        let w1 = k * 3.2;
+        let w1 = k * 4;
         let x1 = cx - w1 / 2;
         let y1 = cy - (h1 / 2);
         let mkPnt = (xy: Coord) => `${xy[0]},${xy[1]}`;
         let mkPnts = (...xys: Coord[]) => xys.map(xy => mkPnt(xy)).join(" ");
         svg.hydrate(el, {
-            points: mkPnts([x1+w1*.15, y1], [x1 + w1*.85, y1], [x1 + w1, y1 + h1*.7], [x1 + w1*.75, y1 + h1], [x1+w1*.25, y1 + h1], [x1, y1 + h1*.7])
+            points: mkPnts([x1+w1*.15, y1], [x1 + w1*.85, y1], [x1 + w1, y1 + h1*.7], [x1 + w1*.7, y1 + h1], [x1+w1*.30, y1 + h1], [x1, y1 + h1*.7])
         });
         svg.hydrate(el, {rx: 0.5, ry: 0.5, class: "sim-bb-wire-end"});
         (<any>el).style["stroke-width"] = `${endW}px`;
 
         let el2 = svg.elt("rect");
         let h2 = k * 3.5;
-        let w2 = k * 3;
+        let w2 = k * 3.5;
         let cy2 = cy + o * (h1 / 2 + h2 / 2);
         let x2 = cx - w2 / 2;
         let y2 = cy2 - (h2 / 2);
