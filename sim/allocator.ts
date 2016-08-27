@@ -7,14 +7,29 @@ namespace pxsim {
         getBBCoord: (loc: BBRowCol) => visuals.Coord,
         cmpList: string[]
     };
-    export interface AllocatedComponent {
-        component: ComponentInstance,
-        wires: WireInstance[]
-    }
     export interface AllocatorResult {
-        powerWires: WireInstance[],
-        components: AllocatedComponent[]
+        powerWires: WireInst[],
+        components: CmpAndWireInst[]
     }
+
+    export interface CmpAndWireInst {
+        component: CmpInst,
+        wires: WireInst[]
+    }
+    export interface CmpInst {
+        breadboardStartColumn: number,
+        breadboardStartRow: string,
+        assemblyStep: number,
+        builtinPartVisual?: string,
+        builtinSimSate?: string,
+        builtinSimVisual?: string,
+    }
+    export interface WireInst {
+        start: Loc,
+        end: Loc,
+        color: string,
+        assemblyStep: number
+    };
 
     interface AllocLocOpts {
         nearestBBPin?: BBRowCol,
@@ -107,7 +122,7 @@ namespace pxsim {
                 return null;
             }
         }
-        private allocatePowerWires(): WireInstance[] {
+        private allocatePowerWires(): WireInst[] {
             let boardGround = this.opts.boardDef.groundPins[0] || null;
             if (!boardGround) {
                 console.log("No available ground pin on board!");
@@ -132,7 +147,7 @@ namespace pxsim {
             }
             const GROUND_COLOR = "blue";
             const POWER_COLOR = "red";
-            const wires: WireInstance[] = [
+            const wires: WireInst[] = [
                 {start: this.allocateLocation("ground", {nearestBBPin: top}),
                  end: this.allocateLocation("ground", {nearestBBPin: bot}),
                  color: GROUND_COLOR, assemblyStep: 0},
@@ -148,7 +163,7 @@ namespace pxsim {
             ];
             return wires;
         }
-        private allocateWire(wireDef: WireDefinition, opts: AllocWireOpts): WireInstance {
+        private allocateWire(wireDef: WireDefinition, opts: AllocWireOpts): WireInst {
             let ends = [wireDef.start, wireDef.end];
             let endIsPower = ends.map(e => e === "ground" || e === "threeVolt");
             let endInsts = ends.map((e, idx) => !endIsPower[idx] ? this.allocateLocation(e, opts) : null)
@@ -258,7 +273,7 @@ namespace pxsim {
             });
             return cmpStartCol;
         }
-        private allocateComponent(cmpDef: ComponentDefinition, startColumn: number): ComponentInstance {
+        private allocateComponent(cmpDef: ComponentDefinition, startColumn: number): CmpInst {
             return {
                 breadboardStartColumn: startColumn,
                 breadboardStartRow: cmpDef.breadboardStartRow,
@@ -270,8 +285,8 @@ namespace pxsim {
         }
         public allocateAll(): AllocatorResult {
             let cmpList = this.opts.cmpList;
-            let basicWires: WireInstance[] = [];
-            let cmpsAndWires: AllocatedComponent[] = [];
+            let basicWires: WireInst[] = [];
+            let cmpsAndWires: CmpAndWireInst[] = [];
             if (cmpList.length > 0) {
                 basicWires = this.allocatePowerWires();
                 let cmpDefs = cmpList.map(c => this.opts.cmpDefs[c] || null).filter(d => !!d);
@@ -287,7 +302,7 @@ namespace pxsim {
                 });
             }
             return {
-                powerWires: basicWires, 
+                powerWires: basicWires,
                 components: cmpsAndWires
             };
         }

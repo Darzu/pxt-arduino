@@ -291,19 +291,19 @@ namespace pxsim.instructions {
         boardDef: BoardDefinition,
         cmpDefs: Map<ComponentDefinition>,
         allAlloc: AllocatorResult,
-        stepToWires: WireInstance[][],
-        stepToCmps: ComponentInstance[][]
-        allWires: WireInstance[],
-        allCmps: ComponentInstance[],
+        stepToWires: WireInst[][],
+        stepToCmps: CmpInst[][]
+        allWires: WireInst[],
+        allCmps: CmpInst[],
         lastStep: number,
-        colorToWires: Map<WireInstance[]>,
+        colorToWires: Map<WireInst[]>,
         allWireColors: string[],
     };
     function mkBoardProps(allocOpts: AllocatorOpts): BoardProps {
         let allocRes = allocateDefinitions(allocOpts);
         let {powerWires, components} = allocRes;
-        let stepToWires: WireInstance[][] = [];
-        let stepToCmps: ComponentInstance[][] = [];
+        let stepToWires: WireInst[][] = [];
+        let stepToCmps: CmpInst[][] = [];
         powerWires.forEach(w => {
             let step = w.assemblyStep + 1;
             (stepToWires[step] || (stepToWires[step] = [])).push(w)
@@ -326,7 +326,7 @@ namespace pxsim.instructions {
         let lastStep = stepOffset - 1;
         let allCmps = components.map(p => p.component);
         let allWires = powerWires.concat(components.map(p => p.wires).reduce((p, n) => p.concat(n), []));
-        let colorToWires: Map<WireInstance[]> = {}
+        let colorToWires: Map<WireInst[]> = {}
         let allWireColors: string[] = [];
         allWires.forEach(w => {
             if (!colorToWires[w.color]) {

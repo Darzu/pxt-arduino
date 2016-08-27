@@ -3,6 +3,12 @@
 /// <reference path="../libs/microbit/dal.d.ts"/>
 
 namespace pxsim {
+    export type BBRowCol = [/*row*/string, /*column*/string];
+    export type BoardPin = string;
+    export interface BBLoc {type: "breadboard", rowCol: BBRowCol};
+    export interface BoardLoc {type: "dalboard", pin: BoardPin};
+    export type Loc = BBLoc | BoardLoc;
+
     export function initRuntimeWithDalBoard() {
         U.assert(!runtime.board);
         let b = new DalBoard();
@@ -15,7 +21,7 @@ namespace pxsim {
     export function board() {
         return runtime.board as DalBoard;
     }
-    
+
     export function mkRange(a: number, b: number): number[] {
         let res: number[] = [];
         for (; a < b; a++)

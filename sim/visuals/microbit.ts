@@ -219,7 +219,7 @@ namespace pxsim.visuals {
             }
             return coord;
         }
-        public addWire(inst: WireInstance): Wire {
+        public addWire(inst: WireInst): Wire {
             return this.wireFactory.addWire(inst.start, inst.end, inst.color, true);
         }
         public addAll(basicWiresAndCmpsAndWires: AllocatorResult) {
@@ -231,7 +231,7 @@ namespace pxsim.visuals {
                 this.addComponent(component);
             });
         }
-        public addComponent(cmpDesc: ComponentInstance): IBoardComponent<any> {
+        public addComponent(cmpDesc: CmpInst): IBoardComponent<any> {
             let cnstr = builtinComponentSimVisual[cmpDesc.builtinSimVisual];
             let stateFn = builtinComponentSimState[cmpDesc.builtinSimSate];
             let cmp = cnstr();

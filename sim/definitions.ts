@@ -48,27 +48,6 @@ namespace pxsim {
     export type LocationDefinition =
         ["breadboard", string, number] | ["GPIO", number] | "ground" | "threeVolt";
 
-    export interface ComponentInstance {
-        breadboardStartColumn: number,
-        breadboardStartRow: string,
-        assemblyStep: number,
-        builtinPartVisual?: string,
-        builtinSimSate?: string,
-        builtinSimVisual?: string,
-    }
-    export interface WireInstance {
-        start: Loc,
-        end: Loc,
-        color: string,
-        assemblyStep: number
-    };
-
-    export type BBRowCol = [/*row*/string, /*column*/string];
-    export type BoardPin = string;
-    export interface BBLoc {type: "breadboard", rowCol: BBRowCol};
-    export interface BoardLoc {type: "dalboard", pin: BoardPin};
-    export type Loc = BBLoc | BoardLoc;
-
     export const MICROBIT_DEF: BoardDefinition = {
         visual: "microbit",
         gpioPinBlocks: [
