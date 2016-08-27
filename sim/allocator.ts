@@ -107,7 +107,7 @@ namespace pxsim {
                 return null;
             }
         }
-        private allocateBasicWires(): WireInstance[] {
+        private allocatePowerWires(): WireInstance[] {
             let boardGround = this.opts.boardDef.groundPins[0] || null;
             if (!boardGround) {
                 console.log("No available ground pin on board!");
@@ -285,7 +285,7 @@ namespace pxsim {
             let basicWires: WireInstance[] = [];
             let cmpsAndWires: AllocatedComponent[] = [];
             if (cmps.length > 0) {
-                basicWires = this.allocateBasicWires();
+                basicWires = this.allocatePowerWires();
                 let cmpDefs = cmps.map(c => this.opts.cmpDefs[c] || null).filter(d => !!d);
                 cmpsAndWires = this.allocateComponentsAndWiring(cmpDefs);
             }
