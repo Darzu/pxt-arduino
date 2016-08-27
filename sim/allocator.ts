@@ -19,11 +19,11 @@ namespace pxsim {
     interface AllocLocOpts {
         nearestBBPin?: BBRowCol,
         startColumn?: number,
-        availableGPIOPins?: string[],
+        cmpGPIOPins?: string[],
     };
     interface AllocWireOpts {
         startColumn: number,
-        availableGPIOPins: string[],
+        cmpGPIOPins: string[],
     }
     interface AllocBlock {
         cmpIdx: number,
@@ -97,9 +97,9 @@ namespace pxsim {
                 let col = (<number>location[2] + opts.startColumn).toString();
                 return {type: "breadboard", rowCol: [row, col]}
             } else if (location[0] === "GPIO") {
-                U.assert(!!opts.availableGPIOPins);
+                U.assert(!!opts.cmpGPIOPins);
                 let idx = <number>location[1];
-                let pin = opts.availableGPIOPins[idx];
+                let pin = opts.cmpGPIOPins[idx];
                 return {type: "dalboard", pin: pin};
             } else {
                 //TODO
@@ -159,13 +159,13 @@ namespace pxsim {
                 let l = this.allocateLocation(ends[idx], {
                     nearestBBPin: locInst.rowCol,
                     startColumn: opts.startColumn,
-                    availableGPIOPins: opts.availableGPIOPins
+                    cmpGPIOPins: opts.cmpGPIOPins
                 });
                 return l;
             });
             return {start: endInsts[0], end: endInsts[1], color: wireDef.color, assemblyStep: wireDef.assemblyStep};
         }
-        private allocateGPIOPins(cmpDefs: ComponentDefinition[]): string[][][] {
+        private allocateGPIOPins(cmpDefs: ComponentDefinition[]): string[][] {
             // determine blocks needed
             let blockAssignments: AllocBlock[] = [];
             cmpDefs.forEach((def, idx) => {
@@ -221,7 +221,7 @@ namespace pxsim {
                 console.debug("Not enough GPIO pins!");
                 return null;
             }
-            let cmpGPIOPins: string[][][] = cmpDefs.map((def, cmpIdx) => {
+            let cmpGPIOPinBlocks: string[][][] = cmpDefs.map((def, cmpIdx) => {
                 if (!def)
                     return null;
                 let assignments = blockAssignments.filter(a => a.cmpIdx === cmpIdx);
@@ -233,6 +233,7 @@ namespace pxsim {
                 }
                 return gpioPins;
             });
+            let cmpGPIOPins = cmpGPIOPinBlocks.map(blks => blks.reduce((p, n) => p.concat(n), []));
             return cmpGPIOPins;
         }
         private allocateColumns(cmpDefs: ComponentDefinition[]): number[] {
@@ -267,28 +268,23 @@ namespace pxsim {
                 builtinSimVisual: cmpDef.builtinSimVisual,
             };
         }
-        private allocateComponentsAndWiring(cmpDefs: ComponentDefinition[]): AllocatedComponent[] {
-            let cmpGPIOPinBlocks = this.allocateGPIOPins(cmpDefs);
-            let availableGPIOPins = cmpGPIOPinBlocks.map(blks => blks.reduce((p, n) => p.concat(n), []));
-            let cmpStartCol = this.allocateColumns(cmpDefs);
-            let wires = cmpDefs.map((c, idx) => c.wires.map(d => this.allocateWire(d, {
-                availableGPIOPins: availableGPIOPins[idx],
-                startColumn: cmpStartCol[idx],
-            })));
-            let cmps = cmpDefs.map((c, idx) => this.allocateComponent(c, cmpStartCol[idx]));
-            let cmpsAndWires: AllocatedComponent[] = cmps.map((c, idx) => {
-                return {component: c, wires: wires[idx]}
-            });
-            return cmpsAndWires;
-        }
         public allocateAll(): AllocatorResult {
-            let cmps = this.opts.cmpList;
+            let cmpList = this.opts.cmpList;
             let basicWires: WireInstance[] = [];
             let cmpsAndWires: AllocatedComponent[] = [];
-            if (cmps.length > 0) {
+            if (cmpList.length > 0) {
                 basicWires = this.allocatePowerWires();
-                let cmpDefs = cmps.map(c => this.opts.cmpDefs[c] || null).filter(d => !!d);
-                cmpsAndWires = this.allocateComponentsAndWiring(cmpDefs);
+                let cmpDefs = cmpList.map(c => this.opts.cmpDefs[c] || null).filter(d => !!d);
+                let cmpGPIOPins = this.allocateGPIOPins(cmpDefs);
+                let cmpStartCol = this.allocateColumns(cmpDefs);
+                let wires = cmpDefs.map((c, idx) => c.wires.map(d => this.allocateWire(d, {
+                    cmpGPIOPins: cmpGPIOPins[idx],
+                    startColumn: cmpStartCol[idx],
+                })));
+                let cmps = cmpDefs.map((c, idx) => this.allocateComponent(c, cmpStartCol[idx]));
+                cmpsAndWires = cmps.map((c, idx) => {
+                    return {component: c, wires: wires[idx]}
+                });
             }
             return {
                 powerWires: basicWires, 
