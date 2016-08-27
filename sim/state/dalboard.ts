@@ -68,7 +68,7 @@ namespace pxsim {
             let cmpDefs = COMPONENT_DEFINITIONS; //TODO: read from pxt.json/pxttarget.json
             let fnArgs = msg.fnArgs;
 
-            let mb = true;
+            let mb = false;
             let view: visuals.ArduinoSvg | visuals.MicrobitBoardSvg;
             if (mb) {
                 view = new visuals.MicrobitBoardSvg({

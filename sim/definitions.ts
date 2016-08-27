@@ -69,10 +69,56 @@ namespace pxsim {
     export interface BoardLoc {type: "dalboard", pin: BoardPin};
     export type Loc = BBLoc | BoardLoc;
 
+    export const RASPBERRYPI_MODELB: BoardDefinition = {
+        visual: {
+            image: "/static/hardware/raspberrypi-model-b.svg",
+            outlineImage: "/static/hardware/raspberrypi-model-b-outline.svg",
+            width: 331,
+            height: 230,
+            pinDist: 9,
+            pinBlocks: [
+                { x: 5, y: 31, labels: ["3V3", "SDA", "SCL", "#4", "--", "#17", "#21", "#22", "--", "MOSI", "MISO", "SCLK", "--", ], },
+                { x: 5, y: 39, labels: ["5V", "--", "GND", "TXD", "RXD", "#18", "--", "#23", "#24", "--", "#25", "CS0", "CS1", ], }
+            ],
+        },
+        gpioPinBlocks: [
+            ["SDA", "SCL", "#4", ],
+            ["#17", "#21", "#22", ],
+            ["MOSI", "MISO", "SCLK", ],
+            ["TXD", "RXD", "#18", ],
+            ["#23", "#24", ],
+            ["#25", "CS0", "CS1", ],
+        ],
+        groundPins: ["GND"],
+        threeVoltPins: ["3V3"],
+    }
+
+    export const SPARKFUN_PHOTON: BoardDefinition = {
+        visual: {
+            image: "/static/hardware/sparkfun-photon.svg",
+            outlineImage: "/static/hardware/sparkfun-photon-outline.svg",
+            width: 264.4,
+            height: 202.4,
+            pinDist: 9.5,
+            pinBlocks: [
+                {x: 72, y: 6, labels: ["~SCL/D1", "~SDA/D0", " ", "GND0", "SCK/A3", "~MISO/A4", "~MOSI/A5", "SS/A2", "~WKP", "DAC", ]},
+                {x: 174, y: 6, labels: ["D7", "D6", "D5", "D4", "~D3", "~D2", "~TX", "~RX", ]},
+                {x: 107, y: 188, labels: [" ", " ", "RESET", "3.3V", "V-USB", "GND1", "GND2", "VIN", ]},
+                {x: 193, y: 188, labels: ["A0", "A1", "A2", "A3", "A4", "A5", ]},
+            ],
+        },
+        gpioPinBlocks: [
+            ["~SCL/D1", "~SDA/D0", "SCK/A3", "~MISO/A4", "~MOSI/A5", "SS/A2", ],
+            ["D7", "D6", "D5", "D4", "~D3", "~D2", "~TX", "~RX"],
+            ["A0", "A1", "A2", "A3", "A4", "A5"],
+        ],
+        groundPins: ["GND0", "GND1", "GND2"],
+        threeVoltPins: ["3.3V"],
+    }
     export const ARDUINO_ZERO: BoardDefinition = {
         visual: {
-            image: "/static/arduino/arduino-zero-photo-sml.png",
-            outlineImage: "/static/arduino/arduino-zero-outline.svg",
+            image: "/static/hardware/arduino-zero.png",
+            outlineImage: "/static/hardware/arduino-zero-outline.svg",
             width: 1000,
             height: 762,
             pinDist: 35.5,
