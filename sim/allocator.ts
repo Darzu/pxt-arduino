@@ -48,6 +48,7 @@ namespace pxsim {
     }
     class Allocator {
         private opts: AllocatorOpts;
+        private cmpDefsList: ComponentDefinition[];
         private availablePowerPins = {
             top: {
                 threeVolt: mkRange(26, 51).map(n => <BBRowCol>["+", `${n}`]),
@@ -61,6 +62,7 @@ namespace pxsim {
 
         constructor(opts: AllocatorOpts) {
             this.opts = opts;
+            this.cmpDefsList = this.opts.cmpList.map(c => this.opts.cmpDefs[c] || null).filter(d => !!d);
         }
 
         private allocateLocation(location: LocationDefinition, opts: AllocLocOpts): Loc {
@@ -180,10 +182,10 @@ namespace pxsim {
             });
             return {start: endInsts[0], end: endInsts[1], color: wireDef.color, assemblyStep: wireDef.assemblyStep};
         }
-        private allocateGPIOPins(cmpDefs: ComponentDefinition[]): string[][] {
+        private allocateGPIOPins(): string[][] {
             // determine blocks needed
             let blockAssignments: AllocBlock[] = [];
-            cmpDefs.forEach((def, idx) => {
+            this.cmpDefsList.forEach((def, idx) => {
                 if (def) {
                     if (typeof def.gpioPinsNeeded === "number") {
                         //individual pins
@@ -236,7 +238,7 @@ namespace pxsim {
                 console.debug("Not enough GPIO pins!");
                 return null;
             }
-            let cmpGPIOPinBlocks: string[][][] = cmpDefs.map((def, cmpIdx) => {
+            let cmpGPIOPinBlocks: string[][][] = this.cmpDefsList.map((def, cmpIdx) => {
                 if (!def)
                     return null;
                 let assignments = blockAssignments.filter(a => a.cmpIdx === cmpIdx);
@@ -251,10 +253,10 @@ namespace pxsim {
             let cmpGPIOPins = cmpGPIOPinBlocks.map(blks => blks.reduce((p, n) => p.concat(n), []));
             return cmpGPIOPins;
         }
-        private allocateColumns(cmpDefs: ComponentDefinition[]): number[] {
-            let componentsCount = cmpDefs.length;
+        private allocateColumns(): number[] {
+            let componentsCount = this.cmpDefsList.length;
             let totalAvailableSpace = 30; //TODO allow multiple breadboards
-            let totalSpaceNeeded = cmpDefs.map(d => d.breadboardColumnsNeeded).reduce((p, n) => p + n, 0);
+            let totalSpaceNeeded = this.cmpDefsList.map(d => d.breadboardColumnsNeeded).reduce((p, n) => p + n, 0);
             let extraSpace = totalAvailableSpace - totalSpaceNeeded;
             if (extraSpace <= 0) {
                 console.log("Not enough breadboard space!");
@@ -266,7 +268,7 @@ namespace pxsim {
             let leftPadding = Math.floor(totalCmpPadding / 2);
             let rightPadding = Math.ceil(totalCmpPadding / 2);
             let nextAvailableCol = 1 + leftPadding;
-            let cmpStartCol = cmpDefs.map(cmp => {
+            let cmpStartCol = this.cmpDefsList.map(cmp => {
                 let col = nextAvailableCol;
                 nextAvailableCol += cmp.breadboardColumnsNeeded + componentSpacing;
                 return col;
@@ -289,14 +291,13 @@ namespace pxsim {
             let cmpsAndWires: CmpAndWireInst[] = [];
             if (cmpList.length > 0) {
                 basicWires = this.allocatePowerWires();
-                let cmpDefs = cmpList.map(c => this.opts.cmpDefs[c] || null).filter(d => !!d);
-                let cmpGPIOPins = this.allocateGPIOPins(cmpDefs);
-                let cmpStartCol = this.allocateColumns(cmpDefs);
-                let wires = cmpDefs.map((c, idx) => c.wires.map(d => this.allocateWire(d, {
+                let cmpGPIOPins = this.allocateGPIOPins();
+                let cmpStartCol = this.allocateColumns();
+                let wires = this.cmpDefsList.map((c, idx) => c.wires.map(d => this.allocateWire(d, {
                     cmpGPIOPins: cmpGPIOPins[idx],
                     startColumn: cmpStartCol[idx],
                 })));
-                let cmps = cmpDefs.map((c, idx) => this.allocateComponent(c, cmpStartCol[idx]));
+                let cmps = this.cmpDefsList.map((c, idx) => this.allocateComponent(c, cmpStartCol[idx]));
                 cmpsAndWires = cmps.map((c, idx) => {
                     return {component: c, wires: wires[idx]}
                 });
