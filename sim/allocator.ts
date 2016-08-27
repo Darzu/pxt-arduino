@@ -188,7 +188,7 @@ namespace pxsim {
             });
             // sort by size of blocks
             let sortBlockAssignments = () => blockAssignments.sort((a, b) => b.gpioNeeded - a.gpioNeeded); //largest blocks first
-            let sortAvailableGPIOBlocks = () => availableGPIOBlocks.sort((a, b) => b.length - a.length); //largest blocks first
+            let sortAvailableGPIOBlocks = () => availableGPIOBlocks.sort((a, b) => a.length - b.length); //smallest blocks first
             // allocate each block
             let copyDoubleArray = (a: string[][]) => a.map(b => b.map(p => p));
             let availableGPIOBlocks = copyDoubleArray(this.opts.boardDef.gpioPinBlocks);
@@ -197,13 +197,14 @@ namespace pxsim {
                     sortBlockAssignments();
                     sortAvailableGPIOBlocks();
                     let assignment = blockAssignments[0];
-                    let smallestAvailableBlockThatFits = availableGPIOBlocks[0];
+                    let smallestAvailableBlockThatFits: string[];
                     for (let j = 0; j < availableGPIOBlocks.length; j++) {
+                        smallestAvailableBlockThatFits = availableGPIOBlocks[j];
                         if (assignment.gpioNeeded <= availableGPIOBlocks[j].length) {
-                            smallestAvailableBlockThatFits = availableGPIOBlocks[j];
+                            break;
                         }
                     }
-                    if (smallestAvailableBlockThatFits.length <= 0) {
+                    if (!smallestAvailableBlockThatFits || smallestAvailableBlockThatFits.length <= 0) {
                         break; // out of pins
                     }
                     while (0 < assignment.gpioNeeded && 0 < smallestAvailableBlockThatFits.length) {

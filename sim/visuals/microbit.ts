@@ -140,20 +140,13 @@ namespace pxsim.visuals {
         private pinNmToCoord: Map<Coord> = {};
         private fromBBCoord: (xy: Coord) => Coord;
         private fromMBCoord: (xy: Coord) => Coord;
-        private MICROBIT_DEF: BoardDefinition = {
-            visual: "microbit",
-            gpioPinBlocks: [["P0"], ["P1"], ["P2"], ],
-            groundPins: ["GND"],
-            threeVoltPins: ["+3v3"],
-            attachPowerOnRight: true,
-        }
 
         constructor(public props: IBoardProps) {
             this.state = this.props.runtime.board as pxsim.DalBoard;
             this.state.updateView = () => this.updateState();
 
             //EXPERIMENTAl
-            let boardDef = this.MICROBIT_DEF; //TODO
+            let boardDef = MICROBIT_DEF;
             let cmpsDef: Map<ComponentDefinition> = COMPONENT_DEFINITIONS;
             this.breadboard = new Breadboard();
             this.buildDom();
