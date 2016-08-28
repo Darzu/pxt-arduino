@@ -17,6 +17,7 @@ namespace pxsim {
         wires: WireInst[]
     }
     export interface CmpInst {
+        name: string,
         breadboardStartColumn: number,
         breadboardStartRow: string,
         assemblyStep: number,
@@ -32,6 +33,7 @@ namespace pxsim {
         assemblyStep: number
     };
     interface PartialCmpAlloc {
+        name: string,
         def: ComponentDefinition,
         pinsAssigned: string[],
         pinsNeeded: number | number[],
@@ -195,13 +197,17 @@ namespace pxsim {
             return {start: endInsts[0], end: endInsts[1], color: wireDef.color, assemblyStep: wireDef.assemblyStep};
         }
         private allocatePartialCmps(): PartialCmpAlloc[] {
-            let cmpDefsList = this.opts.cmpList.map(c => this.opts.cmpDefs[c] || null).filter(d => !!d);
+            let cmpNmAndDefs = this.opts.cmpList.map(cmpName => <[string, ComponentDefinition]>[cmpName, this.opts.cmpDefs[cmpName]]).filter(d => !!d[1]);
+            let cmpNmsList = cmpNmAndDefs.map(p => p[0]);
+            let cmpDefsList = cmpNmAndDefs.map(p => p[1]);
             let partialCmps: PartialCmpAlloc[] = [];
-            cmpDefsList.forEach(def => {
+            cmpDefsList.forEach((def, idx) => {
+                let nm = cmpNmsList[idx];
                 if (def.pinAllocation.type === "predefined") {
                     let mbPins = (<PredefinedPinAlloc>def.pinAllocation).pins;
                     let pinsAssigned = mbPins.map(p => this.opts.boardDef.gpioPinMap[p]);
                     partialCmps.push({
+                        name: nm,
                         def: def,
                         pinsAssigned: pinsAssigned,
                         pinsNeeded: 0,
@@ -223,6 +229,7 @@ namespace pxsim {
                             let mbPins = args.map(arg => readPin(arg));
                             let pinsAssigned = mbPins.map(p => this.opts.boardDef.gpioPinMap[p]);
                             partialCmps.push({
+                                name: nm,
                                 def: def,
                                 pinsAssigned: pinsAssigned,
                                 pinsNeeded: 0,
@@ -234,6 +241,7 @@ namespace pxsim {
                         console.debug("Failed to read pin(s) from callsite for: " + fnNm);
                         let pinsNeeded = fnPinAlloc.pinArgPositions.length;
                         partialCmps.push({
+                            name: nm,
                             def: def,
                             pinsAssigned: [],
                             pinsNeeded: pinsNeeded,
@@ -243,6 +251,7 @@ namespace pxsim {
                 } else if (def.pinAllocation.type === "auto") {
                     let pinsNeeded = (<AutoPinAlloc>def.pinAllocation).gpioPinsNeeded;
                     partialCmps.push({
+                        name: nm,
                         def: def,
                         pinsAssigned: [],
                         pinsNeeded: pinsNeeded,
@@ -357,8 +366,9 @@ namespace pxsim {
             });
             return cmpStartCol;
         }
-        private allocateComponent(cmpDef: ComponentDefinition, startColumn: number, gpioPins: string[]): CmpInst {
+        private allocateComponent(name: string, cmpDef: ComponentDefinition, startColumn: number, gpioPins: string[]): CmpInst {
             return {
+                name: name,
                 breadboardStartColumn: startColumn,
                 breadboardStartRow: cmpDef.breadboardStartRow,
                 assemblyStep: cmpDef.assemblyStep,
@@ -377,7 +387,7 @@ namespace pxsim {
                 let partialCmps = this.allocatePartialCmps();
                 let cmpGPIOPins = this.allocateGPIOPins(partialCmps);
                 let cmpStartCol = this.allocateColumns(partialCmps);
-                let cmps = partialCmps.map((c, idx) => this.allocateComponent(c.def, cmpStartCol[idx], cmpGPIOPins[idx]));
+                let cmps = partialCmps.map((c, idx) => this.allocateComponent(c.name, c.def, cmpStartCol[idx], cmpGPIOPins[idx]));
                 let wires = partialCmps.map((c, idx) => c.def.wires.map(d => this.allocateWire(d, {
                     cmpGPIOPins: cmpGPIOPins[idx],
                     startColumn: cmpStartCol[idx],
