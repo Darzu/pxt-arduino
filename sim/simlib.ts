@@ -29,12 +29,6 @@ namespace pxsim {
         return res;
     }
 
-    export function bbLocToCoordStr(loc: BBRowCol) {
-        let [row, col] = loc;
-        return `(${row},${col})`
-    }
-
-
     export function parseQueryString(): (key: string) => string {
         let qs = window.location.search.substring(1);
         let getQsVal = (key: string) => decodeURIComponent((qs.split(`${key}=`)[1] || "").split("&")[0] || "").replace(/\+/g, " ");

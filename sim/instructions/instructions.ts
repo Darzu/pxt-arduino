@@ -513,9 +513,10 @@ namespace pxsim.instructions {
         panel.appendChild(reqsDiv);
         let wires = (props.stepToWires[step] || []);
         let mkLabel = (loc: Loc) => {
-            if (loc.type === "breadboard")
-                return bbLocToCoordStr((<BBLoc>loc).rowCol);
-            else
+            if (loc.type === "breadboard") {
+                let [row, col] = (<BBLoc>loc).rowCol;
+                return `(${row},${col})`
+            } else
                 return (<BoardLoc>loc).pin;
         };
         wires.forEach(w => {
@@ -540,8 +541,9 @@ namespace pxsim.instructions {
                 locs.push(l2);
             }
             locs.forEach((l, i) => {
+                let [row, col] = l;
                 let cmp = mkCmpDiv(c.builtinPartVisual, {
-                    top: bbLocToCoordStr(l),
+                    top: `(${row},${col})`,
                     topSize: LOC_LBL_SIZE,
                     cmpHeight: REQ_CMP_HEIGHT,
                     cmpScale: REQ_CMP_SCALE
