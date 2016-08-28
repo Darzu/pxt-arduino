@@ -23,6 +23,7 @@ namespace pxsim {
         builtinPartVisual?: string,
         builtinSimSate?: string,
         builtinSimVisual?: string,
+        gpioPins: string[],
     }
     export interface WireInst {
         start: Loc,
@@ -30,6 +31,12 @@ namespace pxsim {
         color: string,
         assemblyStep: number
     };
+    interface PartialCmpAlloc {
+        def: ComponentDefinition,
+        pinsAssigned: string[],
+        pinsNeeded: number | number[],
+        breadboardColumnsNeeded: number,
+    }
 
     interface AllocLocOpts {
         nearestBBPin?: BBRowCol,
@@ -42,13 +49,19 @@ namespace pxsim {
     }
     interface AllocBlock {
         cmpIdx: number,
-        blkIdx: number,
+        cmpBlkIdx: number,
         gpioNeeded: number,
         gpioAssigned: string[]
     }
+    function copyDoubleArray(a: string[][]) {
+         return a.map(b => b.map(p => p));
+    }
+    function readPin(arg: string): string {
+        //TODO;
+        return "P0";
+    }
     class Allocator {
         private opts: AllocatorOpts;
-        private cmpDefsList: ComponentDefinition[];
         private availablePowerPins = {
             top: {
                 threeVolt: mkRange(26, 51).map(n => <BBRowCol>["+", `${n}`]),
@@ -62,7 +75,6 @@ namespace pxsim {
 
         constructor(opts: AllocatorOpts) {
             this.opts = opts;
-            this.cmpDefsList = this.opts.cmpList.map(c => this.opts.cmpDefs[c] || null).filter(d => !!d);
         }
 
         private allocateLocation(location: LocationDefinition, opts: AllocLocOpts): Loc {
@@ -182,33 +194,104 @@ namespace pxsim {
             });
             return {start: endInsts[0], end: endInsts[1], color: wireDef.color, assemblyStep: wireDef.assemblyStep};
         }
-        private allocateGPIOPins(): string[][] {
+        private allocatePartialCmps(): PartialCmpAlloc[] {
+            let cmpDefsList = this.opts.cmpList.map(c => this.opts.cmpDefs[c] || null).filter(d => !!d);
+            let partialCmps: PartialCmpAlloc[] = [];
+            cmpDefsList.forEach(def => {
+                if (def.pinAllocation.type === "predefined") {
+                    let mbPins = (<PredefinedPinAlloc>def.pinAllocation).pins;
+                    let pinsAssigned = mbPins.map(p => this.opts.boardDef.gpioPinMap[p]);
+                    partialCmps.push({
+                        def: def,
+                        pinsAssigned: pinsAssigned,
+                        pinsNeeded: 0,
+                        breadboardColumnsNeeded: def.breadboardColumnsNeeded,
+                    });
+                } else if (def.pinAllocation.type === "factoryfunction") {
+                    let fnPinAlloc = (<FactoryFunctionPinAlloc>def.pinAllocation);
+                    let fnNm = fnPinAlloc.functionName;
+                    let fnsAndArgs = <string[]>this.opts.fnArgs[fnNm];
+                    let success = false;
+                    if (fnsAndArgs && fnsAndArgs.length) {
+                        let argPoses = fnPinAlloc.pinArgPositions;
+                        fnsAndArgs.forEach(fnArgsStr => {
+                            let fnArgsSplit = fnArgsStr.split(",");
+                            let args: string[] = [];
+                            argPoses.forEach(i => {
+                                args.push(fnArgsSplit[i]);
+                            });
+                            let mbPins = args.map(arg => readPin(arg));
+                            let pinsAssigned = mbPins.map(p => this.opts.boardDef.gpioPinMap[p]);
+                            partialCmps.push({
+                                def: def,
+                                pinsAssigned: pinsAssigned,
+                                pinsNeeded: 0,
+                                breadboardColumnsNeeded: def.breadboardColumnsNeeded,
+                            });
+                        });
+                    } else {
+                        // failed to find pin allocation from callsites
+                        console.debug("Failed to read pin(s) from callsite for: " + fnNm);
+                        let pinsNeeded = fnPinAlloc.pinArgPositions.length;
+                        partialCmps.push({
+                            def: def,
+                            pinsAssigned: [],
+                            pinsNeeded: pinsNeeded,
+                            breadboardColumnsNeeded: def.breadboardColumnsNeeded,
+                        });
+                    }
+                } else if (def.pinAllocation.type === "auto") {
+                    let pinsNeeded = (<AutoPinAlloc>def.pinAllocation).gpioPinsNeeded;
+                    partialCmps.push({
+                        def: def,
+                        pinsAssigned: [],
+                        pinsNeeded: pinsNeeded,
+                        breadboardColumnsNeeded: def.breadboardColumnsNeeded,
+                    });
+                }
+            });
+            return partialCmps;
+        }
+        private allocateGPIOPins(partialCmps: PartialCmpAlloc[]): string[][] {
+            let availableGPIOBlocks = copyDoubleArray(this.opts.boardDef.gpioPinBlocks);
+            let sortAvailableGPIOBlocks = () => availableGPIOBlocks.sort((a, b) => a.length - b.length); //smallest blocks first
             // determine blocks needed
             let blockAssignments: AllocBlock[] = [];
-            this.cmpDefsList.forEach((def, idx) => {
-                if (def) {
-                    if (typeof def.gpioPinsNeeded === "number") {
+            let preassignedPins: string[] = [];
+            partialCmps.forEach((cmp, idx) => {
+                if (cmp.pinsAssigned && cmp.pinsAssigned.length) {
+                    //already assigned
+                    blockAssignments.push({cmpIdx: idx, cmpBlkIdx: 0, gpioNeeded: 0, gpioAssigned: cmp.pinsAssigned});
+                    preassignedPins = preassignedPins.concat(cmp.pinsAssigned);
+                } else if (cmp.pinsNeeded) {
+                    if (typeof cmp.pinsNeeded === "number") {
                         //individual pins
-                        for (let i = 0; i < def.gpioPinsNeeded; i++) {
+                        for (let i = 0; i < cmp.pinsNeeded; i++) {
                             blockAssignments.push(
-                                {cmpIdx: idx, blkIdx: 0, gpioNeeded: 1, gpioAssigned: []});
+                                {cmpIdx: idx, cmpBlkIdx: 0, gpioNeeded: 1, gpioAssigned: []});
                         }
                     } else {
                         //blocks of pins
-                        let blocks = <number[]>def.gpioPinsNeeded;
+                        let blocks = <number[]>cmp.pinsNeeded;
                         blocks.forEach((numNeeded, blkIdx) => {
                             blockAssignments.push(
-                                {cmpIdx: idx, blkIdx: blkIdx, gpioNeeded: numNeeded, gpioAssigned: []});
+                                {cmpIdx: idx, cmpBlkIdx: blkIdx, gpioNeeded: numNeeded, gpioAssigned: []});
                         });
+                    }
+                }
+            });
+            // remove assigned blocks
+            availableGPIOBlocks.forEach(blks => {
+                for (let i = blks.length - 1; 0 <= i; i--) {
+                    let pin = blks[i];
+                    if (0 <= preassignedPins.indexOf(pin)) {
+                        blks.splice(i, 1);
                     }
                 }
             });
             // sort by size of blocks
             let sortBlockAssignments = () => blockAssignments.sort((a, b) => b.gpioNeeded - a.gpioNeeded); //largest blocks first
-            let sortAvailableGPIOBlocks = () => availableGPIOBlocks.sort((a, b) => a.length - b.length); //smallest blocks first
             // allocate each block
-            let copyDoubleArray = (a: string[][]) => a.map(b => b.map(p => p));
-            let availableGPIOBlocks = copyDoubleArray(this.opts.boardDef.gpioPinBlocks);
             if (0 < blockAssignments.length && 0 < availableGPIOBlocks.length) {
                 do {
                     sortBlockAssignments();
@@ -234,18 +317,17 @@ namespace pxsim {
                 } while (0 < blockAssignments[0].gpioNeeded);
             }
             if (0 < blockAssignments.length && 0 < blockAssignments[0].gpioNeeded) {
-                //TODO: out of pins
                 console.debug("Not enough GPIO pins!");
                 return null;
             }
-            let cmpGPIOPinBlocks: string[][][] = this.cmpDefsList.map((def, cmpIdx) => {
+            let cmpGPIOPinBlocks: string[][][] = partialCmps.map((def, cmpIdx) => {
                 if (!def)
                     return null;
                 let assignments = blockAssignments.filter(a => a.cmpIdx === cmpIdx);
                 let gpioPins: string[][] = [];
                 for (let i = 0; i < assignments.length; i++) {
                     let a = assignments[i];
-                    let blk = gpioPins[a.blkIdx] || (gpioPins[a.blkIdx] = []);
+                    let blk = gpioPins[a.cmpBlkIdx] || (gpioPins[a.cmpBlkIdx] = []);
                     a.gpioAssigned.forEach(p => blk.push(p));
                 }
                 return gpioPins;
@@ -253,10 +335,10 @@ namespace pxsim {
             let cmpGPIOPins = cmpGPIOPinBlocks.map(blks => blks.reduce((p, n) => p.concat(n), []));
             return cmpGPIOPins;
         }
-        private allocateColumns(): number[] {
-            let componentsCount = this.cmpDefsList.length;
+        private allocateColumns(partialCmps: PartialCmpAlloc[]): number[] {
+            let componentsCount = partialCmps.length;
             let totalAvailableSpace = 30; //TODO allow multiple breadboards
-            let totalSpaceNeeded = this.cmpDefsList.map(d => d.breadboardColumnsNeeded).reduce((p, n) => p + n, 0);
+            let totalSpaceNeeded = partialCmps.map(d => d.breadboardColumnsNeeded).reduce((p, n) => p + n, 0);
             let extraSpace = totalAvailableSpace - totalSpaceNeeded;
             if (extraSpace <= 0) {
                 console.log("Not enough breadboard space!");
@@ -268,14 +350,14 @@ namespace pxsim {
             let leftPadding = Math.floor(totalCmpPadding / 2);
             let rightPadding = Math.ceil(totalCmpPadding / 2);
             let nextAvailableCol = 1 + leftPadding;
-            let cmpStartCol = this.cmpDefsList.map(cmp => {
+            let cmpStartCol = partialCmps.map(cmp => {
                 let col = nextAvailableCol;
                 nextAvailableCol += cmp.breadboardColumnsNeeded + componentSpacing;
                 return col;
             });
             return cmpStartCol;
         }
-        private allocateComponent(cmpDef: ComponentDefinition, startColumn: number): CmpInst {
+        private allocateComponent(cmpDef: ComponentDefinition, startColumn: number, gpioPins: string[]): CmpInst {
             return {
                 breadboardStartColumn: startColumn,
                 breadboardStartRow: cmpDef.breadboardStartRow,
@@ -283,6 +365,7 @@ namespace pxsim {
                 builtinPartVisual: cmpDef.builtinPartVisual,
                 builtinSimSate: cmpDef.builtinSimSate,
                 builtinSimVisual: cmpDef.builtinSimVisual,
+                gpioPins: gpioPins,
             };
         }
         public allocateAll(): AllocatorResult {
@@ -291,13 +374,14 @@ namespace pxsim {
             let cmpsAndWires: CmpAndWireInst[] = [];
             if (cmpList.length > 0) {
                 basicWires = this.allocatePowerWires();
-                let cmpGPIOPins = this.allocateGPIOPins();
-                let cmpStartCol = this.allocateColumns();
-                let wires = this.cmpDefsList.map((c, idx) => c.wires.map(d => this.allocateWire(d, {
+                let partialCmps = this.allocatePartialCmps();
+                let cmpGPIOPins = this.allocateGPIOPins(partialCmps);
+                let cmpStartCol = this.allocateColumns(partialCmps);
+                let cmps = partialCmps.map((c, idx) => this.allocateComponent(c.def, cmpStartCol[idx], cmpGPIOPins[idx]));
+                let wires = partialCmps.map((c, idx) => c.def.wires.map(d => this.allocateWire(d, {
                     cmpGPIOPins: cmpGPIOPins[idx],
                     startColumn: cmpStartCol[idx],
                 })));
-                let cmps = this.cmpDefsList.map((c, idx) => this.allocateComponent(c, cmpStartCol[idx]));
                 cmpsAndWires = cmps.map((c, idx) => {
                     return {component: c, wires: wires[idx]}
                 });
