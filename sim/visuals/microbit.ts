@@ -235,7 +235,7 @@ namespace pxsim.visuals {
             let cnstr = builtinComponentSimVisual[cmpDesc.builtinSimVisual];
             let stateFn = builtinComponentSimState[cmpDesc.builtinSimSate];
             let cmp = cnstr();
-            cmp.init(this.state.bus, stateFn(this.state), this.element);
+            cmp.init(this.state.bus, stateFn(this.state), this.element, cmpDesc.microbitPins, cmpDesc.otherArgs);
             this.components.push(cmp);
             this.hostElement.appendChild(cmp.element);
             if (cmp.defs)

@@ -24,7 +24,8 @@ namespace pxsim {
         builtinPartVisual?: string,
         builtinSimSate?: string,
         builtinSimVisual?: string,
-        gpioPins: string[],
+        microbitPins: string[],
+        otherArgs?: string[],
     }
     export interface WireInst {
         start: Loc,
@@ -38,6 +39,7 @@ namespace pxsim {
         pinsAssigned: string[],
         pinsNeeded: number | number[],
         breadboardColumnsNeeded: number,
+        otherArgs?: string[],
     }
 
     interface AllocLocOpts {
@@ -59,8 +61,24 @@ namespace pxsim {
          return a.map(b => b.map(p => p));
     }
     function readPin(arg: string): string {
-        //TODO;
-        return "P0";
+        U.assert(!!arg, "Invalid pin: " + arg);
+        let pin = arg.split("DigitalPin.")[1];
+        return pin;
+    }
+    function mkReverseMap(map: {[key: string]: string}) {
+        let origKeys: string[] = [];
+        let origVals: string[] = [];
+        for (let key in map) {
+            origKeys.push(key);
+            origVals.push(map[key]);
+        }
+        let newMap: {[key: string]: string} = {};
+        for (let i = 0; i < origKeys.length; i++) {
+            let newKey = origVals[i];
+            let newVal = origKeys[i];
+            newMap[newKey] = newVal;
+        }
+        return newMap;
     }
     class Allocator {
         private opts: AllocatorOpts;
@@ -219,14 +237,19 @@ namespace pxsim {
                     let fnsAndArgs = <string[]>this.opts.fnArgs[fnNm];
                     let success = false;
                     if (fnsAndArgs && fnsAndArgs.length) {
-                        let argPoses = fnPinAlloc.pinArgPositions;
+                        let pinArgPoses = fnPinAlloc.pinArgPositions;
+                        let otherArgPoses = fnPinAlloc.otherArgPositions || [];
                         fnsAndArgs.forEach(fnArgsStr => {
                             let fnArgsSplit = fnArgsStr.split(",");
-                            let args: string[] = [];
-                            argPoses.forEach(i => {
-                                args.push(fnArgsSplit[i]);
+                            let pinArgs: string[] = [];
+                            pinArgPoses.forEach(i => {
+                                pinArgs.push(fnArgsSplit[i]);
                             });
-                            let mbPins = args.map(arg => readPin(arg));
+                            let mbPins = pinArgs.map(arg => readPin(arg));
+                            let otherArgs: string[] = [];
+                            otherArgPoses.forEach(i => {
+                                otherArgs.push(fnArgsSplit[i]);
+                            });
                             let pinsAssigned = mbPins.map(p => this.opts.boardDef.gpioPinMap[p]);
                             partialCmps.push({
                                 name: nm,
@@ -234,6 +257,7 @@ namespace pxsim {
                                 pinsAssigned: pinsAssigned,
                                 pinsNeeded: 0,
                                 breadboardColumnsNeeded: def.breadboardColumnsNeeded,
+                                otherArgs: otherArgs.length ? otherArgs : null,
                             });
                         });
                     } else {
@@ -366,16 +390,17 @@ namespace pxsim {
             });
             return cmpStartCol;
         }
-        private allocateComponent(name: string, cmpDef: ComponentDefinition, startColumn: number, gpioPins: string[]): CmpInst {
+        private allocateComponent(partialCmp: PartialCmpAlloc, startColumn: number, microbitPins: string[]): CmpInst {
             return {
-                name: name,
+                name: partialCmp.name,
                 breadboardStartColumn: startColumn,
-                breadboardStartRow: cmpDef.breadboardStartRow,
-                assemblyStep: cmpDef.assemblyStep,
-                builtinPartVisual: cmpDef.builtinPartVisual,
-                builtinSimSate: cmpDef.builtinSimSate,
-                builtinSimVisual: cmpDef.builtinSimVisual,
-                gpioPins: gpioPins,
+                breadboardStartRow: partialCmp.def.breadboardStartRow,
+                assemblyStep: partialCmp.def.assemblyStep,
+                builtinPartVisual: partialCmp.def.builtinPartVisual,
+                builtinSimSate: partialCmp.def.builtinSimSate,
+                builtinSimVisual: partialCmp.def.builtinSimVisual,
+                microbitPins: microbitPins,
+                otherArgs: partialCmp.otherArgs,
             };
         }
         public allocateAll(): AllocatorResult {
@@ -386,8 +411,10 @@ namespace pxsim {
                 basicWires = this.allocatePowerWires();
                 let partialCmps = this.allocatePartialCmps();
                 let cmpGPIOPins = this.allocateGPIOPins(partialCmps);
+                let reverseMap = mkReverseMap(this.opts.boardDef.gpioPinMap);
+                let cmpMicrobitPins = cmpGPIOPins.map(pins => pins.map(p => reverseMap[p]));
                 let cmpStartCol = this.allocateColumns(partialCmps);
-                let cmps = partialCmps.map((c, idx) => this.allocateComponent(c.name, c.def, cmpStartCol[idx], cmpGPIOPins[idx]));
+                let cmps = partialCmps.map((c, idx) => this.allocateComponent(c, cmpStartCol[idx], cmpMicrobitPins[idx]));
                 let wires = partialCmps.map((c, idx) => c.def.wires.map(d => this.allocateWire(d, {
                     cmpGPIOPins: cmpGPIOPins[idx],
                     startColumn: cmpStartCol[idx],

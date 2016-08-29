@@ -154,7 +154,7 @@ namespace pxsim.visuals {
         style: string,
         element: SVGElement,
         defs: SVGElement[],
-        init(bus: EventBus, state: T, svgEl: SVGSVGElement): void, //NOTE: constructors not supported in interfaces
+        init(bus: EventBus, state: T, svgEl: SVGSVGElement, gpioPins: string[], otherArgs: string[]): void, //NOTE: constructors not supported in interfaces
         moveToCoord(xy: Coord): void,
         updateState(): void,
         updateTheme(): void,

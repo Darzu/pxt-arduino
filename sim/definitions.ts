@@ -29,6 +29,7 @@ namespace pxsim {
         type: "factoryfunction",
         functionName: string,
         pinArgPositions: number[],
+        otherArgPositions?: number[],
     }
     export interface PredefinedPinAlloc {
         type: "predefined",
@@ -266,6 +267,7 @@ namespace pxsim {
                 type: "factoryfunction",
                 functionName: "neopixel.create",
                 pinArgPositions: [0],
+                otherArgPositions: [1],
             },
             assemblyStep: 0,
             builtinPartVisual: "neopixel",

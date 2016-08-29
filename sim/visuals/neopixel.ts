@@ -5,17 +5,6 @@
 /// <reference path="../state/neopixel.ts"/>
 /// <reference path="../simlib.ts"/>
 
-namespace pxsim.visuals {
-    //TODO: determine this from static analysis
-    export const NEOPIXEL_LAYOUT: {[pin: number]: NeoPixelMode} = (() => {
-        let map: {[pin: number]: NeoPixelMode} = {};
-        map[7/*DigitalPin.P0*/] = pxsim.NeoPixelMode.RGB;
-        //map[8/*DigitalPin.P1*/] = NeoPixelMode.RGBW;
-        //map[9/*DigitalPin.P2*/] = NeoPixelMode.RGB;
-        return map
-    })();
-}
-
 //TODO move to utils
 namespace pxsim.visuals {
     //expects rgb from 0,255, gives h in [0,360], s in [0, 100], l in [0, 100]
@@ -143,6 +132,9 @@ namespace pxsim.visuals {
         }
 
         public update(colors: RGBW[]) {
+            if (!colors || colors.length <= 0)
+                return;
+
             for (let i = 0; i < colors.length; i++) {
                 let pixel = this.pixels[i];
                 if (!pixel) {
@@ -156,8 +148,7 @@ namespace pxsim.visuals {
             }
 
             //show the canvas if it's hidden
-            if (colors.length > 0)
-                svg.removeClass(this.background, "hidden");
+            svg.removeClass(this.background, "hidden");
 
             //resize if necessary
             let [first, last] = [this.pixels[0], this.pixels[this.pixels.length - 1]]
@@ -177,7 +168,27 @@ namespace pxsim.visuals {
         }
     };
 
-    export type NeoPixelStrip = {canvas: NeoPixelCanvas, part: SVGElAndSize};
+    function gpioPinToPinNumber(gpioPin: string): number {
+        let pinNumStr = gpioPin.split("P")[1];
+        let pinNum = Number(pinNumStr) + 7 /*MICROBIT_ID_IO_P0; TODO: don't hardcode this, import enums.d.ts*/;
+        return pinNum
+    }
+    function parseNeoPixelMode(modeStr: string): NeoPixelMode {
+        const modeMap: Map<NeoPixelMode> = {
+            "NeoPixelMode.RGB": NeoPixelMode.RGB,
+            "NeoPixelMode.RGBW": NeoPixelMode.RGBW,
+            "*": NeoPixelMode.RGB,
+        };
+        let mode: NeoPixelMode = null;
+        for (let key in modeMap) {
+            if (key == modeStr) {
+                mode = modeMap[key];
+                break;
+            }
+        }
+        U.assert(mode != null, "Unknown NeoPixelMode: " + modeStr);
+        return mode;
+    }
 
     export class NeoPixelView implements IBoardComponent<NeoPixelState> {
         public style: string = `
@@ -199,71 +210,47 @@ namespace pxsim.visuals {
         public element: SVGElement;
         public defs: SVGElement[];
         private state: NeoPixelState;
-        private strips: {[pin: number]: NeoPixelStrip} = {};
-        private stripsGroup: SVGGElement;
-        private lastLocations: Coord[] = [];
+        private canvas: NeoPixelCanvas;
+        private part: SVGElAndSize;
+        private stripGroup: SVGGElement;
+        private lastLocation: Coord;
+        private pin: number;
+        private mode: NeoPixelMode;
 
-        public init(bus: EventBus, state: NeoPixelState, svgEl: SVGSVGElement): void {
+        public init(bus: EventBus, state: NeoPixelState, svgEl: SVGSVGElement, gpioPins: string[], otherArgs: string[]): void {
+            U.assert(otherArgs.length === 1, "NeoPixels assumes a RGB vs RGBW mode is passed to it");
+            let modeStr = otherArgs[0];
+            this.mode = parseNeoPixelMode(modeStr);
             this.state = state;
-
-            this.stripsGroup = <SVGGElement>svg.elt("g");
-            this.element = this.stripsGroup;
-
-            this.mkStrip(9); //TODO: don't hardcode this
-        }
-        private getStripsList() {
-            let strips: NeoPixelStrip[] = [];
-            for (let pinNm in this.strips) {
-                let pin = Number(pinNm);
-                let strip = this.strips[pin];
-                strips.push(strip);
-            }
-            return strips;
+            this.stripGroup = <SVGGElement>svg.elt("g");
+            this.element = this.stripGroup;
+            let pinStr = gpioPins[0];
+            this.pin = gpioPinToPinNumber(pinStr);
+            this.lastLocation = [0, 0];
+            let part = mkNeoPixelPart();
+            this.part = part;
+            this.stripGroup.appendChild(part.el);
+            let canvas = new NeoPixelCanvas(this.pin);
+            this.canvas = canvas;
+            let canvasG = svg.child(this.stripGroup, "g", {class: "sim-neopixel-canvas-parent"});
+            canvasG.appendChild(canvas.canvas);
+            this.updateStripLoc();
         }
         public moveToCoord(xy: Coord): void {
             let [x, y] = xy;
             let loc: Coord = [x, y];
-            this.lastLocations = [loc]; //TODO: support multiple strips
-            this.updateStripLocs();
+            this.lastLocation = loc;
+            this.updateStripLoc();
         }
-        private updateStripLocs() {
-            let xys = this.lastLocations;
-            let strips = this.getStripsList();
-            xys.forEach((xy, i) => {
-                let s = strips[i];
-                if (s) {
-                    let [x, y] = xy;
-                    s.canvas.setLoc([x + CANVAS_LEFT, y + CANVAS_TOP]);
-                    svg.hydrate(s.part.el, {transform: `translate(${x} ${y})`}); //TODO: update part's l,h, etc.
-                }
-            });
-        }
-        public mkStrip(pin: DigitalPin) {
-            let part = mkNeoPixelPart();
-            this.stripsGroup.appendChild(part.el);
-            let canvas = new NeoPixelCanvas(pin);
-            let canvasG = svg.child(this.stripsGroup, "g", {class: "sim-neopixel-canvas-parent"});
-            canvasG.appendChild(canvas.canvas);
-            let strip = {canvas: canvas, part: part};
-            this.strips[pin] = strip;
-            this.updateStripLocs();
-            return strip;
+        private updateStripLoc() {
+            let [x, y] = this.lastLocation;
+            this.canvas.setLoc([x + CANVAS_LEFT, y + CANVAS_TOP]);
+            svg.hydrate(this.part.el, {transform: `translate(${x} ${y})`}); //TODO: update part's l,h, etc.
         }
         public updateState(): void {
-            //update canvases
-            for (let pinStr in this.state.pixelColors) {
-                let pin = Number(pinStr);
-                let colors = this.state.pixelColors[pin];
-                let strip = this.strips[pin];
-                if (!strip) {
-                    strip = this.mkStrip(pin);
-                }
-                let canvas = strip.canvas;
-                canvas.update(colors);
-            }
-
-            //TODO: update NeoPixel part
-         }
+            let colors = this.state.getColors(this.pin, this.mode);
+            this.canvas.update(colors);
+        }
         public updateTheme (): void { }
     }
 }
