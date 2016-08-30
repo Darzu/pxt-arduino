@@ -278,7 +278,69 @@ namespace pxsim {
                 {start: ["breadboard", "j", 2], end: "threeVolt", color: "red", assemblyStep: 2},
                 {start: ["breadboard", "j", 3], end: ["GPIO", 0], color: "green", assemblyStep: 2},
             ],
-        }
+        },
+    }
+
+    export interface ComponentPinDefinition {
+        x: number,
+        y: number,
+        role: LocationDefinition,
+        wireColor: string,
+        assemblyStep: number,
+    }
+    export interface ComponentVisualDefinition {
+        image?: string,
+        builtin?: string,
+        width: number,
+        height: number,
+        pinDist: number,
+        pins: ComponentPinDefinition[],
+    }
+    export interface NewComponentDefinition {
+        visual: ComponentVisualDefinition,
+        assemblyStep: number,
+        pinAllocation: FactoryFunctionPinAlloc | PredefinedPinAlloc | AutoPinAlloc,
+        simBehavior?: string,
+    }
+
+    export const NEW_CMP_DEFS: Map<NewComponentDefinition> = {
+        "speaker": {
+            visual: {
+                image: "/static/hardware/speaker.svg",
+                width: 500,
+                height: 500,
+                pinDist: 70,
+                pins: [
+                    {x: 180, y: 135, role: ["GPIO", 0], wireColor: "white", assemblyStep: 1},
+                    {x: 320, y: 135, role: "ground", wireColor: "white", assemblyStep: 1},
+                ],
+            },
+            pinAllocation: {
+                type: "auto",
+                gpioPinsNeeded: 1,
+            },
+            assemblyStep: 0,
+        },
+        "buttonpair": {
+            visual: {
+                builtin: "buttonpair",
+                width: 81,
+                height: 39,
+                pinDist: 15,
+                pins: [
+                    {x: 3, y: 3, role: ["GPIO", 0], wireColor: "yellow", assemblyStep: 1},
+                    {x: 33, y: 48, role: "ground", wireColor: "blue", assemblyStep: 1},
+                    {x: 48, y: 3, role: ["GPIO", 1], wireColor: "orange", assemblyStep: 2},
+                    {x: 78, y: 48, role: "ground", wireColor: "blue", assemblyStep: 2},
+                ]
+            },
+            pinAllocation: {
+                type: "predefined",
+                pins: ["P13", "P12"],
+            },
+            assemblyStep: 0,
+            simBehavior: "buttonapir",
+        },
     }
 
     export const builtinComponentSimVisual: Map<() => visuals.IBoardComponent<any>> = {
