@@ -21,9 +21,7 @@ namespace pxsim {
         breadboardStartColumn: number,
         breadboardStartRow: string,
         assemblyStep: number,
-        builtinPartVisual?: string,
-        builtinSimSate?: string,
-        builtinSimVisual?: string,
+        visual: string | ComponentVisualDefinition,
         microbitPins: string[],
         otherArgs?: string[],
     }
@@ -396,9 +394,7 @@ namespace pxsim {
                 breadboardStartColumn: startColumn,
                 breadboardStartRow: partialCmp.def.breadboardStartRow,
                 assemblyStep: partialCmp.def.assemblyStep,
-                builtinPartVisual: partialCmp.def.builtinPartVisual,
-                builtinSimSate: partialCmp.def.builtinSimSate,
-                builtinSimVisual: partialCmp.def.builtinSimVisual,
+                visual: partialCmp.def.visual,
                 microbitPins: microbitPins,
                 otherArgs: partialCmp.otherArgs,
             };

@@ -319,23 +319,30 @@ namespace pxsim.visuals {
         }
 
         public addComponent(cmpDesc: CmpInst): IBoardComponent<any> {
-            let cnstr = builtinComponentSimVisual[cmpDesc.builtinSimVisual];
-            let stateFn = builtinComponentSimState[cmpDesc.builtinSimSate];
-            let cmp = cnstr();
-            cmp.init(this.board.bus, stateFn(this.board), this.hostElement, cmpDesc.microbitPins, cmpDesc.otherArgs);
-            this.components.push(cmp);
-            this.g.appendChild(cmp.element);
-            if (cmp.defs)
-                cmp.defs.forEach(d => this.defs.appendChild(d));
-            this.style.textContent += cmp.style || "";
-            let rowCol = <BBRowCol>[`${cmpDesc.breadboardStartRow}`, `${cmpDesc.breadboardStartColumn}`];
-            let coord = this.getBBCoord(rowCol);
-            cmp.moveToCoord(coord);
-            let cls = this.getCmpClass(name);
-            svg.addClass(cmp.element, cls);
-            svg.addClass(cmp.element, "sim-cmp");
-            cmp.updateTheme();
-            cmp.updateState();
+            let cmp: IBoardComponent<any> = null;
+            if (typeof cmpDesc.visual === "string") {
+                let builtinVisual = cmpDesc.visual as string;
+                let cnstr = builtinComponentSimVisual[builtinVisual];
+                let stateFn = builtinComponentSimState[builtinVisual];
+                let state = stateFn(this.board);
+                cmp = cnstr();
+                cmp.init(this.board.bus, state, this.hostElement, cmpDesc.microbitPins, cmpDesc.otherArgs);
+                this.components.push(cmp);
+                this.g.appendChild(cmp.element);
+                if (cmp.defs)
+                    cmp.defs.forEach(d => this.defs.appendChild(d));
+                this.style.textContent += cmp.style || "";
+                let rowCol = <BBRowCol>[`${cmpDesc.breadboardStartRow}`, `${cmpDesc.breadboardStartColumn}`];
+                let coord = this.getBBCoord(rowCol);
+                cmp.moveToCoord(coord);
+                let cls = this.getCmpClass(name);
+                svg.addClass(cmp.element, cls);
+                svg.addClass(cmp.element, "sim-cmp");
+                cmp.updateTheme();
+                cmp.updateState();
+            } else {
+                //TODO: adding generic components
+            }
             return cmp;
         }
 

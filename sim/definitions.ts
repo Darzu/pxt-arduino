@@ -39,15 +39,15 @@ namespace pxsim {
         type: "auto",
         gpioPinsNeeded: number | number[],
     }
+    export interface ComponentVisualDefinition {
+    }
     export interface ComponentDefinition {
+        visual: string | ComponentVisualDefinition,
         breadboardColumnsNeeded: number,
         breadboardStartRow: string,
         wires: WireDefinition[],
         assemblyStep: number,
         pinAllocation: FactoryFunctionPinAlloc | PredefinedPinAlloc | AutoPinAlloc,
-        builtinPartVisual?: string,
-        builtinSimSate?: string,
-        builtinSimVisual?: string,
     }
     export interface WireDefinition {
         start: LocationDefinition,
@@ -219,6 +219,7 @@ namespace pxsim {
     }
     export const COMPONENT_DEFINITIONS: Map<ComponentDefinition> = {
         "ledmatrix": {
+            visual: "ledmatrix",
             breadboardColumnsNeeded: 8,
             breadboardStartRow: "h",
             pinAllocation: {
@@ -226,9 +227,6 @@ namespace pxsim {
                 gpioPinsNeeded: [5, 5],
             },
             assemblyStep: 0,
-            builtinPartVisual: "ledmatrix",
-            builtinSimSate: "ledmatrix",
-            builtinSimVisual: "ledmatrix",
             wires: [
                 {start: ["breadboard", `j`, 0], end: ["GPIO", 5], color: "purple", assemblyStep: 1},
                 {start: ["breadboard", `j`, 1], end: ["GPIO", 6], color: "purple", assemblyStep: 1},
@@ -243,6 +241,7 @@ namespace pxsim {
             ]
         },
         "buttonpair": {
+            visual: "buttonpair",
             breadboardColumnsNeeded: 6,
             breadboardStartRow: "f",
             pinAllocation: {
@@ -250,9 +249,6 @@ namespace pxsim {
                 pins: ["P13", "P12"],
             },
             assemblyStep: 0,
-            builtinPartVisual: "buttonpair",
-            builtinSimSate: "buttonpair",
-            builtinSimVisual: "buttonpair",
             wires: [
                 {start: ["breadboard", "j", 0], end: ["GPIO", 0], color: "yellow", assemblyStep: 1},
                 {start: ["breadboard", "a", 2], end: "ground", color: "blue", assemblyStep: 1},
@@ -261,6 +257,7 @@ namespace pxsim {
             ],
         },
         "neopixel": {
+            visual: "neopixel",
             breadboardColumnsNeeded: 5,
             breadboardStartRow: "h",
             pinAllocation: {
@@ -270,15 +267,33 @@ namespace pxsim {
                 otherArgPositions: [1],
             },
             assemblyStep: 0,
-            builtinPartVisual: "neopixel",
-            builtinSimSate: "neopixel",
-            builtinSimVisual: "neopixel",
             wires: [
                 {start: ["breadboard", "j", 1], end: "ground", color: "blue", assemblyStep: 1},
                 {start: ["breadboard", "j", 2], end: "threeVolt", color: "red", assemblyStep: 2},
                 {start: ["breadboard", "j", 3], end: ["GPIO", 0], color: "green", assemblyStep: 2},
             ],
-        }
+        },
+        "speaker": {
+            visual: {
+                image: "/static/hardware/speaker.svg",
+                width: 500,
+                height: 500,
+                left: -180,
+                top: -135,
+                pinDist: 70,
+            },
+            breadboardColumnsNeeded: 5,
+            breadboardStartRow: "f",
+            pinAllocation: {
+                type: "auto",
+                gpioPinsNeeded: 1,
+            },
+            assemblyStep: 0,
+            wires: [
+                {start: ["breadboard", "j", 1], end: ["GPIO", 0], color: "white", assemblyStep: 1},
+                {start: ["breadboard", "j", 3], end: "ground", color: "white", assemblyStep: 1},
+            ],
+        },
     }
 
     export const builtinComponentSimVisual: Map<() => visuals.IBoardComponent<any>> = {

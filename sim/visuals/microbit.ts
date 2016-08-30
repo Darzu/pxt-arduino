@@ -232,24 +232,29 @@ namespace pxsim.visuals {
             });
         }
         public addComponent(cmpDesc: CmpInst): IBoardComponent<any> {
-            let cnstr = builtinComponentSimVisual[cmpDesc.builtinSimVisual];
-            let stateFn = builtinComponentSimState[cmpDesc.builtinSimSate];
-            let cmp = cnstr();
-            cmp.init(this.state.bus, stateFn(this.state), this.element, cmpDesc.microbitPins, cmpDesc.otherArgs);
-            this.components.push(cmp);
-            this.hostElement.appendChild(cmp.element);
-            if (cmp.defs)
-                cmp.defs.forEach(d => this.defs.appendChild(d));
-            this.style.textContent += cmp.style || "";
-            let rowCol = <BBRowCol>[`${cmpDesc.breadboardStartRow}`, `${cmpDesc.breadboardStartColumn}`];
-            let coord = this.getBBCoord(rowCol);
-            cmp.moveToCoord(coord);
-            let getCmpClass = (type: string) => `sim-${type}-cmp`;
-            let cls = getCmpClass(name);
-            svg.addClass(cmp.element, cls);
-            svg.addClass(cmp.element, "sim-cmp");
-            cmp.updateTheme();
-            cmp.updateState();
+            let cmp: IBoardComponent<any> = null;
+            if (typeof cmpDesc.visual === "string") {
+                let builtinVisual = cmpDesc.visual as string;
+                let cnstr = builtinComponentSimVisual[builtinVisual];
+                let stateFn = builtinComponentSimState[builtinVisual];
+                let cmp = cnstr();
+                cmp.init(this.state.bus, stateFn(this.state), this.element, cmpDesc.microbitPins, cmpDesc.otherArgs);
+                this.components.push(cmp);
+                this.hostElement.appendChild(cmp.element);
+                if (cmp.defs)
+                    cmp.defs.forEach(d => this.defs.appendChild(d));
+                this.style.textContent += cmp.style || "";
+                let rowCol = <BBRowCol>[`${cmpDesc.breadboardStartRow}`, `${cmpDesc.breadboardStartColumn}`];
+                let coord = this.getBBCoord(rowCol);
+                cmp.moveToCoord(coord);
+                let getCmpClass = (type: string) => `sim-${type}-cmp`;
+                let cls = getCmpClass(name);
+                svg.addClass(cmp.element, cls);
+                svg.addClass(cmp.element, "sim-cmp");
+                cmp.updateTheme();
+                cmp.updateState();
+            } else {
+            }
             return cmp;
         }
         public recordPinCoords() {

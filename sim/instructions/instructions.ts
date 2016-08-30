@@ -423,7 +423,7 @@ namespace pxsim.instructions {
                     //last step
                     if (i === step) {
                         board.breadboard.highlightLoc(row, col);
-                        if (cmpInst.builtinPartVisual === "buttonpair") {
+                        if (cmpInst.visual === "buttonpair") {
                             //TODO: don't specialize this
                             let [row2, col2]: BBRowCol = [`${cmpInst.breadboardStartRow}`, `${cmpInst.breadboardStartColumn + 3}`];
                             board.breadboard.highlightLoc(row2, col2);
@@ -462,16 +462,21 @@ namespace pxsim.instructions {
         cmps.forEach(c => {
             let quant = 1;
             // TODO: don't special case this
-            if (c.builtinPartVisual === "buttonpair") {
+            if (c.visual === "buttonpair") {
                 quant = 2;
             }
-            let cmp = mkCmpDiv(c.builtinPartVisual, {
-                left: QUANT_LBL(quant),
-                leftSize: QUANT_LBL_SIZE,
-                cmpScale: CMP_SCALE,
-            });
-            addClass(cmp, "partslist-cmp");
-            panel.appendChild(cmp);
+            if (typeof c.visual === "string") {
+                let builtinVisual = <string>c.visual;
+                let cmp = mkCmpDiv(builtinVisual, {
+                    left: QUANT_LBL(quant),
+                    leftSize: QUANT_LBL_SIZE,
+                    cmpScale: CMP_SCALE,
+                });
+                addClass(cmp, "partslist-cmp");
+                panel.appendChild(cmp);
+            } else {
+                //TODO: handle generic components
+            }
         });
 
         // wires
@@ -535,21 +540,26 @@ namespace pxsim.instructions {
         cmps.forEach(c => {
             let l: BBRowCol = [`${c.breadboardStartRow}`, `${c.breadboardStartColumn}`];
             let locs = [l];
-            if (c.builtinPartVisual === "buttonpair") {
+            if (c.visual === "buttonpair") {
                 //TODO: don't special case this
                 let l2: BBRowCol = [`${c.breadboardStartRow}`, `${c.breadboardStartColumn + 3}`];
                 locs.push(l2);
             }
             locs.forEach((l, i) => {
                 let [row, col] = l;
-                let cmp = mkCmpDiv(c.builtinPartVisual, {
-                    top: `(${row},${col})`,
-                    topSize: LOC_LBL_SIZE,
-                    cmpHeight: REQ_CMP_HEIGHT,
-                    cmpScale: REQ_CMP_SCALE
-                })
-                addClass(cmp, "cmp-div");
-                reqsDiv.appendChild(cmp);
+                if (typeof c.visual === "string") {
+                    let builtinVisual = <string>c.visual;
+                    let cmp = mkCmpDiv(builtinVisual, {
+                        top: `(${row},${col})`,
+                        topSize: LOC_LBL_SIZE,
+                        cmpHeight: REQ_CMP_HEIGHT,
+                        cmpScale: REQ_CMP_SCALE
+                    })
+                    addClass(cmp, "cmp-div");
+                    reqsDiv.appendChild(cmp);
+                } else {
+                    //TODO: generic component
+                }
             });
         });
 
