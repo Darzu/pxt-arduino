@@ -180,7 +180,7 @@ namespace pxsim.visuals {
         `;
 
     let nextBoardId = 0;
-    export class ArduinoSvg {
+    export class GenericBoardSvg {
         public hostElement: SVGSVGElement;
         private style: SVGStyleElement;
         private defs: SVGDefsElement;

@@ -69,7 +69,7 @@ namespace pxsim {
             let fnArgs = msg.fnArgs;
 
             let mb = true;
-            let view: visuals.ArduinoSvg | visuals.MicrobitBoardSvg;
+            let view: visuals.GenericBoardSvg | visuals.MicrobitBoardSvg;
             if (mb) {
                 view = new visuals.MicrobitBoardSvg({
                     runtime: runtime,
@@ -79,7 +79,7 @@ namespace pxsim {
                     disableTilt: false
                 });
             } else {
-                view = new visuals.ArduinoSvg({
+                view = new visuals.GenericBoardSvg({
                     boardDef: boardDef,
                     activeComponents: cmpsList,
                     componentDefinitions: cmpDefs,

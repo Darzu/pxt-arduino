@@ -2,7 +2,7 @@
 /// <reference path="../../node_modules/pxt-core/built/pxtsim.d.ts"/>
 /// <reference path="../../node_modules/pxt-core/built/pxtrunner.d.ts"/>
 /// <reference path="../../libs/microbit/dal.d.ts"/>
-/// <reference path="../visuals/arduino.ts"/>
+/// <reference path="../visuals/genericboard.ts"/>
 /// <reference path="../visuals/wiring.ts"/>
 
 //HACK: allows instructions.html to access pxtblocks without requiring simulator.html to import blocks as well
@@ -348,8 +348,8 @@ namespace pxsim.instructions {
             allWireColors: allWireColors,
         };
     }
-    function mkBoard(boardDef: BoardDefinition, cmpDefs: Map<ComponentDefinition>, width: number, buildMode: boolean = false): visuals.ArduinoSvg {
-        let board = new visuals.ArduinoSvg({
+    function mkBoard(boardDef: BoardDefinition, cmpDefs: Map<ComponentDefinition>, width: number, buildMode: boolean = false): visuals.GenericBoardSvg {
+        let board = new visuals.GenericBoardSvg({
             runtime: pxsim.runtime,
             boardDef: boardDef,
             activeComponents: [],
@@ -385,7 +385,7 @@ namespace pxsim.instructions {
 
         return board;
     }
-    function drawSteps(board: visuals.ArduinoSvg, step: number, props: BoardProps) {
+    function drawSteps(board: visuals.GenericBoardSvg, step: number, props: BoardProps) {
         if (step > 0) {
             svg.addClass(board.hostElement, "grayed");
         }
